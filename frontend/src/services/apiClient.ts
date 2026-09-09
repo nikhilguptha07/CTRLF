@@ -150,8 +150,14 @@ class ApiClient {
   private accessToken: string | null = null;
 
   constructor() {
-    // Port 5000 is the Express backend port; can be overridden via Vite env
-    this.baseUrl = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000';
+    const envUrl = (import.meta as any).env?.VITE_API_URL;
+    if (envUrl) {
+      this.baseUrl = envUrl;
+    } else if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
+      this.baseUrl = 'https://ctrlf-1.onrender.com';
+    } else {
+      this.baseUrl = 'http://localhost:5000';
+    }
   }
 
   setToken(token: string | null) {
