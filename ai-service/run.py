@@ -1,0 +1,8 @@
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+import uvicorn
+from app.config import settings
+
+if __name__ == "__main__":
+    print(f"Starting CTRL-F Computer Vision Service on http://{settings.HOST}:{settings.PORT}")
+    uvicorn.run("app.main:app", host=settings.HOST, port=settings.PORT, reload=False)

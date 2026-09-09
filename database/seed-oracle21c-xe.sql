@@ -1,0 +1,139 @@
+-- ============================================================================
+-- CONTROL F — LOST OBJECT CCTV DETECTION APPLICATION
+-- Database: Oracle Database 21c Express Edition (Oracle 21c XE)
+-- Seed Data: Users, CCTV Cameras, Search Sessions, and Detections with BLOB
+-- Default Password for all seed users: Password123!
+-- Bcrypt Hash (12 rounds): $2a$12$L6l8yvE7e5f3sT09/x15EuZ4oE230s0aEfeW2eF8R2c8k10W3j9C.
+-- ============================================================================
+
+-- 1. SEED USERS
+INSERT INTO USERS (USERNAME, EMAIL, PASSWORD_HASH, FULL_NAME, ROLE, IS_ACTIVE)
+VALUES (
+    'admin',
+    'admin@ctrlf.local',
+    '$2a$12$L6l8yvE7e5f3sT09/x15EuZ4oE230s0aEfeW2eF8R2c8k10W3j9C.',
+    'System Administrator',
+    'ADMIN',
+    1
+);
+
+INSERT INTO USERS (USERNAME, EMAIL, PASSWORD_HASH, FULL_NAME, ROLE, IS_ACTIVE)
+VALUES (
+    'operator1',
+    'operator@ctrlf.local',
+    '$2a$12$L6l8yvE7e5f3sT09/x15EuZ4oE230s0aEfeW2eF8R2c8k10W3j9C.',
+    'Security Officer James',
+    'OPERATOR',
+    1
+);
+
+INSERT INTO USERS (USERNAME, EMAIL, PASSWORD_HASH, FULL_NAME, ROLE, IS_ACTIVE)
+VALUES (
+    'johndoe',
+    'user@ctrlf.local',
+    '$2a$12$L6l8yvE7e5f3sT09/x15EuZ4oE230s0aEfeW2eF8R2c8k10W3j9C.',
+    'John Doe',
+    'USER',
+    1
+);
+
+-- 2. SEED CCTV CAMERAS
+INSERT INTO CAMERAS (CAMERA_NAME, CAMERA_LOCATION, CAMERA_SOURCE, STATUS)
+VALUES (
+    'CCTV-01 (Lobby Overhead)',
+    'Building A - Ground Floor Main Entrance',
+    'rtsp://10.0.1.101:554/live/stream1',
+    'ONLINE'
+);
+
+INSERT INTO CAMERAS (CAMERA_NAME, CAMERA_LOCATION, CAMERA_SOURCE, STATUS)
+VALUES (
+    'CCTV-02 (Corridor North)',
+    'Building A - 2nd Floor Corridor North PTZ',
+    'rtsp://10.0.1.102:554/live/stream1',
+    'ONLINE'
+);
+
+INSERT INTO CAMERAS (CAMERA_NAME, CAMERA_LOCATION, CAMERA_SOURCE, STATUS)
+VALUES (
+    'CCTV-03 (East Perimeter)',
+    'Perimeter Gate East - Fence Monitored Area',
+    'rtsp://10.0.1.103:554/live/stream1',
+    'PROCESSING'
+);
+
+INSERT INTO CAMERAS (CAMERA_NAME, CAMERA_LOCATION, CAMERA_SOURCE, STATUS)
+VALUES (
+    'CCTV-04 (South Loading Dock)',
+    'Logistics Yard - Delivery Bay 4',
+    'rtsp://10.0.1.104:554/live/stream1',
+    'OFFLINE'
+);
+
+-- 3. SEED INITIAL SEARCHES
+INSERT INTO SEARCHES (USER_ID, OBJECT_NAME, CAMERA_ID, SEARCH_STATUS, STARTED_AT, COMPLETED_AT)
+VALUES (
+    1,
+    'Bottle',
+    1,
+    'FOUND',
+    SYSTIMESTAMP - INTERVAL '10' MINUTE,
+    SYSTIMESTAMP - INTERVAL '8' MINUTE
+);
+
+INSERT INTO SEARCHES (USER_ID, OBJECT_NAME, CAMERA_ID, SEARCH_STATUS, STARTED_AT, COMPLETED_AT)
+VALUES (
+    2,
+    'Backpack',
+    2,
+    'FOUND',
+    SYSTIMESTAMP - INTERVAL '25' MINUTE,
+    SYSTIMESTAMP - INTERVAL '24' MINUTE
+);
+
+INSERT INTO SEARCHES (USER_ID, OBJECT_NAME, CAMERA_ID, SEARCH_STATUS, STARTED_AT, COMPLETED_AT)
+VALUES (
+    3,
+    'Keys',
+    1,
+    'NOT_FOUND',
+    SYSTIMESTAMP - INTERVAL '40' MINUTE,
+    SYSTIMESTAMP - INTERVAL '38' MINUTE
+);
+
+-- 4. SEED SAMPLE DETECTION RECORD WITH DETECTION_IMAGE BLOB
+-- Small valid JPEG magic bytes header stored as raw BLOB
+INSERT INTO DETECTIONS (
+    USER_ID,
+    SEARCH_ID,
+    CAMERA_ID,
+    OBJECT_NAME,
+    CONFIDENCE,
+    TIMESTAMP_SECONDS,
+    VIDEO_TIMESTAMP,
+    FRAME_NUMBER,
+    BOUNDING_BOX_X,
+    BOUNDING_BOX_Y,
+    BOUNDING_BOX_WIDTH,
+    BOUNDING_BOX_HEIGHT,
+    DETECTION_STATUS,
+    DETECTION_IMAGE
+)
+VALUES (
+    1,
+    1,
+    1,
+    'Bottle',
+    94.80,
+    3.200,
+    '00:03',
+    10,
+    420.00,
+    280.00,
+    160.00,
+    120.00,
+    'TARGET_ACQUIRED',
+    HEXTORAW('FFD8FFE000104A46494600010101006000600000FFDB004300080606070605080707070909080A0C140D0C0B0B0C1912130F141D1A1F1E1D1A1C1C20242E2720222C231C1C2837292C30313434341F27393D38323C2E333431FFC0000B080001000101011100FFDA0008010100003F00D2CF20FFD9')
+);
+
+COMMIT;

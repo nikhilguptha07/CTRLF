@@ -1,0 +1,22 @@
+{
+  "name": "control-f-workspace",
+  "private": true,
+  "version": "1.0.0",
+  "description": "CONTROL F — Physical Surveillance & Object Recovery System Workspace",
+  "scripts": {
+    "dev": "npm run dev --prefix frontend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "npm run dev --prefix server",
+    "dev:server": "npm run dev --prefix server",
+    "dev:ai": "cd ai-service && python run.py",
+    "build": "npm run build --prefix frontend && npm run build --prefix server",
+    "build:frontend": "npm run build --prefix frontend",
+    "build:backend": "npm run build --prefix server",
+    "start:backend": "npm run start --prefix server",
+    "test": "npm run test --prefix server",
+    "test:backend": "npm run test --prefix server",
+    "test:all": "npm run test:all --prefix server",
+    "test:e2e": "npm run test:e2e --prefix server",
+    "lint:frontend": "npm run lint --prefix frontend"
+  }
+}

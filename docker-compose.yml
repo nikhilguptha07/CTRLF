@@ -1,0 +1,100 @@
+# ====================================================================
+# CONTROL F — Production Container Orchestration (docker-compose.yml)
+# AI Object Detection & CCTV Surveillance System
+# ====================================================================
+
+version: '3.8'
+
+services:
+  # ------------------------------------------------------------------
+  # Frontend — React / Three.js Surveillance Console + Nginx
+  # ------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ctrlf_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - ctrlf_network
+
+  # ------------------------------------------------------------------
+  # Backend — Node.js / Express / TypeScript Core Orchestrator
+  # ------------------------------------------------------------------
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: ctrlf_backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - JWT_SECRET=${JWT_SECRET:-production_secret_change_me_minimum_32_characters!}
+      - JWT_EXPIRES_IN=24h
+      - AI_SERVICE_URL=http://ai-service:8000
+      - AI_SERVICE_API_KEY=${AI_SERVICE_API_KEY:-ctrlf_ai_secret_key_2026}
+      # Oracle 21c XE Connection Settings (Pointing to host or managed Oracle instance)
+      - ORACLE_USER=${ORACLE_USER:-CTRLF_ADMIN}
+      - ORACLE_PASSWORD=${ORACLE_PASSWORD:-OraclePassword2026!}
+      - ORACLE_CONNECT_STRING=${ORACLE_CONNECT_STRING:-host.docker.internal:1521/XEPDB1}
+      - ORACLE_POOL_MIN=2
+      - ORACLE_POOL_MAX=10
+      - ORACLE_POOL_INCREMENT=2
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef}
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      - ai-service
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - ctrlf_network
+
+  # ------------------------------------------------------------------
+  # AI Service — Python FastAPI / YOLOv8 / ByteTrack
+  # ------------------------------------------------------------------
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: ctrlf_ai_service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - MODEL_PATH=/app/yolov8n.pt
+      - AI_SERVICE_API_KEY=${AI_SERVICE_API_KEY:-ctrlf_ai_secret_key_2026}
+    volumes:
+      - ./reference:/app/reference:ro
+    networks:
+      - ctrlf_network
+
+# --------------------------------------------------------------------
+# Networks & Volumes
+# --------------------------------------------------------------------
+networks:
+  ctrlf_network:
+    driver: bridge
+
+volumes:
+  uploads_data:
+    driver: local
+
+# ====================================================================
+# NOTE ON ORACLE DATABASE 21c XE DEPLOYMENT:
+# Oracle 21c XE requires significant memory resources (min 2GB RAM)
+# and proprietary licensing. For enterprise production, point
+# ORACLE_CONNECT_STRING to your dedicated Oracle 21c XE server or VM.
+# To run Oracle 21c XE locally via container:
+#   docker run -d --name oracle21c -p 1521:1521 -e ORACLE_PWD=YourPassword \
+#   container-registry.oracle.com/database/express:21.3.0-xe
+# ====================================================================
