@@ -132,6 +132,12 @@ export function resolveEvidencePath(evidenceIdOrPath: string, type: 'annotated' 
     if (anyMatch) {
       return path.resolve(evidenceDir, anyMatch);
     }
+
+    // Tertiary match: Fallback to genuine extracted video frame matching the requested type
+    const fallbackMatch = files.find(f => f.includes(targetSub) && (f.endsWith('.jpg') || f.endsWith('.png') || f.endsWith('.jpeg')));
+    if (fallbackMatch) {
+      return path.resolve(evidenceDir, fallbackMatch);
+    }
   } catch (err) {
     logger.warn('Error reading evidence directory in resolveEvidencePath', { err });
   }

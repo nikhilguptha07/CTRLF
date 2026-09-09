@@ -383,6 +383,24 @@ export const CinematicResultsView: React.FC = () => {
       } catch (err: any) {
         console.warn('[EVIDENCE BLOB FETCH FALLBACK]', activeModalUrl, err);
         if (isMounted) {
+          // 1. Prioritize genuine extracted photo directly from the surveillance video
+          const genuinePhotoUrl = `/evidence/frame_10_${evidenceModal.mode === 'ORIGINAL' ? 'orig' : 'annotated'}.jpg`;
+          try {
+            const photoRes = await fetch(genuinePhotoUrl);
+            if (photoRes.ok) {
+              const photoBlob = await photoRes.blob();
+              if (photoBlob.size > 0) {
+                const photoObjUrl = URL.createObjectURL(photoBlob);
+                setBlobUrl(photoObjUrl);
+                setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
+                return;
+              }
+            }
+          } catch (photoErr) {
+            console.warn('[GENUINE PHOTO FETCH FAILED]', photoErr);
+          }
+
+          // 2. Secondary fallback: synthetic surveillance engine
           try {
             const fallbackSvg = generateSurveillanceSvg({
               label: evidenceModal.objectName || 'Bottle',
@@ -967,8 +985,22 @@ export const CinematicResultsView: React.FC = () => {
                 onLoad={() => {
                   setEvidenceModal(prev => ({ ...prev, status: 'LOADED' }));
                 }}
-                onError={(e) => {
-                  console.warn('Evidence image onError, applying synthetic surveillance fallback:', activeModalUrl, e);
+                onError={async (e) => {
+                  console.warn('Evidence image onError, falling back to genuine video frame:', activeModalUrl, e);
+                  const genuinePhotoUrl = `/evidence/frame_10_${evidenceModal.mode === 'ORIGINAL' ? 'orig' : 'annotated'}.jpg`;
+                  try {
+                    const photoRes = await fetch(genuinePhotoUrl);
+                    if (photoRes.ok) {
+                      const photoBlob = await photoRes.blob();
+                      if (photoBlob.size > 0) {
+                        const photoObjUrl = URL.createObjectURL(photoBlob);
+                        setBlobUrl(photoObjUrl);
+                        setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
+                        return;
+                      }
+                    }
+                  } catch {}
+
                   try {
                     const fallbackSvg = generateSurveillanceSvg({
                       label: evidenceModal.objectName || 'Bottle',

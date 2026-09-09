@@ -46,8 +46,10 @@ server/uploads/original/*
 server/uploads/temp/*
 server/uploads/videos/*
 !server/uploads/evidence/.gitkeep
+!server/uploads/evidence/*.jpg
 !server/uploads/frames/.gitkeep
 !server/uploads/original/.gitkeep
+!server/uploads/original/cctv-reference.mp4
 !server/uploads/temp/.gitkeep
 !server/uploads/videos/.gitkeep
 !server/uploads/videos/cctv-reference.mp4
