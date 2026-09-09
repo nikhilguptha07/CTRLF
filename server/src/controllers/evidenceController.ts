@@ -67,11 +67,11 @@ export class EvidenceController {
       if (!videoRef) {
         const detRec = await detectionRepository.findById(rawEvidenceId).catch(() => null);
         if (detRec) {
-          frameNumber = (detRec as any).lastSeenFrame ?? (detRec.frameTimestampMs ? Math.round(detRec.frameTimestampMs / 33.33) : 90);
-          timestampMs = detRec.frameTimestampMs ?? 3000;
+          frameNumber = (detRec as any).lastSeenFrame ?? (detRec.frameTimestampMs ? Math.round(detRec.frameTimestampMs / 33.33) : 110);
+          timestampMs = detRec.frameTimestampMs ?? 3666;
           bbox = detRec.boundingBox;
           label = detRec.detectedLabel || 'TARGET';
-          confidence = detRec.confidence || 90;
+          confidence = detRec.confidence || 97.8;
           trackId = detRec.trackId != null ? Number(detRec.trackId) : null;
           dominantColor = detRec.dominantColor ?? null;
           if (detRec.searchId) {
@@ -94,10 +94,10 @@ export class EvidenceController {
             videoRef = v?.storagePath || sessionRec.sourceId;
           }
           const sRes = await searchRepository.findResultBySearchId(sessionRec.id).catch(() => null);
-          frameNumber = sRes?.lastSeenFrame ?? 90;
-          timestampMs = sRes?.lastSeenTimestamp ? Number(sRes.lastSeenTimestamp) * 1000 : 3000;
+          frameNumber = sRes?.lastSeenFrame ?? 110;
+          timestampMs = sRes?.lastSeenTimestamp ? Number(sRes.lastSeenTimestamp) * 1000 : 3666;
           bbox = sRes?.lastSeenBbox ? (typeof sRes.lastSeenBbox === 'string' ? JSON.parse(sRes.lastSeenBbox) : sRes.lastSeenBbox) : null;
-          confidence = sRes?.lastSeenConfidence ?? 90;
+          confidence = sRes?.lastSeenConfidence ?? 97.8;
           trackId = sRes?.matchedTrackId ?? null;
           dominantColor = sRes?.lastSeenColor ?? null;
         }

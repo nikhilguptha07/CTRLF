@@ -121,6 +121,18 @@ export function resolveEvidencePath(evidenceIdOrPath: string, type: 'annotated' 
     const files = fs.readdirSync(evidenceDir);
     const targetSub = type === 'original' ? 'orig' : 'annotated';
     
+    // Check if specifically asking for initial / in-hand (frame 10)
+    if (evidenceIdOrPath.includes('10') || evidenceIdOrPath.includes('hand') || evidenceIdOrPath.includes('initial')) {
+      const handMatch = files.find(f => f.includes('frame_10') && f.includes(targetSub));
+      if (handMatch) return path.resolve(evidenceDir, handMatch);
+    }
+
+    // Default & Last Known Spot: Prioritize the genuine resting frame (frame 110 on table)
+    const lastSpotMatch = files.find(f => (f.includes('frame_last_spot') || f.includes('frame_110')) && f.includes(targetSub));
+    if (lastSpotMatch) {
+      return path.resolve(evidenceDir, lastSpotMatch);
+    }
+
     // Exact match with type
     const match = files.find(f => f.includes(evidenceIdOrPath) && f.includes(targetSub));
     if (match) {

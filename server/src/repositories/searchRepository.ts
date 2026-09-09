@@ -206,7 +206,7 @@ export class SearchRepository {
       SELECT id, search_id, track_id, class_name, confidence, frame_index, timestamp_ms, bbox_x, bbox_y, bbox_width, bbox_height, status, created_at
       FROM OBJECT_TRACKS
       WHERE search_id = :searchId
-      ORDER BY frame_index ASC, track_id ASC
+      ORDER BY timestamp_ms DESC, frame_index DESC, track_id ASC
     `;
     const result = await db.execute<any>(sql, { searchId });
     if (!result.rows) return [];

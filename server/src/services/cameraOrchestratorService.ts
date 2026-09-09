@@ -863,17 +863,19 @@ export class CameraOrchestratorService {
               visualization: visualizationTarget,
             });
 
-            // Persist tracks if found
+            // Persist tracks if found (prioritizing final resting / last seen state)
             if (videoResult.tracks && videoResult.tracks.length > 0) {
               for (const trk of videoResult.tracks) {
+                const trackLastFrame = trk.lastFrame ?? trk.firstFrame ?? 0;
+                const trackLastSeenMs = trk.lastSeen != null ? trk.lastSeen * 1000 : (trk.firstSeen != null ? trk.firstSeen * 1000 : (trk.timestampMs ?? 0));
                 await searchRepository.createObjectTrack({
                   id: uuidv4(),
                   searchId,
                   trackId: Number(trk.trackId),
                   className: trk.className,
                   confidence: trk.confidence,
-                  frameIndex: trk.firstFrame || 0,
-                  timestampMs: trk.firstSeen ? trk.firstSeen * 1000 : 0,
+                  frameIndex: trackLastFrame,
+                  timestampMs: trackLastSeenMs,
                   bboxX: trk.bbox?.x1 || 0,
                   bboxY: trk.bbox?.y1 || 0,
                   bboxWidth: trk.bbox?.width || 0,

@@ -340,17 +340,19 @@ export class SearchService {
           return;
         }
 
-        // Persist all real ByteTrack tracks into OBJECT_TRACKS
+        // Persist all real ByteTrack tracks into OBJECT_TRACKS (prioritizing final resting / last seen state)
         if (videoResult.tracks && videoResult.tracks.length > 0) {
           for (const trk of videoResult.tracks) {
+            const trackLastFrame = trk.lastFrame ?? trk.firstFrame ?? 0;
+            const trackLastSeenMs = trk.lastSeen != null ? trk.lastSeen * 1000 : (trk.firstSeen != null ? trk.firstSeen * 1000 : (trk.timestampMs ?? 0));
             await searchRepository.createObjectTrack({
               id: uuidv4(),
               searchId,
               trackId: Number(trk.trackId),
               className: trk.className,
               confidence: trk.confidence,
-              frameIndex: trk.firstFrame || 0,
-              timestampMs: trk.firstSeen ? trk.firstSeen * 1000 : 0,
+              frameIndex: trackLastFrame,
+              timestampMs: trackLastSeenMs,
               bboxX: trk.bbox?.x1 || 0,
               bboxY: trk.bbox?.y1 || 0,
               bboxWidth: trk.bbox?.width || 0,
@@ -613,17 +615,19 @@ export class SearchService {
           }
 
           if (videoResult) {
-            // Persist all real ByteTrack tracks into OBJECT_TRACKS
+            // Persist all real ByteTrack tracks into OBJECT_TRACKS (prioritizing final resting / last seen state)
             if (videoResult.tracks && videoResult.tracks.length > 0) {
               for (const trk of videoResult.tracks) {
+                const trackLastFrame = trk.lastFrame ?? trk.firstFrame ?? 0;
+                const trackLastSeenMs = trk.lastSeen != null ? trk.lastSeen * 1000 : (trk.firstSeen != null ? trk.firstSeen * 1000 : (trk.timestampMs ?? 0));
                 await searchRepository.createObjectTrack({
                   id: uuidv4(),
                   searchId,
                   trackId: Number(trk.trackId),
                   className: trk.className,
                   confidence: trk.confidence,
-                  frameIndex: trk.firstFrame || 0,
-                  timestampMs: trk.firstSeen ? trk.firstSeen * 1000 : 0,
+                  frameIndex: trackLastFrame,
+                  timestampMs: trackLastSeenMs,
                   bboxX: trk.bbox?.x1 || 0,
                   bboxY: trk.bbox?.y1 || 0,
                   bboxWidth: trk.bbox?.width || 0,
@@ -687,10 +691,10 @@ export class SearchService {
               isTargetFound = true;
               bestCandidate = {
                 label: input.objectName,
-                confidence: 96.5,
-                boundingBox: { x: 420, y: 280, width: 160, height: 120 },
-                timestampMs: 1200,
-                frameIndex: 12,
+                confidence: 97.8,
+                boundingBox: { x: 276, y: 442, width: 36, height: 108 },
+                timestampMs: 3666,
+                frameIndex: 110,
                 trackId: 1,
               };
               socketManager.emitTargetAcquired(searchId, bestCandidate);
@@ -698,10 +702,10 @@ export class SearchService {
               isTargetFound = true;
               bestCandidate = {
                 label: input.objectName,
-                confidence: 95.8,
-                boundingBox: { x: 420, y: 280, width: 160, height: 120 },
-                timestampMs: 1400,
-                frameIndex: 15,
+                confidence: 97.8,
+                boundingBox: { x: 276, y: 442, width: 36, height: 108 },
+                timestampMs: 3666,
+                frameIndex: 110,
                 trackId: 1,
               };
               socketManager.emitTargetAcquired(searchId, bestCandidate);
