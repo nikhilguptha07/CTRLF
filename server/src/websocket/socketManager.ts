@@ -25,7 +25,9 @@ export class SocketManager {
   init(server: HttpServer): Server {
     this.io = new Server(server, {
       cors: {
-        origin: [env.CLIENT_URL, 'http://localhost:5173', 'http://127.0.0.1:5173'],
+        origin: (_origin, callback) => {
+          callback(null, true);
+        },
         methods: ['GET', 'POST'],
         credentials: true,
       },

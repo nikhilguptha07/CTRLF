@@ -75,6 +75,22 @@ app.use('/uploads/videos', express.static(path.resolve(env.UPLOAD_DIR, 'videos')
 app.use('/uploads/frames', express.static(path.resolve(env.UPLOAD_DIR, 'frames')));
 
 // 7. Mount Authoritative API Routes
+app.get('/', (_req, res) => {
+  res.status(200).json({
+    status: 'ONLINE',
+    system: 'CONTROL F Surveillance Intelligence Backend',
+    version: '2.5.0',
+    endpoints: {
+      health: `${env.API_PREFIX}/health`,
+      ready: `${env.API_PREFIX}/ready`,
+      auth: `${env.API_PREFIX}/auth`,
+      search: `${env.API_PREFIX}/search`,
+      cameras: `${env.API_PREFIX}/cameras`,
+      videos: `${env.API_PREFIX}/videos`,
+    },
+  });
+});
+
 app.use(env.API_PREFIX, routes);
 
 // 8. Centralized Safe Error Handling Pipeline (Section 16)
