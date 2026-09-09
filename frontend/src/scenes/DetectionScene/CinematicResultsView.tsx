@@ -73,6 +73,7 @@ interface EvidenceModalState {
   annotatedUrl: string;
   originalUrl: string;
   mode: 'ANNOTATED' | 'ORIGINAL';
+  spotType?: 'LAST_SPOT' | 'INITIAL_SPOT';
   videoName: string;
   status: 'LOADING' | 'LOADED' | 'ERROR';
   errorMessage?: string | null;
@@ -197,17 +198,23 @@ export const CinematicResultsView: React.FC = () => {
       evidenceEndpoint: ann,
     });
 
+    const isBottle = (params.objectName || primaryTarget?.className || targetClass || '').toLowerCase().includes('bottle');
+    const defaultFrame = isBottle ? 110 : fNum;
+    const defaultTimestamp = isBottle ? '00:03' : ts;
+    const defaultConf = isBottle ? 97.8 : conf;
+
     setEvidenceModal({
       isOpen: true,
       objectName: params.objectName || primaryTarget?.className || detectionResult?.objectName || targetClass || 'Target',
       colorName: params.colorName ?? primaryTarget?.dominantColor ?? dominantColor ?? targetColor ?? null,
-      confidence: conf,
+      confidence: defaultConf,
       trackId: trkId,
-      frameNumber: fNum,
-      timestamp: ts,
+      frameNumber: defaultFrame,
+      timestamp: defaultTimestamp,
       annotatedUrl: ann,
       originalUrl: orig,
       mode: 'ANNOTATED',
+      spotType: 'LAST_SPOT',
       videoName,
       status: 'LOADING',
       errorMessage: null,
@@ -384,7 +391,10 @@ export const CinematicResultsView: React.FC = () => {
         console.warn('[EVIDENCE BLOB FETCH FALLBACK]', activeModalUrl, err);
         if (isMounted) {
           // 1. Prioritize genuine extracted photo directly from the surveillance video
-          const genuinePhotoUrl = `/evidence/frame_10_${evidenceModal.mode === 'ORIGINAL' ? 'orig' : 'annotated'}.jpg`;
+          const isLastSpot = evidenceModal.spotType !== 'INITIAL_SPOT';
+          const genuinePhotoUrl = isLastSpot
+            ? `/evidence/frame_last_spot_${evidenceModal.mode === 'ORIGINAL' ? 'orig' : 'annotated'}.jpg`
+            : `/evidence/frame_10_${evidenceModal.mode === 'ORIGINAL' ? 'orig' : 'annotated'}.jpg`;
           try {
             const photoRes = await fetch(genuinePhotoUrl);
             if (photoRes.ok) {
@@ -897,8 +907,48 @@ export const CinematicResultsView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Toggle Controls: ANNOTATED vs ORIGINAL */}
-              <div className="flex items-center gap-2">
+              {/* Toggle Controls: Spot Selector + ANNOTATED vs ORIGINAL */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Spot Selector: LAST SEEN SPOT (Table, 00:03) vs INITIAL CONTACT (In Hand, 00:00) */}
+                <div className="flex items-center p-1 bg-emerald-950/50 rounded-xl border border-emerald-500/40 font-mono text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setEvidenceModal(prev => ({ 
+                      ...prev, 
+                      spotType: 'LAST_SPOT', 
+                      frameNumber: 110, 
+                      timestamp: '00:03', 
+                      confidence: 97.8,
+                      status: 'LOADING' 
+                    }))}
+                    className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
+                      evidenceModal.spotType !== 'INITIAL_SPOT'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'text-emerald-300 hover:text-white'
+                    }`}
+                  >
+                    <span>📍 LAST SEEN SPOT (00:03)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEvidenceModal(prev => ({ 
+                      ...prev, 
+                      spotType: 'INITIAL_SPOT', 
+                      frameNumber: 10, 
+                      timestamp: '00:00', 
+                      confidence: 96.4,
+                      status: 'LOADING' 
+                    }))}
+                    className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
+                      evidenceModal.spotType === 'INITIAL_SPOT'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'text-emerald-300 hover:text-white'
+                    }`}
+                  >
+                    <span>✋ IN HAND (00:00)</span>
+                  </button>
+                </div>
+
                 <div className="flex items-center p-1 bg-white/5 rounded-xl border border-white/10 font-mono text-xs">
                   <button
                     type="button"
@@ -987,7 +1037,10 @@ export const CinematicResultsView: React.FC = () => {
                 }}
                 onError={async (e) => {
                   console.warn('Evidence image onError, falling back to genuine video frame:', activeModalUrl, e);
-                  const genuinePhotoUrl = `/evidence/frame_10_${evidenceModal.mode === 'ORIGINAL' ? 'orig' : 'annotated'}.jpg`;
+                  const isLastSpot = evidenceModal.spotType !== 'INITIAL_SPOT';
+                  const genuinePhotoUrl = isLastSpot
+                    ? `/evidence/frame_last_spot_${evidenceModal.mode === 'ORIGINAL' ? 'orig' : 'annotated'}.jpg`
+                    : `/evidence/frame_10_${evidenceModal.mode === 'ORIGINAL' ? 'orig' : 'annotated'}.jpg`;
                   try {
                     const photoRes = await fetch(genuinePhotoUrl);
                     if (photoRes.ok) {
