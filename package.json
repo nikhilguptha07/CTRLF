@@ -12,6 +12,7 @@
     "build": "npm run build --prefix frontend && npm --prefix server install && npm run build --prefix server",
     "build:frontend": "npm run build --prefix frontend",
     "build:backend": "npm --prefix server install && npm run build --prefix server",
+    "start": "npm run start --prefix server",
     "start:backend": "npm run start --prefix server",
     "test": "npm run test --prefix server",
     "test:backend": "npm run test --prefix server",
