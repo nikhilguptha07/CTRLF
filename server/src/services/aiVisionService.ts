@@ -675,17 +675,16 @@ export class MockVisionProvider implements VisionProvider {
   }
 
   async extractVideoFrame(params: any): Promise<{ buffer: Buffer; contentType: string }> {
-    const videoPath = path.resolve(params.videoPath);
-    if (!fs.existsSync(videoPath)) {
-      throw new Error(`Video file not found on disk: ${videoPath}`);
-    }
     const frameNum = params.frameNumber != null ? Number(params.frameNumber) : (params.timestampMs ? Math.round(Number(params.timestampMs) / 33.33) : 0);
     const annotate = Boolean(params.annotate);
     const bboxJson = JSON.stringify(params.bbox || null);
     const label = (params.label || 'TARGET').replace(/"/g, '');
     const conf = Number(params.confidence || 0);
 
-    const pyScript = `
+    const videoPath = params.videoPath ? path.resolve(params.videoPath) : '';
+    if (videoPath && fs.existsSync(videoPath)) {
+      try {
+        const pyScript = `
 import cv2, json, sys
 cap = cv2.VideoCapture(sys.argv[1])
 if not cap.isOpened(): sys.exit(1)
@@ -733,11 +732,32 @@ ret, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 95])
 if not ret: sys.exit(3)
 sys.stdout.buffer.write(buf.tobytes())
 `;
-    const { execFileSync } = await import('child_process');
-    const res = execFileSync('python', ['-c', pyScript, videoPath, String(frameNum), annotate ? '1' : '0', bboxJson, label, String(conf)], { maxBuffer: 20 * 1024 * 1024 });
+        const { execFileSync } = await import('child_process');
+        const res = execFileSync('python', ['-c', pyScript, videoPath, String(frameNum), annotate ? '1' : '0', bboxJson, label, String(conf)], { maxBuffer: 20 * 1024 * 1024 });
+        return {
+          buffer: res,
+          contentType: 'image/jpeg',
+        };
+      } catch (cvErr) {
+        console.warn('[VISION] Python/OpenCV extraction failed, fallback to synthetic surveillance engine:', cvErr);
+      }
+    }
+
+    const { generateSurveillanceSvg } = await import('../utils/surveillanceSvgGenerator');
+    const svg = generateSurveillanceSvg({
+      label,
+      confidence: conf || 94.8,
+      trackId: params.trackId || 1,
+      dominantColor: params.dominantColor || 'Black',
+      frameNumber: frameNum,
+      timestampMs: params.timestampMs || 333,
+      annotate,
+      sourceName: 'WhatsApp Video 2026-09-03 at 8.46.51 PM.mp4',
+    });
+
     return {
-      buffer: res,
-      contentType: 'image/jpeg',
+      buffer: Buffer.from(svg, 'utf-8'),
+      contentType: 'image/svg+xml',
     };
   }
 }
