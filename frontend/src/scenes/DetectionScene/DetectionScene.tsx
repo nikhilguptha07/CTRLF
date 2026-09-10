@@ -91,7 +91,7 @@ export const DetectionScene: React.FC<DetectionSceneProps> = ({ timelineTime }) 
 
   // Local display angle and sweep count for the HUD text
   const [displayDeg, setDisplayDeg] = useState<number>(0);
-  const [sweepCount, setSweepCount] = useState<number>(1);
+  const [_sweepCount, setSweepCount] = useState<number>(1);
 
   // Visual states
   const isSearching = stage === 'SEARCHING';
@@ -349,8 +349,8 @@ export const DetectionScene: React.FC<DetectionSceneProps> = ({ timelineTime }) 
             <div className="flex items-center justify-center gap-2 text-xs font-mono text-[#38bdf8] font-bold tracking-wider">
               <span className="w-2.5 h-2.5 rounded-full bg-[#0284c7] border border-[#38bdf8] animate-pulse shadow-[0_0_8px_#38bdf8]" />
               <span>
-                {sweepCount > 1
-                  ? `CAMERA 01 · 360° SCANNING · SWEEP ${sweepCount} · ${displayDeg}° / 360°`
+                {displayDeg >= 360
+                  ? 'CAMERA 01 · 360° SWEEP COMPLETE · FINALIZING'
                   : `CAMERA 01 · 360° SCANNING · ${displayDeg}° / 360°`}
               </span>
             </div>

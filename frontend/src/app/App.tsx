@@ -145,7 +145,7 @@ export default function App() {
 
     setIsPlayingDemo(true);
     demoTimelineRef.current = createMasterDemoTimeline({
-      loop: true,
+      loop: false,
       onTimeUpdate: (t) => setCurrentTime(t),
       onStageChange: () => {},
     });
