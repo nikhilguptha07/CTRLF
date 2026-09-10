@@ -1073,7 +1073,10 @@ export const CinematicResultsView: React.FC = () => {
 
             <button
               type="button"
-              onClick={() => setStage('HOME')}
+              onClick={() => {
+                setActiveFeedTab('home');
+                setStage('HOME');
+              }}
               className="px-3.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />

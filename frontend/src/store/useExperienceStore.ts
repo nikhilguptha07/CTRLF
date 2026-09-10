@@ -323,7 +323,11 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
     if (stage === 'INTRO') normalized = 'HOME';
     if (stage === 'QUESTION') normalized = 'OBJECT_INPUT';
     if (stage === 'TRANSITION') normalized = 'PREPARING';
-    set({ stage: normalized });
+    if (normalized === 'HOME' && (get().activeFeedTab === 'search' || get().activeFeedTab === 'detected')) {
+      set({ stage: normalized, activeFeedTab: 'home' });
+    } else {
+      set({ stage: normalized });
+    }
   },
 
   setSearchQuery: (searchQuery) => set({ searchQuery }),
