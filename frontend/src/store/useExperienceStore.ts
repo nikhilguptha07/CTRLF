@@ -500,9 +500,14 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
       const completedAt = now.toISOString();
 
       // Fetch evidence items and all detected tracks (detection inventory)
-      const evidenceRecords = await apiClient.getSearchEvidence(session.sessionId).catch(() => []);
+      const rawEvidenceRecords = await apiClient.getSearchEvidence(session.sessionId).catch(() => []);
+      const evidenceRecords = [...rawEvidenceRecords].sort((a, b) => {
+        if (a.selectionPolicy === 'last_known_position' && b.selectionPolicy !== 'last_known_position') return -1;
+        if (b.selectionPolicy === 'last_known_position' && a.selectionPolicy !== 'last_known_position') return 1;
+        return (b.frameNumber ?? 0) - (a.frameNumber ?? 0);
+      });
       const allTracks = await apiClient.getSearchTracks(session.sessionId).catch(() => []);
-      const defaultEvidenceUrl = `/api/search/${session.sessionId}/evidence/frame?type=annotated`;
+      const defaultEvidenceUrl = `/api/search/${session.sessionId}/evidence/frame?type=annotated&spot=last_spot`;
       const topEvidence = evidenceRecords.length > 0
         ? (evidenceRecords[0].annotatedImagePath || evidenceRecords[0].originalImagePath || defaultEvidenceUrl)
         : ((completedSession.lastTargetObservation as any)?.evidence?.url || (completedSession.detection as any)?.evidenceFramePath || defaultEvidenceUrl);

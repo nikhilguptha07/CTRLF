@@ -77,7 +77,7 @@ export class EvidenceRepository {
              selection_policy, confidence, created_at
       FROM EVIDENCE_FILES
       WHERE session_id = :sessionId
-      ORDER BY frame_number ASC
+      ORDER BY CASE WHEN selection_policy = 'last_known_position' THEN 0 ELSE 1 END, frame_number DESC
     `;
 
     const result = await db.execute<EvidenceRow>(sql, { sessionId });

@@ -121,32 +121,55 @@ export function resolveEvidencePath(evidenceIdOrPath: string, type: 'annotated' 
     const files = fs.readdirSync(evidenceDir);
     const targetSub = type === 'original' ? 'orig' : 'annotated';
     
-    // 1. Exact match with type (e.g. filename contains evidenceIdOrPath AND targetSub)
+    // 1. If specifically asking for initial / in-hand (frame 10)
+    const isInitialHand = 
+      evidenceIdOrPath === 'frame_10' ||
+      evidenceIdOrPath === '10' ||
+      evidenceIdOrPath.includes('frame_10_') ||
+      evidenceIdOrPath.includes('frame_10.') ||
+      evidenceIdOrPath.includes('hand') ||
+      evidenceIdOrPath.includes('initial');
+
+    if (isInitialHand) {
+      const handMatch = files.find(f => f.includes('frame_10') && f.includes(targetSub));
+      if (handMatch) return path.resolve(evidenceDir, handMatch);
+    }
+
+    // 2. If asking for last spot or frame 110 or last known position
+    const isLastSpot = 
+      evidenceIdOrPath.includes('frame_last_spot') ||
+      evidenceIdOrPath.includes('last_spot') ||
+      evidenceIdOrPath.includes('last_known_position') ||
+      evidenceIdOrPath.includes('frame_110') ||
+      evidenceIdOrPath === '110' ||
+      evidenceIdOrPath === 'default' ||
+      evidenceIdOrPath === 'latest';
+
+    if (isLastSpot) {
+      const lastSpotMatch = files.find(f => (f.includes('frame_last_spot') || f.includes('frame_110')) && f.includes(targetSub));
+      if (lastSpotMatch) {
+        return path.resolve(evidenceDir, lastSpotMatch);
+      }
+    }
+
+    // 3. Exact match with type (e.g. filename contains evidenceIdOrPath AND targetSub)
     if (evidenceIdOrPath && evidenceIdOrPath !== 'default' && evidenceIdOrPath !== 'latest') {
       const match = files.find(f => f.includes(evidenceIdOrPath) && f.includes(targetSub));
       if (match) {
         return path.resolve(evidenceDir, match);
       }
 
-      // 2. Secondary match (any file containing the id/clean name)
+      // Secondary match (any file containing the id/clean name)
       const anyMatch = files.find(f => f.includes(evidenceIdOrPath));
       if (anyMatch) {
         return path.resolve(evidenceDir, anyMatch);
       }
     }
 
-    // 3. Only if specifically asking for initial / in-hand (frame 10)
-    if (evidenceIdOrPath.includes('10') || evidenceIdOrPath.includes('hand') || evidenceIdOrPath.includes('initial')) {
-      const handMatch = files.find(f => f.includes('frame_10') && f.includes(targetSub));
-      if (handMatch) return path.resolve(evidenceDir, handMatch);
-    }
-
-    // 4. Only if explicitly asking for last spot or frame 110:
-    if (evidenceIdOrPath.includes('frame_last_spot') || evidenceIdOrPath.includes('frame_110') || evidenceIdOrPath === 'last_spot') {
-      const lastSpotMatch = files.find(f => (f.includes('frame_last_spot') || f.includes('frame_110')) && f.includes(targetSub));
-      if (lastSpotMatch) {
-        return path.resolve(evidenceDir, lastSpotMatch);
-      }
+    // 4. Default fallback: ALWAYS provide LAST SEEN SPOT (frame_last_spot / frame_110), NEVER initial in-hand
+    const defaultLastMatch = files.find(f => (f.includes('frame_last_spot') || f.includes('frame_110')) && f.includes(targetSub));
+    if (defaultLastMatch) {
+      return path.resolve(evidenceDir, defaultLastMatch);
     }
   } catch (err) {
     logger.warn('Error reading evidence directory in resolveEvidencePath', { err });

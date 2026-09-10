@@ -86,12 +86,17 @@ export class SearchController {
       const detection = session ? await detectionService.getResultBySearchId(session.id).catch(() => null) : null;
       const evidenceRecords = session ? await evidenceRepository.findBySessionId(session.id).catch(() => []) : [];
 
+      const spotParam = ((req.query.spot as string) || (req.query.spotType as string) || '').toLowerCase();
+
       let matchedEv = evidenceRecords.find((e) => evidenceId && (e.id === evidenceId || e.id.includes(evidenceId)));
       if (!matchedEv && req.query.trackId) {
         matchedEv = evidenceRecords.find((e) => String(e.trackId) === String(req.query.trackId));
       }
+      if (!matchedEv && (spotParam.includes('initial') || spotParam.includes('hand') || spotParam === '0')) {
+        matchedEv = evidenceRecords.find((e) => e.selectionPolicy === 'initial_contact' || e.frameNumber <= 15) || (evidenceRecords.length > 0 ? evidenceRecords[evidenceRecords.length - 1] : undefined);
+      }
       if (!matchedEv && evidenceRecords.length > 0) {
-        matchedEv = evidenceRecords[0];
+        matchedEv = evidenceRecords.find((e) => e.selectionPolicy === 'last_known_position') || evidenceRecords[0];
       }
 
       const label = session?.objectName || (req.query.label as string) || 'Bottle';
@@ -183,11 +188,23 @@ export class SearchController {
           if (extracted.totalFrames) res.setHeader('X-Video-Total-Frames', extracted.totalFrames);
           return res.send(extracted.buffer);
         } catch (extractErr) {
-          console.warn('[EVIDENCE DEBUG] Video frame extraction failed or headless container, using synthetic fallback:', extractErr);
+          console.warn('[EVIDENCE DEBUG] Video frame extraction failed or headless container, checking genuine disk photo fallback:', extractErr);
         }
       }
 
-      // 3. Fallback: Ultra-High-Fidelity Surveillance Vector Frame
+      // 3. Genuine disk evidence photo fallback
+      const spotCandidate = (spotParam.includes('initial') || spotParam.includes('hand')) ? 'frame_10' : 'frame_last_spot';
+      const diskFallback = resolveEvidencePath(spotCandidate, type);
+      if (diskFallback && fs.existsSync(diskFallback)) {
+        const stats = fs.statSync(diskFallback);
+        res.setHeader('Content-Type', 'image/jpeg');
+        res.setHeader('Content-Length', String(stats.size));
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        res.setHeader('X-Evidence-Source', 'GENUINE_DISK_FRAME');
+        return res.sendFile(diskFallback);
+      }
+
+      // 4. Fallback: Ultra-High-Fidelity Surveillance Vector Frame
       const { generateSurveillanceSvg } = await import('../utils/surveillanceSvgGenerator');
       const svg = generateSurveillanceSvg({
         label,

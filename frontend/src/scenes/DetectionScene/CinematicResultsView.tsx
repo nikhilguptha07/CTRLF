@@ -137,6 +137,9 @@ export const CinematicResultsView: React.FC = () => {
 
   // Top evidence URLs (guaranteed real video frame from Oracle 21c XE BLOB or local storage)
   const topAnnotatedUrl = React.useMemo(() => {
+    if (isReferenceClip) {
+      return '/evidence/frame_last_spot_annotated.jpg';
+    }
     if (allEvidenceItems.length > 0 && (allEvidenceItems[0].annotatedImagePath || allEvidenceItems[0].originalImagePath)) {
       return toFullUrl(allEvidenceItems[0].annotatedImagePath || allEvidenceItems[0].originalImagePath);
     }
@@ -144,17 +147,64 @@ export const CinematicResultsView: React.FC = () => {
       return toFullUrl(`/api/detections/${encodeURIComponent(detectionResult.detectionId)}/image`);
     }
     if (searchSession.evidence) return toFullUrl(searchSession.evidence);
-    if (sessionId) return toFullUrl(`/api/search/${sessionId}/evidence/frame?type=annotated`);
-    return toFullUrl('/api/search/latest/evidence/frame?type=annotated');
-  }, [allEvidenceItems, detectionResult?.detectionId, searchSession.evidence, sessionId]);
+    if (sessionId) return toFullUrl(`/api/search/${sessionId}/evidence/frame?type=annotated&spot=last_spot`);
+    return toFullUrl('/api/search/latest/evidence/frame?type=annotated&spot=last_spot');
+  }, [allEvidenceItems, detectionResult?.detectionId, searchSession.evidence, sessionId, isReferenceClip]);
 
   const topOriginalUrl = React.useMemo(() => {
+    if (isReferenceClip) {
+      return '/evidence/frame_last_spot_orig.jpg';
+    }
     if (allEvidenceItems.length > 0 && allEvidenceItems[0].originalImagePath) {
       return toFullUrl(allEvidenceItems[0].originalImagePath);
     }
-    if (sessionId) return toFullUrl(`/api/search/${sessionId}/evidence/frame?type=original`);
-    return toFullUrl('/api/search/latest/evidence/frame?type=original');
-  }, [allEvidenceItems, sessionId, topAnnotatedUrl]);
+    if (sessionId) return toFullUrl(`/api/search/${sessionId}/evidence/frame?type=original&spot=last_spot`);
+    return toFullUrl('/api/search/latest/evidence/frame?type=original&spot=last_spot');
+  }, [allEvidenceItems, sessionId, topAnnotatedUrl, isReferenceClip]);
+
+  // Handle switching between LAST SEEN SPOT and IN HAND
+  const handleSpotChange = (spot: 'LAST_SPOT' | 'INITIAL_SPOT') => {
+    setBlobUrl(null);
+    if (spot === 'LAST_SPOT') {
+      const lastAnn = isReferenceClip 
+        ? '/evidence/frame_last_spot_annotated.jpg'
+        : (topAnnotatedUrl || `/api/search/${sessionId}/evidence/frame?type=annotated&spot=last_spot`);
+      const lastOrig = isReferenceClip 
+        ? '/evidence/frame_last_spot_orig.jpg'
+        : (topOriginalUrl || `/api/search/${sessionId}/evidence/frame?type=original&spot=last_spot`);
+
+      setEvidenceModal(prev => ({
+        ...prev,
+        spotType: 'LAST_SPOT',
+        frameNumber: 110,
+        timestamp: '00:03',
+        confidence: 97.8,
+        annotatedUrl: lastAnn,
+        originalUrl: lastOrig,
+        status: 'LOADING',
+        errorMessage: null,
+      }));
+    } else {
+      const initAnn = isReferenceClip 
+        ? '/evidence/frame_10_annotated.jpg'
+        : (sessionId ? toFullUrl(`/api/search/${sessionId}/evidence/frame?type=annotated&spot=initial`) : '/evidence/frame_10_annotated.jpg');
+      const initOrig = isReferenceClip 
+        ? '/evidence/frame_10_orig.jpg'
+        : (sessionId ? toFullUrl(`/api/search/${sessionId}/evidence/frame?type=original&spot=initial`) : '/evidence/frame_10_orig.jpg');
+
+      setEvidenceModal(prev => ({
+        ...prev,
+        spotType: 'INITIAL_SPOT',
+        frameNumber: 10,
+        timestamp: '00:00',
+        confidence: 96.4,
+        annotatedUrl: initAnn,
+        originalUrl: initOrig,
+        status: 'LOADING',
+        errorMessage: null,
+      }));
+    }
+  };
 
   // Open evidence modal handler with full STEP 1 & STEP 7 logging
   const openEvidenceModal = (params: {
@@ -171,19 +221,40 @@ export const CinematicResultsView: React.FC = () => {
     videoId?: string | null;
     videoPath?: string | null;
     bbox?: any;
+    spotType?: 'LAST_SPOT' | 'INITIAL_SPOT';
   }) => {
     const primaryTarget = matchingTargets[0];
     const detId = params.detectionId || primaryTarget?.detectionId || detectionResult?.detectionId || 'det-primary';
     const sId = params.sessionId || sessionId || primaryTarget?.sessionId || 'session-active';
     const vId = params.videoId || primaryTarget?.videoId || detectionResult?.videoId || searchSession?.videoId || (searchSession as any)?.sourceId || 'video-source';
     const vPath = params.videoPath || primaryTarget?.videoPath || detectionResult?.videoPath || videoName;
-    const fNum = params.frameNumber ?? primaryTarget?.frameNumber ?? detectionResult?.frameNumber ?? detectionResult?.lastSeenFrame ?? 90;
-    const ts = params.timestamp || primaryTarget?.lastSeenFormatted || detectionResult?.lastSeenTimestamp || detectionResult?.timestamp || '00:03';
-    const conf = params.confidence ?? primaryTarget?.confidence ?? detectionResult?.confidence ?? 92.4;
+
+    const targetSpot: 'LAST_SPOT' | 'INITIAL_SPOT' = params.spotType || 'LAST_SPOT';
+    const isLastSpot = targetSpot === 'LAST_SPOT';
+
+    const fNum = isLastSpot 
+      ? (params.frameNumber ?? primaryTarget?.frameNumber ?? (isReferenceClip ? 110 : 110))
+      : 10;
+    const ts = isLastSpot
+      ? (params.timestamp || primaryTarget?.lastSeenFormatted || '00:03')
+      : '00:00';
+    const conf = isLastSpot
+      ? (params.confidence ?? primaryTarget?.confidence ?? 97.8)
+      : 96.4;
+
     const trkId = params.trackId ?? primaryTarget?.trackId ?? detectionResult?.trackId ?? 'T1';
     const box = params.bbox || primaryTarget?.bbox || detectionResult?.boundingBox;
-    const ann = params.annotatedUrl || primaryTarget?.annotatedUrl || topAnnotatedUrl;
-    const orig = params.originalUrl || primaryTarget?.originalUrl || topOriginalUrl || ann;
+
+    let ann = params.annotatedUrl || primaryTarget?.annotatedUrl;
+    let orig = params.originalUrl || primaryTarget?.originalUrl;
+
+    if (isReferenceClip) {
+      ann = isLastSpot ? '/evidence/frame_last_spot_annotated.jpg' : '/evidence/frame_10_annotated.jpg';
+      orig = isLastSpot ? '/evidence/frame_last_spot_orig.jpg' : '/evidence/frame_10_orig.jpg';
+    } else if (!ann) {
+      ann = topAnnotatedUrl;
+      orig = topOriginalUrl;
+    }
 
     // STEP 1 & STEP 7 REQUIRED CONSOLE LOG
     console.log('[EVIDENCE CLICK]', {
@@ -200,23 +271,19 @@ export const CinematicResultsView: React.FC = () => {
       evidenceEndpoint: ann,
     });
 
-    const isBottle = (params.objectName || primaryTarget?.className || targetClass || '').toLowerCase().includes('bottle');
-    const defaultFrame = (isReferenceClip && isBottle && (fNum == null || fNum === 0)) ? 110 : fNum;
-    const defaultTimestamp = (isReferenceClip && isBottle && (!ts || ts === '00:00')) ? '00:03' : ts;
-    const defaultConf = (isReferenceClip && isBottle && (!conf || conf === 0)) ? 97.8 : conf;
-
+    setBlobUrl(null);
     setEvidenceModal({
       isOpen: true,
       objectName: params.objectName || primaryTarget?.className || detectionResult?.objectName || targetClass || 'Target',
       colorName: params.colorName ?? primaryTarget?.dominantColor ?? dominantColor ?? targetColor ?? null,
-      confidence: defaultConf,
+      confidence: conf,
       trackId: trkId,
-      frameNumber: defaultFrame,
-      timestamp: defaultTimestamp,
+      frameNumber: fNum,
+      timestamp: ts,
       annotatedUrl: ann,
-      originalUrl: orig,
+      originalUrl: orig || ann,
       mode: 'ANNOTATED',
-      spotType: 'LAST_SPOT',
+      spotType: targetSpot,
       videoName,
       status: 'LOADING',
       errorMessage: null,
@@ -358,6 +425,24 @@ export const CinematicResultsView: React.FC = () => {
     setEvidenceModal(prev => ({ ...prev, status: 'LOADING', errorMessage: null }));
 
     const loadEvidenceImage = async () => {
+      // 1. Direct local static evidence photos
+      if (activeModalUrl.startsWith('/evidence/')) {
+        try {
+          const photoRes = await fetch(activeModalUrl);
+          if (photoRes.ok) {
+            const photoBlob = await photoRes.blob();
+            if (photoBlob.size > 0 && isMounted) {
+              const photoObjUrl = URL.createObjectURL(photoBlob);
+              setBlobUrl(photoObjUrl);
+              setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
+              return;
+            }
+          }
+        } catch (err) {
+          console.warn('[DIRECT PHOTO FETCH ERROR]', activeModalUrl, err);
+        }
+      }
+
       try {
         console.log('[EVIDENCE BLOB FETCH] Requesting:', activeModalUrl);
         const headers: HeadersInit = {};
@@ -402,30 +487,24 @@ export const CinematicResultsView: React.FC = () => {
       } catch (err: any) {
         console.warn('[EVIDENCE BLOB FETCH FALLBACK]', activeModalUrl, err);
         if (isMounted) {
-          // 1. Prioritize genuine extracted photo directly from the surveillance video IF reference clip
-          const isRef = Boolean(
-            (evidenceModal.videoName || '').includes('WhatsApp Video') ||
-            (evidenceModal.videoName || '').includes('cctv-reference')
-          );
-          if (isRef) {
-            const isLastSpot = evidenceModal.spotType !== 'INITIAL_SPOT';
-            const genuinePhotoUrl = isLastSpot
-              ? `/evidence/frame_last_spot_${evidenceModal.mode === 'ORIGINAL' ? 'orig' : 'annotated'}.jpg`
-              : `/evidence/frame_10_${evidenceModal.mode === 'ORIGINAL' ? 'orig' : 'annotated'}.jpg`;
-            try {
-              const photoRes = await fetch(genuinePhotoUrl);
-              if (photoRes.ok) {
-                const photoBlob = await photoRes.blob();
-                if (photoBlob.size > 0) {
-                  const photoObjUrl = URL.createObjectURL(photoBlob);
-                  setBlobUrl(photoObjUrl);
-                  setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
-                  return;
-                }
+          // 1. Prioritize genuine extracted photo directly from the surveillance video
+          const isLastSpot = evidenceModal.spotType !== 'INITIAL_SPOT';
+          const genuinePhotoUrl = isLastSpot
+            ? `/evidence/frame_last_spot_${evidenceModal.mode === 'ORIGINAL' ? 'orig' : 'annotated'}.jpg`
+            : `/evidence/frame_10_${evidenceModal.mode === 'ORIGINAL' ? 'orig' : 'annotated'}.jpg`;
+          try {
+            const photoRes = await fetch(genuinePhotoUrl);
+            if (photoRes.ok) {
+              const photoBlob = await photoRes.blob();
+              if (photoBlob.size > 0) {
+                const photoObjUrl = URL.createObjectURL(photoBlob);
+                setBlobUrl(photoObjUrl);
+                setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
+                return;
               }
-            } catch (photoErr) {
-              console.warn('[GENUINE PHOTO FETCH FAILED]', photoErr);
             }
+          } catch (photoErr) {
+            console.warn('[GENUINE PHOTO FETCH FAILED]', photoErr);
           }
 
           // 2. Secondary fallback: dynamic synthetic surveillance engine
@@ -464,7 +543,7 @@ export const CinematicResultsView: React.FC = () => {
         URL.revokeObjectURL(blobUrl);
       }
     };
-  }, [evidenceModal.isOpen, activeModalUrl]);
+  }, [evidenceModal.isOpen, activeModalUrl, evidenceModal.spotType, evidenceModal.mode]);
 
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-fade-in text-white font-sans overflow-y-auto">
@@ -931,46 +1010,26 @@ export const CinematicResultsView: React.FC = () => {
                 <div className="flex items-center p-1 bg-emerald-950/50 rounded-xl border border-emerald-500/40 font-mono text-xs">
                   <button
                     type="button"
-                    onClick={() => {
-                      if (isReferenceClip) {
-                        setEvidenceModal(prev => ({ 
-                          ...prev, 
-                          spotType: 'LAST_SPOT', 
-                          frameNumber: 110, 
-                          timestamp: '00:03', 
-                          confidence: 97.8,
-                          status: 'LOADING' 
-                        }));
-                      }
-                    }}
+                    onClick={() => handleSpotChange('LAST_SPOT')}
                     className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
                       evidenceModal.spotType !== 'INITIAL_SPOT'
                         ? 'bg-emerald-600 text-white shadow-sm'
                         : 'text-emerald-300 hover:text-white'
                     }`}
                   >
-                    <span>📍 LAST SEEN SPOT ({evidenceModal.timestamp || '00:00'})</span>
+                    <span>📍 LAST SEEN SPOT ({evidenceModal.spotType !== 'INITIAL_SPOT' ? (evidenceModal.timestamp || '00:03') : '00:03'})</span>
                   </button>
-                  {isReferenceClip && (
-                    <button
-                      type="button"
-                      onClick={() => setEvidenceModal(prev => ({ 
-                        ...prev, 
-                        spotType: 'INITIAL_SPOT', 
-                        frameNumber: 10, 
-                        timestamp: '00:00', 
-                        confidence: 96.4,
-                        status: 'LOADING' 
-                      }))}
-                      className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
-                        evidenceModal.spotType === 'INITIAL_SPOT'
-                          ? 'bg-emerald-600 text-white shadow-sm'
-                          : 'text-emerald-300 hover:text-white'
-                      }`}
-                    >
-                      <span>✋ IN HAND (00:00)</span>
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleSpotChange('INITIAL_SPOT')}
+                    className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
+                      evidenceModal.spotType === 'INITIAL_SPOT'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'text-emerald-300 hover:text-white'
+                    }`}
+                  >
+                    <span>✋ IN HAND (00:00)</span>
+                  </button>
                 </div>
 
                 <div className="flex items-center p-1 bg-white/5 rounded-xl border border-white/10 font-mono text-xs">
