@@ -144,7 +144,7 @@ export const CinematicResultsView: React.FC = () => {
 
   React.useEffect(() => {
     const userSource = uploadedRec?.file || uploadedRec?.blobUrl;
-    if (userSource && !isReferenceClip) {
+    if (userSource && !isReferenceClip && isTargetFound) {
       let isCancelled = false;
       const targetLabel = detectionResult?.objectName || targetClass || 'Target';
       const conf = detectionResult?.confidence ?? 97.8;
@@ -187,7 +187,7 @@ export const CinematicResultsView: React.FC = () => {
         isCancelled = true;
       };
     }
-  }, [uploadedRec?.blobUrl, uploadedRec?.file, isReferenceClip, detectionResult]);
+  }, [uploadedRec?.blobUrl, uploadedRec?.file, isReferenceClip, isTargetFound, detectionResult]);
 
   // Format timestamp helper
   const formatTimestamp = (ms?: number | null, fallback?: string | null) => {

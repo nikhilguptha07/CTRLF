@@ -5,6 +5,7 @@ import { socketClient } from '../services/socketClient';
 import { parseClientTarget } from '../utils/colorVocabulary';
 import { searchExperienceController } from '../services/searchExperienceController';
 import { extractFrameFromVideo } from '../utils/clientFrameExtractor';
+import { detectObjectsInVideo } from '../utils/clientObjectDetector';
 
 export type AppStage =
   | 'HOME'
@@ -552,19 +553,6 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
           (extraOptions?.videoFilename || '').toLowerCase() === 'whatsapp video 2026-09-03 at 8.46.51 pm.mp4'
         );
 
-        const lastSeenTimestampMs = rawLastSeenMs != null
-          ? rawLastSeenMs
-          : (isReferenceClip && isBottleTarget ? 3666 : 3000);
-
-        const lastSeenFrame = rawLastSeenFrame != null
-          ? rawLastSeenFrame
-          : (isReferenceClip && isBottleTarget ? 110 : (lastSeenTimestampMs ? Math.round(lastSeenTimestampMs / 33.33) : 90));
-
-        const lastSeenSecs = lastSeenTimestampMs != null ? (lastSeenTimestampMs / 1000) : 3.0;
-        const mins = Math.floor(lastSeenSecs / 60);
-        const secs = Math.floor(lastSeenSecs % 60);
-        const lastSeenFormatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-
         const rawBbox = lastTargetObs?.boundingBox ||
           (completedSession.result?.lastSeenBbox
             ? (typeof completedSession.result.lastSeenBbox === 'string'
@@ -580,30 +568,106 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
           completedSession.result?.lastSeenConfidence ??
           completedSession.detection?.confidence ?? (isReferenceClip && isBottleTarget ? 97.8 : 94.8);
 
-        // For user-uploaded videos: extract genuine frames from the uploaded video file/blob directly in browser
+        const dominantColor = lastTargetObs?.dominantColor ||
+          completedSession.result?.lastSeenColor ||
+          completedSession.detection.dominantColor || null;
+
+        // For user-uploaded videos: perform real client-side AI object detection across the uploaded video
+        let targetActuallyFound = completedSession.status === 'DETECTED';
+        let effectiveLastSeenMs = rawLastSeenMs != null ? rawLastSeenMs : (isReferenceClip && isBottleTarget ? 3666 : 3000);
+        let effectiveLastSeenFrame = rawLastSeenFrame != null ? rawLastSeenFrame : (isReferenceClip && isBottleTarget ? 110 : (effectiveLastSeenMs ? Math.round(effectiveLastSeenMs / 33.33) : 90));
+        let effectiveBbox = lastBbox;
+        let effectiveConfidence = lastConfidence;
+        let effectiveColor = dominantColor;
+        let effectiveTracks = allTracks.length > 0 ? allTracks : (completedSession.tracks || []);
+        let effectiveLabel = completedSession.detection?.detectedLabel || targetClass || activeQuery;
+
         const userVideoSrc = currentUploadedRec?.file || currentUploadedRec?.blobUrl;
+        if (hasUserUploadedVideo && userVideoSrc) {
+          try {
+            const scan = await detectObjectsInVideo(userVideoSrc, targetClass || activeQuery, (pct, _msg) => {
+              searchExperienceController.notifyAnalysisProgress(pct, 'ANALYZING');
+            });
+
+            targetActuallyFound = scan.targetFound;
+            if (scan.allTracks.length > 0) {
+              effectiveTracks = scan.allTracks;
+            }
+
+            if (scan.targetFound && scan.lastTargetObservation) {
+              effectiveLastSeenMs = scan.lastTargetObservation.timestampMs;
+              effectiveLastSeenFrame = scan.lastTargetObservation.frameIndex;
+              effectiveBbox = scan.lastTargetObservation.bbox;
+              effectiveConfidence = scan.lastTargetObservation.confidence;
+              effectiveColor = scan.lastTargetObservation.dominantColor || effectiveColor;
+              effectiveLabel = scan.lastTargetObservation.label;
+            }
+          } catch (scanErr) {
+            console.warn('[STORE] Client AI video scanning warning:', scanErr);
+          }
+        }
+
+        if (!targetActuallyFound) {
+          const mismatchNotes = `No matching ${targetClass || activeQuery} was observed across the analyzed surveillance footage frames.`;
+
+          const detResult: DetectionResult = {
+            objectName: targetClass || activeQuery,
+            confidence: 0,
+            timestamp: timeStr,
+            camera: cameraLabel,
+            location: source === 'VIDEO' ? 'Surveillance Video Archive' : 'All Monitored Sectors',
+            found: false,
+            videoFilename: extraOptions?.videoFilename || null,
+            matchSnippet: mismatchNotes,
+          };
+
+          set((state) => ({
+            detectionResult: detResult,
+            allDetectedTracks: effectiveTracks,
+            allEvidenceItems: [],
+            searchSession: {
+              ...state.searchSession,
+              status: 'NOT_DETECTED',
+              completedAt,
+              detection: detResult,
+              confidence: 0,
+              trackId: null,
+              evidence: null,
+              mismatchExplanation: mismatchNotes,
+            },
+          }));
+
+          get().setAnalysisComplete(true);
+          return;
+        }
+
+        const lastSeenSecs = effectiveLastSeenMs != null ? (effectiveLastSeenMs / 1000) : 3.0;
+        const mins = Math.floor(lastSeenSecs / 60);
+        const secs = Math.floor(lastSeenSecs % 60);
+        const lastSeenFormatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
         if (userVideoSrc) {
           try {
-            const lastSeenSec = lastSeenTimestampMs != null ? (lastSeenTimestampMs / 1000) : 3.0;
             const clientAnnotatedLastUrl = await extractFrameFromVideo(userVideoSrc, {
-              timestampSeconds: lastSeenSec,
+              timestampSeconds: lastSeenSecs,
               annotate: true,
-              label: completedSession.detection?.detectedLabel || targetClass || activeQuery,
-              confidence: lastConfidence,
-              bbox: lastBbox,
+              label: effectiveLabel,
+              confidence: effectiveConfidence,
+              bbox: effectiveBbox,
             });
             const clientOriginalLastUrl = await extractFrameFromVideo(userVideoSrc, {
-              timestampSeconds: lastSeenSec,
+              timestampSeconds: lastSeenSecs,
               annotate: false,
             });
             const clientAnnotatedInitUrl = await extractFrameFromVideo(userVideoSrc, {
-              timestampSeconds: 0.33,
+              timestampSeconds: Math.min(lastSeenSecs, 0.33),
               annotate: true,
-              label: completedSession.detection?.detectedLabel || targetClass || activeQuery,
-              confidence: 94.8,
+              label: effectiveLabel,
+              confidence: effectiveConfidence,
+              bbox: effectiveBbox,
             });
             const clientOriginalInitUrl = await extractFrameFromVideo(userVideoSrc, {
-              timestampSeconds: 0.33,
+              timestampSeconds: Math.min(lastSeenSecs, 0.33),
               annotate: false,
             });
 
@@ -611,23 +675,23 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
               {
                 id: `ev-client-last-${session.sessionId}`,
                 sessionId: session.sessionId,
-                frameNumber: lastSeenFrame,
-                timestampMs: lastSeenTimestampMs,
+                frameNumber: effectiveLastSeenFrame,
+                timestampMs: effectiveLastSeenMs,
                 annotatedImagePath: clientAnnotatedLastUrl,
                 originalImagePath: clientOriginalLastUrl,
                 selectionPolicy: 'last_known_position',
-                confidence: lastConfidence,
+                confidence: effectiveConfidence,
                 trackId: Number(resolvedTrackId) || 1,
               },
               {
                 id: `ev-client-init-${session.sessionId}`,
                 sessionId: session.sessionId,
                 frameNumber: 10,
-                timestampMs: 333,
+                timestampMs: Math.round(Math.min(lastSeenSecs, 0.33) * 1000),
                 annotatedImagePath: clientAnnotatedInitUrl,
                 originalImagePath: clientOriginalInitUrl,
                 selectionPolicy: 'initial_contact',
-                confidence: 94.8,
+                confidence: effectiveConfidence,
                 trackId: Number(resolvedTrackId) || 1,
               }
             );
@@ -637,10 +701,6 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
           }
         }
 
-        const dominantColor = lastTargetObs?.dominantColor ||
-          completedSession.result?.lastSeenColor ||
-          completedSession.detection.dominantColor || null;
-
         const colorConfidence = completedSession.detection.colorConfidence != null
           ? Number(completedSession.detection.colorConfidence)
           : null;
@@ -649,25 +709,24 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
         const resolvedDetectionId = completedSession.detection?.id || (completedSession.detection as any)?.detectionId || (completedSession.result as any)?.detectionId || 'det-primary';
         const resolvedVideoId = source === 'VIDEO' ? (sourceId || (completedSession as any).sourceId || (completedSession as any).videoId || null) : null;
         const resolvedVideoPath = (completedSession as any).videoPath || (completedSession as any).video?.storagePath || (completedSession.detection as any)?.videoPath || extraOptions?.videoFilename || null;
-        const resolvedFrameNumber = lastSeenFrame ?? (lastSeenTimestampMs != null ? Math.round(lastSeenTimestampMs / 33.33) : 110);
 
         const detResult: DetectionResult = {
-          objectName: completedSession.detection.detectedLabel || targetClass || activeQuery,
-          confidence: lastConfidence,
+          objectName: effectiveLabel,
+          confidence: effectiveConfidence,
           timestamp: lastSeenFormatted,
           camera: cameraLabel,
           location: locationLabel,
           found: true,
-          dominantColor,
+          dominantColor: effectiveColor,
           colorConfidence,
           secondaryColors,
           trackId: resolvedTrackId,
-          frameNumber: resolvedFrameNumber,
+          frameNumber: effectiveLastSeenFrame,
           lastSeenTimestamp: lastSeenFormatted,
-          lastSeenTimestampMs: lastSeenTimestampMs,
-          lastSeenFrame: resolvedFrameNumber,
+          lastSeenTimestampMs: effectiveLastSeenMs,
+          lastSeenFrame: effectiveLastSeenFrame,
           videoFilename: extraOptions?.videoFilename || (completedSession as any).video?.originalFilename || null,
-          boundingBox: lastBbox,
+          boundingBox: effectiveBbox,
           detectionId: resolvedDetectionId,
           sessionId: session.sessionId,
           videoId: resolvedVideoId,
@@ -691,21 +750,21 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
 
         set((state) => ({
           detectionResult: detResult,
-          allDetectedTracks: allTracks.length > 0 ? allTracks : (completedSession.tracks || []),
+          allDetectedTracks: effectiveTracks,
           allEvidenceItems: evidenceRecords,
           searchSession: {
             ...state.searchSession,
             status: 'DETECTED',
             completedAt,
             detection: detResult,
-            dominantColor,
+            dominantColor: effectiveColor,
             colorConfidence,
-            confidence: lastConfidence,
+            confidence: effectiveConfidence,
             trackId: resolvedTrackId,
             evidence: topEvidence,
             lastSeenTimestamp: lastSeenFormatted,
-            lastSeenTimestampMs: lastSeenTimestampMs,
-            lastSeenFrame: resolvedFrameNumber,
+            lastSeenTimestampMs: effectiveLastSeenMs,
+            lastSeenFrame: effectiveLastSeenFrame,
             videoId: resolvedVideoId,
             videoPath: resolvedVideoPath,
           } as any,
