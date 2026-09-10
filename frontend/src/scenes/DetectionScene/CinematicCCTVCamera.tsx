@@ -30,7 +30,7 @@ export const CinematicCCTVCamera: React.FC<CinematicCCTVCameraProps> = ({
   panAngle,
   tiltAngle,
   isScanning = false,
-  isAnalysisComplete: _isAnalysisComplete = false,
+  isAnalysisComplete = false,
   isTargetLocked = false,
   targetYawRad,
   targetPitchRad,
@@ -157,9 +157,9 @@ export const CinematicCCTVCamera: React.FC<CinematicCCTVCameraProps> = ({
 
     // =========================================================================
     // 1. CCTV ROTATION EXECUTION
-    // Requirement (Phase 14 Rule 3 & 7):
-    // - Exactly 1 full 360° horizontal sweep (0° -> 360°), then stops and holds
-    // - Holds position at 360° while waiting for AI video analysis to finalize
+    // Requirement:
+    // - Minimum rotation is 1 full 360° sweep
+    // - Maximum rotation is: keep rotating until AI video analysis completes
     // - Direction: turns from Left to Right for the observer
     // =========================================================================
     if (panAngle !== undefined && tiltAngle !== undefined) {
@@ -167,28 +167,27 @@ export const CinematicCCTVCamera: React.FC<CinematicCCTVCameraProps> = ({
       if (panGroupRef.current) panGroupRef.current.rotation.y = panAngle;
       if (tiltGroupRef.current) tiltGroupRef.current.rotation.x = tiltAngle;
     } else if (isScanning) {
-      const is360Reached = totalRotationRef.current >= Math.PI * 2;
+      const isMinSatisfied = totalRotationRef.current >= Math.PI * 2;
+      const shouldStopScanning = isMinSatisfied && isAnalysisComplete;
 
-      if (!is360Reached) {
+      if (!shouldStopScanning) {
         // Rotates with positive angular velocity: sweeps Left -> Front -> Right across the room
-        // 1 full 360° sweep across ~4.5 seconds
+        // 1 full 360° sweep every ~4.5 seconds
         const angularVelocity = (Math.PI * 2) / 4.5;
-        totalRotationRef.current = Math.min(
-          Math.PI * 2,
-          totalRotationRef.current + angularVelocity * clampedDelta
-        );
+        totalRotationRef.current += angularVelocity * clampedDelta;
 
         const currentBearingDeg = Math.round(
-          (totalRotationRef.current / (Math.PI * 2)) * 360
+          ((totalRotationRef.current % (Math.PI * 2)) / (Math.PI * 2)) * 360
         );
+        const sweepCount = Math.floor(totalRotationRef.current / (Math.PI * 2)) + 1;
         const isMinSatisfiedNow = totalRotationRef.current >= Math.PI * 2;
 
         if (isMinSatisfiedNow && !minRotationSatisfiedRef.current) {
           minRotationSatisfiedRef.current = true;
-          onRotationProgress?.(360, true, 1);
+          onRotationProgress?.(360, true, sweepCount);
         } else if (Math.abs(currentBearingDeg - lastReportedDegRef.current) >= 4) {
           lastReportedDegRef.current = currentBearingDeg;
-          onRotationProgress?.(currentBearingDeg, isMinSatisfiedNow, 1);
+          onRotationProgress?.(currentBearingDeg, isMinSatisfiedNow, sweepCount);
         }
       }
 
