@@ -23,7 +23,17 @@ import { SettingsView } from '../../components/dashboard/SettingsView';
 import { useExperienceStore } from '../../store/useExperienceStore';
 
 export const DashboardWindow: React.FC = () => {
-  const { stage, setStage, activeFeedTab, setActiveFeedTab, startSearchFlow } = useExperienceStore();
+  const { 
+    stage, 
+    setStage, 
+    activeFeedTab, 
+    setActiveFeedTab, 
+    startSearchFlow,
+    currentUser,
+    isAuthenticated,
+    setShowAuthModal,
+    setShowOracleModal
+  } = useExperienceStore();
   const [headerSearch, setHeaderSearch] = useState('');
   const [showChatAssistant, setShowChatAssistant] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
@@ -31,13 +41,30 @@ export const DashboardWindow: React.FC = () => {
 
   const isFormView = stage === 'OBJECT_INPUT' || stage === 'QUESTION' || activeFeedTab === 'search';
 
+  const handleNavClick = (tab: any, targetStage: any = 'HOME') => {
+    if (!isAuthenticated && tab !== 'home' && tab !== 'overview') {
+      setShowAuthModal(true);
+      return;
+    }
+    setActiveFeedTab(tab);
+    setStage(targetStage);
+  };
+
   const handleConnectLive = () => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
     setActiveFeedTab('search');
     setStage('OBJECT_INPUT');
   };
 
   const handleHeaderSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
     if (headerSearch.trim()) {
       startSearchFlow(headerSearch.trim());
     }
@@ -45,6 +72,10 @@ export const DashboardWindow: React.FC = () => {
 
   const handleChatSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
     if (chatMessage.trim()) {
       const q = chatMessage.trim();
       setChatMessage('');
@@ -128,22 +159,41 @@ export const DashboardWindow: React.FC = () => {
           {(activeFeedTab === 'home' || activeFeedTab === 'overview') && (
             <button 
               type="button" 
-              onClick={() => setActiveFeedTab('settings')}
-              className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+              onClick={() => {
+                if (!isAuthenticated) {
+                  setShowAuthModal(true);
+                } else {
+                  setActiveFeedTab('settings');
+                }
+              }}
+              className="text-xs font-semibold text-slate-700 hover:text-slate-900 transition-colors cursor-pointer"
             >
-              Operator 01
+              {isAuthenticated && currentUser ? (currentUser.fullName || currentUser.username) : 'Sign In'}
             </button>
           )}
           <button
             type="button"
-            onClick={() => { setActiveFeedTab('search'); setStage('OBJECT_INPUT'); }}
+            onClick={() => {
+              if (!isAuthenticated) {
+                setShowAuthModal(true);
+                return;
+              }
+              setActiveFeedTab('search');
+              setStage('OBJECT_INPUT');
+            }}
             className="px-4 py-1.5 rounded-xl bg-[#4361ee] hover:bg-[#3a56d4] text-white text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer"
           >
             Find Item
           </button>
           <div 
-            onClick={() => setActiveFeedTab('settings')}
-            title="System Preferences"
+            onClick={() => {
+              if (!isAuthenticated) {
+                setShowAuthModal(true);
+              } else {
+                setActiveFeedTab('settings');
+              }
+            }}
+            title={isAuthenticated ? 'System Preferences' : 'Operator Login'}
             className="w-7 h-7 rounded-full bg-slate-200 hover:bg-slate-300 flex items-center justify-center text-slate-600 cursor-pointer transition-colors"
           >
             <User className="w-4 h-4" />
@@ -160,7 +210,7 @@ export const DashboardWindow: React.FC = () => {
             {/* Overview / Home */}
             <button
               type="button"
-              onClick={() => { setActiveFeedTab('home'); setStage('HOME'); }}
+              onClick={() => handleNavClick('home', 'HOME')}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all cursor-pointer ${
                 (activeFeedTab === 'home' || activeFeedTab === 'overview') && stage === 'HOME'
                   ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
@@ -174,7 +224,7 @@ export const DashboardWindow: React.FC = () => {
             {/* Find Object / Lost Object */}
             <button
               type="button"
-              onClick={() => { setActiveFeedTab('search'); setStage('OBJECT_INPUT'); }}
+              onClick={() => handleNavClick('search', 'OBJECT_INPUT')}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all cursor-pointer ${
                 isFormView
                   ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
@@ -188,7 +238,7 @@ export const DashboardWindow: React.FC = () => {
             {/* CCTV Feeds */}
             <button
               type="button"
-              onClick={() => { setActiveFeedTab('cctv'); setStage('HOME'); }}
+              onClick={() => handleNavClick('cctv', 'HOME')}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all cursor-pointer ${
                 activeFeedTab === 'cctv' && stage === 'HOME'
                   ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
@@ -202,7 +252,7 @@ export const DashboardWindow: React.FC = () => {
             {/* Spatial Heatmap */}
             <button
               type="button"
-              onClick={() => { setActiveFeedTab('heatmaps'); setStage('HOME'); }}
+              onClick={() => handleNavClick('heatmaps', 'HOME')}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all cursor-pointer ${
                 activeFeedTab === 'heatmaps' && stage === 'HOME'
                   ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
@@ -216,7 +266,7 @@ export const DashboardWindow: React.FC = () => {
             {/* Audit Logs */}
             <button
               type="button"
-              onClick={() => { setActiveFeedTab('logs'); setStage('HOME'); }}
+              onClick={() => handleNavClick('logs', 'HOME')}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all cursor-pointer ${
                 (activeFeedTab === 'logs' || activeFeedTab === 'history') && stage === 'HOME'
                   ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
@@ -230,7 +280,7 @@ export const DashboardWindow: React.FC = () => {
             {/* Upload Footage */}
             <button
               type="button"
-              onClick={() => { setActiveFeedTab('upload'); setStage('HOME'); }}
+              onClick={() => handleNavClick('upload', 'HOME')}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all cursor-pointer ${
                 activeFeedTab === 'upload' && stage === 'HOME'
                   ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
@@ -244,7 +294,7 @@ export const DashboardWindow: React.FC = () => {
             {/* Preferences */}
             <button
               type="button"
-              onClick={() => { setActiveFeedTab('settings'); setStage('HOME'); }}
+              onClick={() => handleNavClick('settings', 'HOME')}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all cursor-pointer ${
                 activeFeedTab === 'settings' && stage === 'HOME'
                   ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
@@ -259,11 +309,12 @@ export const DashboardWindow: React.FC = () => {
           {/* Bottom badge - Overview only */}
           {(activeFeedTab === 'home' || activeFeedTab === 'overview') && (
             <div 
-              onClick={() => { setActiveFeedTab('settings'); setStage('HOME'); }}
-              className="p-2 rounded-xl bg-slate-100/80 hover:bg-white border border-slate-200/70 text-[10px] text-slate-700 flex items-center gap-2 cursor-pointer transition-all shadow-2xs"
+              onClick={() => setShowOracleModal(true)}
+              title="View Oracle 21c Database Health & Schema"
+              className="p-2 rounded-xl bg-slate-100/80 hover:bg-white border border-slate-200/70 text-[10px] text-slate-700 flex items-center gap-2 cursor-pointer transition-all shadow-2xs group"
             >
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-              <span className="truncate font-medium">Oracle 21c · Ready</span>
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0 group-hover:scale-125 transition-transform" />
+              <span className="truncate font-semibold">Oracle 21c · Ready</span>
             </div>
           )}
         </aside>

@@ -81,7 +81,37 @@ export class UserRepository {
     const byEmail = await this.findByEmail(clean);
     if (byEmail) return byEmail;
 
-    return this.findByUsername(clean);
+    const byUser = await this.findByUsername(clean);
+    if (byUser) return byUser;
+
+    // Direct mapping for common seed identifiers
+    const aliases: Record<string, string> = {
+      'operator1': 'operator@ctrlf.local',
+      'operator': 'operator@ctrlf.local',
+      'admin': 'admin@ctrlf.local',
+      'user': 'user@ctrlf.local'
+    };
+    if (aliases[clean]) {
+      const byAlias = await this.findByEmail(aliases[clean]);
+      if (byAlias) return byAlias;
+    }
+
+    const sql = `
+      SELECT id, email, password_hash, full_name, role, refresh_token_hash,
+             is_active, last_login_at, failed_login_attempts, locked_until, created_at, updated_at
+      FROM USERS
+      WHERE LOWER(email) LIKE :prefix
+    `;
+    try {
+      const result = await db.execute<UserRow>(sql, { prefix: `${clean}%` });
+      if (result.rows && result.rows.length > 0) {
+        return this.mapRowToUser(result.rows[0]);
+      }
+    } catch {
+      // ignore
+    }
+
+    return null;
   }
 
   async findById(id: string): Promise<User | null> {

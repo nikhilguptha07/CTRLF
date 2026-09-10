@@ -275,6 +275,18 @@ class ApiClient {
     return json.data;
   }
 
+  async clearDatabase(): Promise<{ message: string; recordsRemoved: number; clearedTables: string[] }> {
+    const res = await this.request('/api/admin/clear-database', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.error?.message || json.message || 'Failed to clear database');
+    }
+    return json.data;
+  }
+
   getBaseUrl(): string {
     return this.baseUrl;
   }

@@ -156,8 +156,10 @@ interface ExperienceState {
   currentUser: any | null;
   isAuthenticated: boolean;
   showAuthModal: boolean;
+  showOracleModal: boolean;
   setCurrentUser: (user: any | null) => void;
   setShowAuthModal: (show: boolean) => void;
+  setShowOracleModal: (show: boolean) => void;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
 
@@ -250,6 +252,7 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
   })(),
   isAuthenticated: Boolean(localStorage.getItem('ctrlf_token')),
   showAuthModal: false,
+  showOracleModal: false,
 
   setCurrentUser: (currentUser) => {
     set({ currentUser, isAuthenticated: Boolean(currentUser) });
@@ -262,6 +265,7 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
   },
 
   setShowAuthModal: (showAuthModal) => set({ showAuthModal }),
+  setShowOracleModal: (showOracleModal) => set({ showOracleModal }),
 
   logout: async () => {
     await apiClient.logout();
@@ -414,6 +418,12 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
     sourceId = '1',
     extraOptions?: { videoFilename?: string; transitionImmediately?: boolean; targetClass?: string | null; targetColor?: string | null }
   ) => {
+    // MANDATORY AUTHENTICATION GUARD
+    if (!get().isAuthenticated || !get().currentUser) {
+      set({ showAuthModal: true });
+      return;
+    }
+
     const parsed = typeof query === 'object' && query !== null
       ? parseClientTarget(query)
       : parseClientTarget(query || get().searchQuery || 'bottle');

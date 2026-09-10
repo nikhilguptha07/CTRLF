@@ -1020,8 +1020,12 @@ export class SearchService {
     return detectionService.getResultBySearchId(searchId);
   }
 
-  async getSearchHistory(userId: string, limit = 50): Promise<any[]> {
-    const sessions = await searchRepository.findAllByUserId(userId, limit);
+  async getSearchHistory(userId: string, limit = 50, role?: string): Promise<any[]> {
+    // Only Admin can see ALL searches across the entire system; non-admins only see their own
+    const sessions = (role === 'ADMIN')
+      ? await searchRepository.findAll(limit)
+      : await searchRepository.findAllByUserId(userId, limit);
+
     return Promise.all(
       sessions.map(async (s) => {
         const detection = await detectionService.getResultBySearchId(s.id);

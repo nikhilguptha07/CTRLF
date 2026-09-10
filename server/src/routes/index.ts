@@ -7,6 +7,8 @@ import detectionRoutes from './detectionRoutes';
 import historyRoutes from './historyRoutes';
 import auditRoutes from './auditRoutes';
 import evidenceRoutes from './evidenceRoutes';
+import adminRoutes from './adminRoutes';
+import { authenticate } from '../middleware/authMiddleware';
 import { db } from '../config/database';
 import { env } from '../config/env';
 
@@ -85,6 +87,7 @@ router.use('/history', historyRoutes);
 router.use('/search-history', historyRoutes);
 router.use('/audit-logs', auditRoutes);
 router.use('/evidence', evidenceRoutes);
+router.use('/admin', adminRoutes);
 
 // AI capability endpoints
 router.get('/ai/classes', async (_req, res, next) => {
@@ -111,9 +114,15 @@ router.get('/ai/health', async (_req, res, next) => {
   }
 });
 
-// Legacy audit log endpoint
-router.get('/logs', async (_req, res, next) => {
+// Legacy audit log endpoint - strictly ADMIN restricted
+router.get('/logs', authenticate, async (req, res, next) => {
   try {
+    if (req.user?.role !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'Audit logs are restricted to Administrators only.' },
+      });
+    }
     const { auditService } = await import('../services/auditService');
     const logs = await auditService.getRecentLogs(100);
     res.status(200).json({ success: true, data: logs });

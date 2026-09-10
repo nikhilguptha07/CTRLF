@@ -30,6 +30,7 @@ export interface DatabasePool {
   ): Promise<T>;
   isMock(): boolean;
   recoverStaleJobs(): Promise<number>;
+  clearOperationalData(): Promise<{ cleared: string[]; count: number }>;
 }
 
 class OracleDatabaseManager implements DatabasePool {
@@ -923,6 +924,62 @@ class OracleDatabaseManager implements DatabasePool {
       logger.warn(`Crash Recovery: marked ${recoveredCount} stale/interrupted search sessions as FAILED on startup.`);
     }
     return recoveredCount;
+  }
+
+  async clearOperationalData(): Promise<{ cleared: string[]; count: number }> {
+    let count = 0;
+    const tableKeys = [
+      'searches',
+      'search_sessions',
+      'detections',
+      'detection_results',
+      'object_tracks',
+      'search_results',
+      'camera_events',
+      'search_events',
+      'evidence_files',
+      'search_jobs',
+      'search_targets',
+      'audit_logs',
+      'videos',
+      'video_files',
+    ];
+
+    if (this.isFallbackMode || !this.pool) {
+      for (const t of tableKeys) {
+        if (this.inMemoryTables[t]) {
+          count += this.inMemoryTables[t].length;
+          this.inMemoryTables[t] = [];
+        }
+      }
+    } else {
+      const oracleTables = [
+        'SEARCH_TARGETS',
+        'SEARCH_EVENTS',
+        'SEARCH_JOBS',
+        'SEARCH_RESULTS',
+        'OBJECT_TRACKS',
+        'DETECTION_RESULTS',
+        'DETECTIONS',
+        'EVIDENCE_FILES',
+        'SEARCH_SESSIONS',
+        'AUDIT_LOGS',
+        'VIDEO_FILES',
+        'VIDEOS',
+      ];
+      for (const tbl of oracleTables) {
+        try {
+          const res = await this.execute(`DELETE FROM ${tbl}`);
+          count += res.rowsAffected || 0;
+          await this.execute('COMMIT');
+        } catch (err: any) {
+          logger.warn(`Could not clear table ${tbl}`, { error: err?.message });
+        }
+      }
+    }
+
+    logger.info(`Operational database tables cleared cleanly (${count} records purged).`);
+    return { cleared: tableKeys, count };
   }
 }
 

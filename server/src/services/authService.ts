@@ -330,18 +330,42 @@ export class AuthService {
 
     const defaultUsers = [
       {
+        username: 'admin',
+        email: 'admin@ctrlf.local',
+        password: 'Password123!',
+        fullName: 'System Security Administrator',
+        role: 'ADMIN' as UserRole,
+      },
+      {
+        username: 'operator1',
+        email: 'operator@ctrlf.local',
+        password: 'Password123!',
+        fullName: 'Security Officer James',
+        role: 'OPERATOR' as UserRole,
+      },
+      {
+        username: 'user',
+        email: 'user@ctrlf.local',
+        password: 'Password123!',
+        fullName: 'John Doe',
+        role: 'USER' as UserRole,
+      },
+      {
+        username: 'admin_internal',
         email: 'admin@controlf.internal',
         password: 'AdminPass123!',
         fullName: 'System Security Administrator',
         role: 'ADMIN' as UserRole,
       },
       {
+        username: 'operator_internal',
         email: 'operator@controlf.internal',
         password: 'OperatorPass123!',
         fullName: 'Surveillance Operations Lead',
         role: 'OPERATOR' as UserRole,
       },
       {
+        username: 'viewer_internal',
         email: 'viewer@controlf.internal',
         password: 'ViewerPass123!',
         fullName: 'Surveillance Auditor & Viewer',
@@ -350,11 +374,12 @@ export class AuthService {
     ];
 
     for (const u of defaultUsers) {
-      const existing = await userRepository.findByEmail(u.email);
+      const existing = (await userRepository.findByEmail(u.email)) || (u.username ? await userRepository.findByUsername(u.username) : null);
       if (!existing) {
         const hash = await bcrypt.hash(u.password, SALT_ROUNDS);
         await userRepository.create({
           id: uuidv4(),
+          username: u.username,
           email: u.email,
           passwordHash: hash,
           fullName: u.fullName,

@@ -1,5 +1,18 @@
 import React, { useState } from 'react';
-import { Lock, Mail, User, Eye, EyeOff, ShieldCheck, AlertCircle, Key, CheckCircle, ArrowRight, X } from 'lucide-react';
+import { 
+  Lock, 
+  Mail, 
+  User, 
+  Eye, 
+  EyeOff, 
+  ShieldCheck, 
+  AlertCircle, 
+  Key, 
+  CheckCircle2, 
+  ArrowRight, 
+  X,
+  Sparkles
+} from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 
 interface AuthModalProps {
@@ -87,123 +100,130 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md bg-[#0a0f18] border border-cyan-500/30 rounded-2xl shadow-2xl shadow-cyan-500/10 overflow-hidden">
-        
-        {/* Top Accent Radar Bar */}
-        <div className="h-1.5 w-full bg-gradient-to-r from-cyan-500 via-emerald-400 to-cyan-500 animate-pulse" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-md p-4 animate-fade-in font-sans">
+      <div 
+        className="relative w-full max-w-md bg-white/95 backdrop-blur-2xl border border-white/90 rounded-3xl shadow-2xl overflow-hidden text-slate-800 animate-scale-in"
+        style={{
+          boxShadow: '0 25px 50px -12px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.8) inset',
+        }}
+      >
+        {/* Accent Top Gradient */}
+        <div className="h-1.5 w-full bg-gradient-to-r from-indigo-500 via-[#4361ee] to-blue-500" />
 
         {/* Close Button */}
         <button
+          type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-800"
+          className="absolute top-4 right-4 p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
           title="Close dialog"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Header */}
-        <div className="p-6 pb-2 text-center">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 mb-3 shadow-inner">
-            <ShieldCheck className="w-7 h-7" />
+        <div className="p-6 pb-3 text-center">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-[#4361ee] mb-3 shadow-2xs">
+            <ShieldCheck className="w-6 h-6" />
           </div>
-          <h2 className="text-xl font-bold tracking-wider text-white uppercase font-mono">
+          <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
             Control F — Security Console
           </h2>
-          <p className="text-xs text-slate-400 mt-1 font-mono">
-            Oracle 21c XE Relational Intelligence & CCTV Verification
+          <p className="text-xs text-slate-500 mt-1">
+            Oracle 21c XE Relational Intelligence & Operator Authorization
           </p>
         </div>
 
-        {/* Mode Selector Tabs */}
-        <div className="flex border-b border-slate-800 px-6">
-          <button
-            type="button"
-            onClick={() => { setMode('login'); setErrorMessage(null); }}
-            className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 font-mono ${
-              mode === 'login'
-                ? 'border-emerald-400 text-emerald-400 bg-emerald-500/5'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Sign In
-          </button>
-          <button
-            type="button"
-            onClick={() => { setMode('register'); setErrorMessage(null); }}
-            className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 font-mono ${
-              mode === 'register'
-                ? 'border-cyan-400 text-cyan-400 bg-cyan-500/5'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Register Operator
-          </button>
+        {/* Mode Selector Segmented Tabs */}
+        <div className="px-6 pb-2">
+          <div className="flex p-1 rounded-2xl bg-slate-100/90 border border-slate-200/60">
+            <button
+              type="button"
+              onClick={() => { setMode('login'); setErrorMessage(null); }}
+              className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                mode === 'login'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMode('register'); setErrorMessage(null); }}
+              className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                mode === 'register'
+                  ? 'bg-white text-[#4361ee] shadow-xs'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              Register Operator
+            </button>
+          </div>
         </div>
 
         {/* Alert Messages */}
         {errorMessage && (
-          <div className="mx-6 mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-2 text-red-400 text-xs">
-            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-            <span>{errorMessage}</span>
+          <div className="mx-6 mt-3 p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-rose-700 text-xs animate-fade-in">
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-rose-500" />
+            <span className="font-medium">{errorMessage}</span>
           </div>
         )}
 
         {successMessage && (
-          <div className="mx-6 mt-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg flex items-start gap-2 text-emerald-400 text-xs">
-            <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" />
-            <span>{successMessage}</span>
+          <div className="mx-6 mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-2.5 text-emerald-700 text-xs animate-fade-in">
+            <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-emerald-500" />
+            <span className="font-medium">{successMessage}</span>
           </div>
         )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        {/* Form Fields */}
+        <form onSubmit={handleSubmit} className="p-6 pt-3 space-y-3.5">
           {mode === 'login' ? (
             <>
               <div>
-                <label className="block text-xs font-mono text-slate-300 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Username or Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
                     type="text"
                     required
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     placeholder="admin@ctrlf.local or operator1"
-                    className="w-full bg-[#111927] border border-slate-700 rounded-lg pl-9 pr-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 font-mono transition-all"
+                    className="w-full bg-slate-50/80 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl pl-10 pr-3.5 py-2.5 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-[#4361ee] transition-all"
                   />
                 </div>
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-mono text-slate-300 uppercase tracking-wide">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-semibold text-slate-700">
                     Password
                   </label>
                   <button
                     type="button"
                     onClick={() => setShowForgotModal(true)}
-                    className="text-[11px] font-mono text-cyan-400 hover:underline"
+                    className="text-[11px] font-semibold text-[#4361ee] hover:underline cursor-pointer"
                   >
                     Forgot Password?
                   </button>
                 </div>
                 <div className="relative">
-                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Key className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
-                    className="w-full bg-[#111927] border border-slate-700 rounded-lg pl-9 pr-10 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 font-mono transition-all"
+                    className="w-full bg-slate-50/80 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-[#4361ee] transition-all"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -211,14 +231,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
               </div>
 
               <div className="flex items-center justify-between pt-1">
-                <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-300 font-mono">
+                <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-600">
                   <input
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="rounded bg-[#111927] border-slate-700 text-cyan-500 focus:ring-cyan-400"
+                    className="w-4 h-4 rounded border-slate-300 text-[#4361ee] focus:ring-indigo-500/30 accent-[#4361ee] cursor-pointer"
                   />
-                  Remember session (30 days)
+                  <span>Remember session for 30 days</span>
                 </label>
               </div>
             </>
@@ -226,7 +246,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
             <>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-mono text-slate-300 uppercase tracking-wide mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Username
                   </label>
                   <div className="relative">
@@ -237,19 +257,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       placeholder="operator_j"
-                      className="w-full bg-[#111927] border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 font-mono"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#4361ee] focus:ring-2 focus:ring-indigo-500/20"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono text-slate-300 uppercase tracking-wide mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Role
                   </label>
                   <select
                     value={role}
                     onChange={(e: any) => setRole(e.target.value)}
-                    className="w-full bg-[#111927] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-400 font-mono"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#4361ee]"
                   >
                     <option value="USER">USER</option>
                     <option value="OPERATOR">OPERATOR</option>
@@ -259,7 +279,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-slate-300 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Full Name
                 </label>
                 <input
@@ -268,12 +288,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Officer Jane Doe"
-                  className="w-full bg-[#111927] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 font-mono"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#4361ee] focus:ring-2 focus:ring-indigo-500/20"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-slate-300 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Official Email
                 </label>
                 <div className="relative">
@@ -284,14 +304,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="jdoe@ctrlf.local"
-                    className="w-full bg-[#111927] border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 font-mono"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#4361ee] focus:ring-2 focus:ring-indigo-500/20"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-slate-300 uppercase tracking-wide mb-1.5">
-                  Password (min 8 chars, 1 Upper, 1 Lower, 1 Number)
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Password (min 8 chars)
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -301,12 +321,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="SecurePass123!"
-                    className="w-full bg-[#111927] border border-slate-700 rounded-lg pl-9 pr-10 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 font-mono"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-10 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#4361ee] focus:ring-2 focus:ring-indigo-500/20"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -315,15 +335,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
             </>
           )}
 
-          {/* Submit Button */}
+          {/* Submit Action */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 py-3 px-4 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-black font-bold uppercase tracking-wider rounded-lg shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2 transition-all font-mono disabled:opacity-50"
+            className="w-full mt-2 py-3 px-4 bg-[#4361ee] hover:bg-[#364fc7] text-white font-semibold text-xs rounded-xl shadow-md shadow-indigo-300/40 flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer disabled:opacity-50"
           >
             {loading ? (
               <span className="flex items-center gap-2">
-                <span className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 Validating with Oracle 21c...
               </span>
             ) : (
@@ -336,27 +356,30 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
         </form>
 
         {/* Quick Fill Testing Credentials Toolbar */}
-        <div className="px-6 py-3 bg-[#070b12] border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
-          <span className="text-slate-500 uppercase tracking-wider">Quick Fill:</span>
-          <div className="flex gap-2">
+        <div className="px-6 py-3.5 bg-slate-50/90 border-t border-slate-100 flex items-center justify-between text-xs">
+          <span className="text-slate-500 font-medium flex items-center gap-1">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+            Quick Test Fill:
+          </span>
+          <div className="flex gap-1.5">
             <button
               type="button"
               onClick={() => handleQuickFill('admin')}
-              className="px-2 py-1 rounded bg-slate-800 text-cyan-400 hover:bg-slate-700 transition-colors"
+              className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-indigo-600 hover:bg-indigo-50 font-semibold text-[11px] transition-colors shadow-2xs cursor-pointer"
             >
               Admin
             </button>
             <button
               type="button"
               onClick={() => handleQuickFill('operator')}
-              className="px-2 py-1 rounded bg-slate-800 text-emerald-400 hover:bg-slate-700 transition-colors"
+              className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-emerald-600 hover:bg-emerald-50 font-semibold text-[11px] transition-colors shadow-2xs cursor-pointer"
             >
               Operator
             </button>
             <button
               type="button"
               onClick={() => handleQuickFill('user')}
-              className="px-2 py-1 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors"
+              className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 font-semibold text-[11px] transition-colors shadow-2xs cursor-pointer"
             >
               User
             </button>
@@ -364,28 +387,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
         </div>
       </div>
 
-      {/* Forgot Password Modal */}
+      {/* Forgot Password Sub-Modal */}
       {showForgotModal && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/90 p-4">
-          <div className="bg-[#0f172a] border border-cyan-500/40 rounded-xl p-6 max-w-sm w-full space-y-4 font-mono text-xs">
-            <div className="flex items-center justify-between text-cyan-400 font-bold uppercase">
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 max-w-sm w-full space-y-4 text-xs shadow-2xl text-slate-800 animate-scale-in">
+            <div className="flex items-center justify-between font-bold text-slate-900">
               <span className="flex items-center gap-2">
-                <Lock className="w-4 h-4" /> Operator Security Reset
+                <Lock className="w-4 h-4 text-[#4361ee]" /> Operator Security Reset
               </span>
-              <button onClick={() => setShowForgotModal(false)} className="text-slate-400 hover:text-white">
+              <button 
+                onClick={() => setShowForgotModal(false)} 
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-slate-300 leading-relaxed">
+            <p className="text-slate-600 leading-relaxed">
               In accordance with surveillance compliance policies, password recovery requires an authorized System Administrator key.
             </p>
-            <div className="p-3 bg-slate-900 border border-slate-800 rounded text-slate-400">
-              Default system administrator account: <br />
-              <span className="text-emerald-400 font-bold">admin@ctrlf.local</span> / Password: <span className="text-cyan-400 font-bold">Password123!</span>
+            <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl text-slate-600 space-y-1">
+              <span className="text-[11px] uppercase font-semibold text-slate-400 block">Default Administrator:</span>
+              <div className="font-mono text-xs">
+                <span className="text-indigo-600 font-bold">admin@ctrlf.local</span>
+                <br />
+                Password: <span className="text-slate-800 font-bold">Password123!</span>
+              </div>
             </div>
             <button
+              type="button"
               onClick={() => setShowForgotModal(false)}
-              className="w-full py-2 bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 rounded font-bold uppercase tracking-wider hover:bg-cyan-500/30"
+              className="w-full py-2.5 bg-[#4361ee] text-white rounded-xl font-semibold text-xs hover:bg-[#364fc7] transition-colors shadow-sm"
             >
               Understood
             </button>

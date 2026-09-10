@@ -8,6 +8,8 @@ import { createMasterDemoTimeline } from '../animation/masterTimeline';
 import { soundService } from '../services/soundService';
 import { AuthModal } from '../components/auth/AuthModal';
 import { DashboardTopControls } from '../components/dashboard/DashboardTopControls';
+import { OracleStatusModal } from '../components/database/OracleStatusModal';
+import { DemoPlayerHUD } from '../components/dashboard/DemoPlayerHUD';
 
 export default function App() {
   const { 
@@ -16,6 +18,9 @@ export default function App() {
     toggleSound,
     showAuthModal,
     setShowAuthModal,
+    showOracleModal,
+    setShowOracleModal,
+    setActiveFeedTab,
     setCurrentUser,
     checkAuth
   } = useExperienceStore();
@@ -213,6 +218,14 @@ export default function App() {
         isPlayingDemo={isPlayingDemo}
         currentTime={currentTime}
         onPlayDemo={handlePlayDemo}
+        onOpenOracleStatus={() => setShowOracleModal(true)}
+      />
+
+      {/* Floating Demo Player HUD during sequence playback */}
+      <DemoPlayerHUD
+        isPlaying={isPlayingDemo}
+        currentTime={currentTime}
+        onStop={handlePlayDemo}
       />
 
       {/* Oracle 21c Authentication Modal */}
@@ -220,6 +233,17 @@ export default function App() {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onSuccess={(user) => setCurrentUser(user)}
+      />
+
+      {/* Oracle 21c Database Health & Schema Modal */}
+      <OracleStatusModal
+        isOpen={showOracleModal}
+        onClose={() => setShowOracleModal(false)}
+        onOpenAuditLogs={() => {
+          setShowOracleModal(false);
+          setActiveFeedTab('logs');
+          setStage('HOME');
+        }}
       />
 
     </div>

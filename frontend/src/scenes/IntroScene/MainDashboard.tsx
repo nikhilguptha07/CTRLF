@@ -6,7 +6,8 @@ import {
   Upload,
   Clock,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Lock
 } from 'lucide-react';
 import { useExperienceStore } from '../../store/useExperienceStore';
 
@@ -15,10 +16,21 @@ interface MainDashboardProps {
 }
 
 export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick }) => {
-  const { setStage, setActiveFeedTab, startSearchFlow, searchQuery } = useExperienceStore();
+  const { 
+    setStage, 
+    setActiveFeedTab, 
+    startSearchFlow, 
+    searchQuery,
+    isAuthenticated,
+    setShowAuthModal
+  } = useExperienceStore();
   const [searchTerm, setSearchTerm] = useState(searchQuery || '');
 
   const handleConnect = () => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
     if (onConnectLiveClick) {
       onConnectLiveClick();
     } else {
@@ -29,6 +41,10 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
 
   const handleSearchSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
     const query = searchTerm.trim() || 'Bottle';
     startSearchFlow(query);
   };
@@ -115,11 +131,34 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
           </button>
         </form>
 
+        {/* Authentication Notice if not signed in */}
+        {!isAuthenticated && (
+          <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-indigo-50/80 border border-indigo-100 text-indigo-900 text-xs shadow-2xs animate-fade-in">
+            <Lock className="w-4 h-4 text-[#4361ee] shrink-0" />
+            <span className="font-bold">Authentication Required:</span>
+            <span className="text-slate-600">Please sign in to search items or connect to live CCTV feeds.</span>
+            <button
+              type="button"
+              onClick={() => setShowAuthModal(true)}
+              className="ml-1 px-3 py-1 rounded-xl bg-[#4361ee] hover:bg-[#364fc7] text-white font-bold text-[11px] transition-colors cursor-pointer shadow-2xs shrink-0"
+            >
+              Sign In
+            </button>
+          </div>
+        )}
+
         {/* Action Buttons: Upload Video & Connect to Live CC Cam */}
         <div className="flex items-center gap-3 sm:gap-5 pt-1">
           <button
             type="button"
-            onClick={() => { setActiveFeedTab('upload'); setStage('HOME'); }}
+            onClick={() => {
+              if (!isAuthenticated) {
+                setShowAuthModal(true);
+                return;
+              }
+              setActiveFeedTab('upload');
+              setStage('HOME');
+            }}
             className="px-6 sm:px-7 py-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 text-xs sm:text-sm font-semibold shadow-sm border border-slate-200/80 hover:shadow-md active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
           >
             <Upload className="w-4 h-4 text-indigo-600" />
@@ -180,7 +219,13 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
           <span>Surveillance System Status</span>
           <button
             type="button"
-            onClick={() => setActiveFeedTab('cctv')}
+            onClick={() => {
+              if (!isAuthenticated) {
+                setShowAuthModal(true);
+                return;
+              }
+              setActiveFeedTab('cctv');
+            }}
             className="text-[11px] font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5 cursor-pointer"
           >
             <span>View all 4 feeds</span>
@@ -189,7 +234,13 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
         </div>
         <div className="grid grid-cols-12 gap-3 items-center text-xs text-slate-700">
           <div
-            onClick={() => setActiveFeedTab('cctv')}
+            onClick={() => {
+              if (!isAuthenticated) {
+                setShowAuthModal(true);
+                return;
+              }
+              setActiveFeedTab('cctv');
+            }}
             className="col-span-6 flex items-center justify-between p-2.5 rounded-xl bg-white/70 hover:bg-white border border-slate-200/80 shadow-2xs cursor-pointer transition-all"
           >
             <div className="flex items-center gap-2">
@@ -201,7 +252,13 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
             </span>
           </div>
           <div
-            onClick={() => setActiveFeedTab('logs')}
+            onClick={() => {
+              if (!isAuthenticated) {
+                setShowAuthModal(true);
+                return;
+              }
+              setActiveFeedTab('logs');
+            }}
             className="col-span-6 flex items-center justify-between p-2.5 rounded-xl bg-white/70 hover:bg-white border border-slate-200/80 shadow-2xs cursor-pointer transition-all"
           >
             <span className="text-slate-600 font-medium">Audit Trail</span>
