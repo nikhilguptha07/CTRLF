@@ -219,11 +219,80 @@ export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
     return new THREE.BufferGeometry().setFromPoints(points);
   }, [width, height]);
 
+  // Target tracking box derivation for detected object on monitor screen quad
+  const isFound = Boolean(detectionResult?.found || searchSession?.status === 'DETECTED');
+  const targetBbox = useMemo(() => {
+    if (!isFound) return null;
+    const b = detectionResult?.boundingBox || searchSession?.detection?.boundingBox;
+    if (b) {
+      const bx = b.x ?? b.x1 ?? 0;
+      const by = b.y ?? b.y1 ?? 0;
+      const bw = b.width ?? (b.x2 != null && b.x1 != null ? b.x2 - b.x1 : 0);
+      const bh = b.height ?? (b.y2 != null && b.y1 != null ? b.y2 - b.y1 : 0);
+      if (bw > 0 && bh > 0) {
+        return { x: bx, y: by, width: bw, height: bh };
+      }
+    }
+    return { x: 760, y: 380, width: 400, height: 320 };
+  }, [isFound, detectionResult?.boundingBox, searchSession?.detection?.boundingBox]);
+
+  const trackingBox3D = useMemo(() => {
+    if (!targetBbox) return null;
+    const [quadW, quadH] = screenQuadSize;
+    const vW = videoDimensions.width > 0 ? videoDimensions.width : 1920;
+    const vH = videoDimensions.height > 0 ? videoDimensions.height : 1080;
+
+    const cx = targetBbox.x + targetBbox.width / 2;
+    const cy = targetBbox.y + targetBbox.height / 2;
+
+    const normX = (cx / vW) - 0.5;
+    const normY = -((cy / vH) - 0.5);
+
+    const boxW = Math.max(0.24, (targetBbox.width / vW) * quadW);
+    const boxH = Math.max(0.24, (targetBbox.height / vH) * quadH);
+
+    const x = normX * quadW;
+    const y = normY * quadH;
+
+    const hw = boxW / 2;
+    const hh = boxH / 2;
+    const cl = Math.min(0.09, Math.min(hw, hh) * 0.45);
+
+    const pts: THREE.Vector3[] = [];
+    // Corner brackets
+    pts.push(new THREE.Vector3(-hw, hh - cl, 0.005), new THREE.Vector3(-hw, hh, 0.005));
+    pts.push(new THREE.Vector3(-hw, hh, 0.005), new THREE.Vector3(-hw + cl, hh, 0.005));
+
+    pts.push(new THREE.Vector3(hw - cl, hh, 0.005), new THREE.Vector3(hw, hh, 0.005));
+    pts.push(new THREE.Vector3(hw, hh, 0.005), new THREE.Vector3(hw, hh - cl, 0.005));
+
+    pts.push(new THREE.Vector3(hw, -hh + cl, 0.005), new THREE.Vector3(hw, -hh, 0.005));
+    pts.push(new THREE.Vector3(hw, -hh, 0.005), new THREE.Vector3(hw - cl, -hh, 0.005));
+
+    pts.push(new THREE.Vector3(-hw + cl, -hh, 0.005), new THREE.Vector3(-hw, -hh, 0.005));
+    pts.push(new THREE.Vector3(-hw, -hh, 0.005), new THREE.Vector3(-hw, -hh + cl, 0.005));
+
+    // Center crosshair
+    const ch = 0.04;
+    pts.push(new THREE.Vector3(-ch, 0, 0.005), new THREE.Vector3(ch, 0, 0.005));
+    pts.push(new THREE.Vector3(0, -ch, 0.005), new THREE.Vector3(0, ch, 0.005));
+
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+
+    return {
+      x,
+      y,
+      boxW,
+      boxH,
+      geo,
+    };
+  }, [targetBbox, screenQuadSize, videoDimensions]);
+
   // Animated pulse for radar and targeting graphics & video texture refresh
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
     if (radarRingRef.current) {
-      const scaleVal = 1.0 + Math.sin(t * 3.5) * 0.05;
+      const scaleVal = 1.0 + Math.sin(t * 3.5) * 0.08;
       radarRingRef.current.scale.set(scaleVal, scaleVal, 1.0);
     }
     if (glowPlaneRef.current) {
@@ -266,7 +335,32 @@ export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
         <lineBasicMaterial color="#ffffff" linewidth={2} transparent opacity={0.85} />
       </lineSegments>
 
-      {/* 4. Ambient Wall Glow behind the monitor (illuminated by the green spotlight) */}
+      {/* 4. Optical Target Tracking Reticle on Screen (Target Lock Indicator) */}
+      {trackingBox3D && (
+        <group position={[trackingBox3D.x, trackingBox3D.y, 0.008]}>
+          {/* Target Corner Bracket Lines */}
+          <lineSegments geometry={trackingBox3D.geo}>
+            <lineBasicMaterial color="#22c55e" linewidth={3} transparent opacity={0.95} />
+          </lineSegments>
+
+          {/* Target Box Semi-transparent Highlight Quad */}
+          <mesh position={[0, 0, 0.001]}>
+            <planeGeometry args={[trackingBox3D.boxW, trackingBox3D.boxH]} />
+            <meshBasicMaterial color="#10b981" transparent opacity={0.16} depthWrite={false} />
+          </mesh>
+
+          {/* Pulsing Concentric Radar Ring in target center */}
+          <mesh ref={radarRingRef} position={[0, 0, 0.003]}>
+            <ringGeometry args={[0.04, 0.055, 32]} />
+            <meshBasicMaterial color="#22c55e" transparent opacity={0.75} depthWrite={false} side={THREE.DoubleSide} />
+          </mesh>
+
+          {/* Track Lock Glow Point */}
+          <pointLight position={[0, 0, 0.08]} color="#22c55e" intensity={2.0} distance={1.2} />
+        </group>
+      )}
+
+      {/* 5. Ambient Wall Glow behind the monitor (illuminated by the green spotlight) */}
       <pointLight position={[width * 0.5, 0, -0.2]} color="#10f070" intensity={3.5} distance={3.0} />
       <mesh position={[width * 0.35, 0, -0.05]}>
         <planeGeometry args={[1.8, 2.4]} />

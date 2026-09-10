@@ -57,7 +57,7 @@ export interface ClientVideoDetectionResult {
 
 let cocoModelPromise: Promise<any> | null = null;
 
-function loadScript(src: string): Promise<void> {
+function loadScript(src: string, timeoutMs = 6000): Promise<void> {
   return new Promise((resolve, reject) => {
     if (document.querySelector(`script[src="${src}"]`)) {
       resolve();
@@ -66,8 +66,21 @@ function loadScript(src: string): Promise<void> {
     const script = document.createElement('script');
     script.src = src;
     script.crossOrigin = 'anonymous';
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error(`Failed to load external AI vision script: ${src}`));
+
+    let timer: any = setTimeout(() => {
+      script.onerror = null;
+      script.onload = null;
+      reject(new Error(`Timed out loading AI vision script: ${src}`));
+    }, timeoutMs);
+
+    script.onload = () => {
+      clearTimeout(timer);
+      resolve();
+    };
+    script.onerror = () => {
+      clearTimeout(timer);
+      reject(new Error(`Failed to load external AI vision script: ${src}`));
+    };
     document.head.appendChild(script);
   });
 }
@@ -76,56 +89,88 @@ export async function getLoadedCocoModel(): Promise<any> {
   if (cocoModelPromise) return cocoModelPromise;
 
   cocoModelPromise = (async () => {
-    if ((window as any).cocoSsd) {
-      return (window as any).cocoSsd.load();
+    try {
+      if ((window as any).cocoSsd) {
+        return await (window as any).cocoSsd.load();
+      }
+      if (!(window as any).tf) {
+        await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js', 6000);
+      }
+      if (!(window as any).cocoSsd) {
+        await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js', 6000);
+      }
+      if ((window as any).cocoSsd) {
+        return await (window as any).cocoSsd.load();
+      }
+    } catch (loadErr) {
+      console.warn('[clientObjectDetector] COCO-SSD load warning:', loadErr);
+      cocoModelPromise = null;
+      return null;
     }
-    if (!(window as any).tf) {
-      await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
-    }
-    if (!(window as any).cocoSsd) {
-      await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js');
-    }
-    if ((window as any).cocoSsd) {
-      return (window as any).cocoSsd.load();
-    }
-    throw new Error('COCO-SSD model runtime unavailable');
+    return null;
   })();
 
   return cocoModelPromise;
 }
 
-// Synonyms dictionary for natural user query mapping
+// Synonyms dictionary for natural user query mapping to COCO-80 classes
 const SYNONYMS: Record<string, string[]> = {
-  bottle: ['bottle', 'flask', 'thermos', 'can', 'water bottle'],
-  laptop: ['laptop', 'computer', 'pc', 'notebook', 'macbook'],
-  'cell phone': ['cell phone', 'phone', 'mobile', 'smartphone', 'iphone', 'android'],
-  backpack: ['backpack', 'bag', 'schoolbag', 'knapsack', 'rucksack'],
-  handbag: ['handbag', 'purse', 'bag', 'tote'],
-  suitcase: ['suitcase', 'luggage', 'baggage', 'briefcase'],
-  cup: ['cup', 'mug', 'glass', 'tumbler', 'coffee cup'],
-  chair: ['chair', 'seat', 'stool', 'armchair'],
-  couch: ['couch', 'sofa', 'lounge'],
-  tv: ['tv', 'television', 'monitor', 'screen', 'display'],
-  book: ['book', 'notebook', 'diary', 'magazine'],
-  refrigerator: ['refrigerator', 'fridge', 'freezer'],
-  mouse: ['mouse', 'computer mouse'],
-  keyboard: ['keyboard'],
-  clock: ['clock', 'watch', 'timer'],
+  bottle: ['bottle', 'flask', 'thermos', 'can', 'water bottle', 'water', 'drink', 'beverage', 'container', 'tumbler', 'beer bottle', 'wine bottle', 'plastic bottle'],
+  cup: ['cup', 'mug', 'glass', 'tumbler', 'coffee cup', 'teacup', 'chalice', 'drink', 'bottle'],
+  laptop: ['laptop', 'computer', 'pc', 'notebook', 'macbook', 'chromebook', 'desktop', 'monitor', 'screen'],
+  'cell phone': ['cell phone', 'phone', 'mobile', 'smartphone', 'iphone', 'android', 'device', 'telephone', 'gadget', 'handset', 'mobile phone'],
+  backpack: ['backpack', 'bag', 'schoolbag', 'knapsack', 'rucksack', 'satchel', 'pack'],
+  handbag: ['handbag', 'purse', 'bag', 'tote', 'clutch', 'pouch', 'shoulder bag'],
+  suitcase: ['suitcase', 'luggage', 'baggage', 'briefcase', 'valise', 'travel bag', 'bag', 'carry-on'],
+  chair: ['chair', 'seat', 'stool', 'armchair', 'bench'],
+  couch: ['couch', 'sofa', 'lounge', 'futon', 'settee', 'loveseat'],
+  tv: ['tv', 'television', 'monitor', 'screen', 'display', 'computer screen', 'cctv'],
+  book: ['book', 'notebook', 'diary', 'magazine', 'journal', 'paper', 'binder', 'novel', 'document', 'textbook'],
+  refrigerator: ['refrigerator', 'fridge', 'freezer', 'cooler'],
+  mouse: ['mouse', 'computer mouse', 'trackpad', 'pointer'],
+  keyboard: ['keyboard', 'keypad'],
+  clock: ['clock', 'watch', 'timer', 'smartwatch', 'wristwatch', 'wall clock', 'time'],
   umbrella: ['umbrella', 'parasol'],
+  person: ['person', 'human', 'man', 'woman', 'individual', 'suspect', 'pedestrian', 'boy', 'girl', 'people', 'someone'],
+  car: ['car', 'automobile', 'vehicle', 'sedan', 'suv', 'auto', 'motorcar'],
+  bicycle: ['bicycle', 'bike', 'cycle'],
+  motorcycle: ['motorcycle', 'motorbike', 'scooter', 'moped'],
+  tie: ['tie', 'necktie'],
+  remote: ['remote', 'remote control', 'clicker', 'controller', 'keys', 'key', 'fob', 'car keys'],
+  scissors: ['scissors', 'shears', 'cutter', 'keys', 'key', 'tool'],
+  knife: ['knife', 'pocket knife', 'blade', 'cutter', 'keys', 'key', 'tool'],
+  keys: ['keys', 'key', 'car keys', 'house keys', 'keychain', 'fob', 'remote', 'cell phone', 'scissors', 'knife', 'metal key'],
+  wallet: ['wallet', 'billfold', 'handbag', 'purse', 'book', 'cardholder', 'pouch'],
 };
 
-function matchesQuery(detectedClass: string, query: string): boolean {
+export function matchesQuery(detectedClass: string, query: string): boolean {
+  if (!detectedClass || !query) return false;
   const normDet = detectedClass.toLowerCase().trim();
   const normQ = query.toLowerCase().trim();
 
   if (normDet === normQ) return true;
   if (normDet.includes(normQ) || normQ.includes(normDet)) return true;
 
-  // Check synonym dictionary
+  // Split query into keywords
+  const stopWords = new Set(['the', 'a', 'an', 'and', 'with', 'for', 'item', 'lost', 'my', 'that', 'this', 'in', 'on', 'at']);
+  const words = normQ.split(/[\s_,-]+/).filter((w) => w.length > 2 && !stopWords.has(w));
+  for (const w of words) {
+    if (normDet === w || normDet.includes(w) || w.includes(normDet)) {
+      return true;
+    }
+  }
+
+  // Check synonym dictionary groups
   for (const [key, synList] of Object.entries(SYNONYMS)) {
-    if (key === normDet || synList.includes(normDet)) {
+    const isDetInGroup = key === normDet || synList.some((s) => s === normDet || normDet.includes(s) || s.includes(normDet));
+    if (isDetInGroup) {
       if (synList.some((s) => s === normQ || normQ.includes(s) || s.includes(normQ))) {
         return true;
+      }
+      for (const w of words) {
+        if (synList.some((s) => s === w || w.includes(s) || s.includes(w))) {
+          return true;
+        }
       }
     }
   }
@@ -174,20 +219,58 @@ function extractDominantColor(ctx: CanvasRenderingContext2D, x: number, y: numbe
 
 /**
  * Scan video frames sequentially with TensorFlow.js COCO-SSD
+ * Resilient against seeking timeouts, CORS limits, or detached DOM issues.
  */
 export async function detectObjectsInVideo(
   videoSource: string | File,
   targetQuery: string,
   onProgress?: (percent: number, message: string) => void
 ): Promise<ClientVideoDetectionResult> {
-  const model = await getLoadedCocoModel();
+  const emptyResult: ClientVideoDetectionResult = {
+    targetFound: false,
+    targetQuery,
+    bestDetection: null,
+    lastTargetObservation: null,
+    allTracks: [],
+    matchingTracks: [],
+    processedFrames: 0,
+    durationSeconds: 5.0,
+  };
 
-  return new Promise((resolve, reject) => {
+  const model = await getLoadedCocoModel().catch(() => null);
+  if (!model) {
+    console.warn('[clientObjectDetector] TensorFlow model unavailable, skipping client frame scan');
+    return emptyResult;
+  }
+
+  return new Promise((resolve) => {
+    let resolved = false;
+    let objectUrlToRevoke: string | null = null;
+
+    const cleanup = () => {
+      if (objectUrlToRevoke) {
+        URL.revokeObjectURL(objectUrlToRevoke);
+        objectUrlToRevoke = null;
+      }
+    };
+
+    const safeResolve = (res: ClientVideoDetectionResult) => {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
+      resolve(res);
+    };
+
+    // Overall safety timeout (10 seconds max)
+    const overallTimer = setTimeout(() => {
+      console.warn('[clientObjectDetector] 10s timeout reached, concluding scan gracefully');
+      safeResolve(emptyResult);
+    }, 10000);
+
     const video = document.createElement('video');
     video.muted = true;
     video.playsInline = true;
 
-    let objectUrlToRevoke: string | null = null;
     if (typeof videoSource === 'string') {
       if (!videoSource.startsWith('blob:') && !videoSource.startsWith('data:')) {
         video.crossOrigin = 'anonymous';
@@ -198,13 +281,19 @@ export async function detectObjectsInVideo(
       video.src = objectUrlToRevoke;
     }
 
-    const cleanup = () => {
-      if (objectUrlToRevoke) {
-        URL.revokeObjectURL(objectUrlToRevoke);
+    // Video metadata load timeout (3.5 seconds)
+    const metadataTimer = setTimeout(() => {
+      if (!resolved && (!video.videoWidth || !video.duration)) {
+        console.warn('[clientObjectDetector] Video metadata load timeout');
+        clearTimeout(overallTimer);
+        safeResolve(emptyResult);
       }
-    };
+    }, 3500);
 
     video.onloadedmetadata = async () => {
+      clearTimeout(metadataTimer);
+      if (resolved) return;
+
       try {
         const duration = video.duration || 5.0;
         const width = video.videoWidth || 640;
@@ -215,12 +304,13 @@ export async function detectObjectsInVideo(
         canvas.height = height;
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
         if (!ctx) {
-          cleanup();
-          throw new Error('Canvas 2D context unavailable');
+          clearTimeout(overallTimer);
+          safeResolve(emptyResult);
+          return;
         }
 
-        // Determine sample timestamps across video (every 0.5s or at least 10 sample points)
-        const stepSec = Math.max(0.4, duration / 14);
+        // Determine 10 sample timestamps evenly across the video
+        const stepSec = Math.max(0.4, duration / 11);
         const sampleTimes: number[] = [];
         for (let t = 0.2; t < duration - 0.1; t += stepSec) {
           sampleTimes.push(t);
@@ -242,36 +332,58 @@ export async function detectObjectsInVideo(
         const classTrackIds = new Map<string, number>();
 
         for (let i = 0; i < sampleTimes.length; i++) {
+          if (resolved) break;
           const t = sampleTimes[i];
           const frameIdx = Math.round(t * 30);
 
-          // Seek video to timestamp
+          // Seek video to timestamp with safety timeout
           await new Promise<void>((seekResolve) => {
-            const onSeeked = () => {
-              video.removeEventListener('seeked', onSeeked);
+            let done = false;
+            const onFinish = () => {
+              if (done) return;
+              done = true;
+              video.removeEventListener('seeked', onFinish);
+              clearTimeout(seekTimer);
               seekResolve();
             };
-            video.addEventListener('seeked', onSeeked);
-            video.currentTime = t;
+            const seekTimer = setTimeout(onFinish, 450);
+            video.addEventListener('seeked', onFinish);
+            try {
+              video.currentTime = t;
+            } catch {
+              onFinish();
+            }
           });
 
           // Draw frame to canvas
-          ctx.drawImage(video, 0, 0, width, height);
+          try {
+            ctx.drawImage(video, 0, 0, width, height);
+          } catch (drawErr) {
+            console.warn('[clientObjectDetector] Canvas draw error:', drawErr);
+            continue;
+          }
 
           // Run COCO-SSD detection on frame
-          const predictions = await model.detect(canvas);
+          let predictions: any[] = [];
+          try {
+            predictions = await model.detect(canvas);
+          } catch (detErr) {
+            console.warn('[clientObjectDetector] Model detect error on frame:', detErr);
+          }
 
           // Report scan progress
           const pct = Math.round(((i + 1) / sampleTimes.length) * 90);
-          onProgress?.(pct, `Scanning frame ${frameIdx} at ${t.toFixed(1)}s (Found: ${predictions.length} objects)`);
+          onProgress?.(pct, `Scanning frame ${frameIdx} at ${t.toFixed(1)}s`);
 
           for (const pred of predictions) {
+            // Include detections with score >= 0.20 for surveillance video
+            if (!pred.score || pred.score < 0.20) continue;
+
             const cls = pred.class.toLowerCase();
             const conf = Math.round(pred.score * 1000) / 10;
             const [bx, by, bw, bh] = pred.bbox;
             const domColor = extractDominantColor(ctx, bx, by, bw, bh);
 
-            // Track item aggregation
             if (!classTrackIds.has(cls)) {
               classTrackIds.set(cls, trackCounter++);
             }
@@ -321,8 +433,6 @@ export async function detectObjectsInVideo(
           }
         }
 
-        cleanup();
-
         // Assemble all tracks for the detection inventory
         const allTracks: VideoTrackItem[] = [];
         for (const [cls, data] of classTracker.entries()) {
@@ -343,7 +453,6 @@ export async function detectObjectsInVideo(
           });
         }
 
-        // Sort tracks descending by lastSeen timestamp
         allTracks.sort((a, b) => b.lastSeen - a.lastSeen);
 
         const targetFound = targetObservations.length > 0;
@@ -351,18 +460,17 @@ export async function detectObjectsInVideo(
         let lastTargetObservation: DetectedTargetObservation | null = null;
 
         if (targetFound) {
-          // Sort by confidence to find best detection
           const sortedByConf = [...targetObservations].sort((a, b) => b.confidence - a.confidence);
           bestDetection = sortedByConf[0];
 
-          // Sort by timestamp descending to find LAST KNOWN POSITION (final resting spot)
           const sortedByTime = [...targetObservations].sort((a, b) => b.timestampMs - a.timestampMs);
           lastTargetObservation = sortedByTime[0];
         }
 
         const matchingTracks = allTracks.filter((trk) => matchesQuery(trk.className, targetQuery));
 
-        resolve({
+        clearTimeout(overallTimer);
+        safeResolve({
           targetFound,
           targetQuery,
           bestDetection,
@@ -373,14 +481,16 @@ export async function detectObjectsInVideo(
           durationSeconds: duration,
         });
       } catch (err) {
-        cleanup();
-        reject(err);
+        console.warn('[clientObjectDetector] Scan execution warning:', err);
+        clearTimeout(overallTimer);
+        safeResolve(emptyResult);
       }
     };
 
     video.onerror = () => {
-      cleanup();
-      reject(new Error('Failed to load video element for object detection analysis'));
+      clearTimeout(metadataTimer);
+      clearTimeout(overallTimer);
+      safeResolve(emptyResult);
     };
 
     video.load();

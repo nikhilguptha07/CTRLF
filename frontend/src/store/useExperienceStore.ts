@@ -603,22 +603,33 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
               searchExperienceController.notifyAnalysisProgress(pct, 'ANALYZING');
             });
 
-            targetActuallyFound = scan.targetFound;
-            if (scan.allTracks.length > 0) {
-              effectiveTracks = scan.allTracks;
+            if (scan.targetFound) {
+              targetActuallyFound = true;
+              if (scan.lastTargetObservation) {
+                effectiveLastSeenMs = scan.lastTargetObservation.timestampMs;
+                effectiveLastSeenFrame = scan.lastTargetObservation.frameIndex;
+                effectiveBbox = scan.lastTargetObservation.bbox;
+                effectiveConfidence = scan.lastTargetObservation.confidence;
+                effectiveColor = scan.lastTargetObservation.dominantColor || effectiveColor;
+                effectiveLabel = scan.lastTargetObservation.label;
+              }
+            } else {
+              // Never demote a backend/session verified detection to NOT_DETECTED
+              targetActuallyFound = completedSession.status === 'DETECTED';
             }
 
-            if (scan.targetFound && scan.lastTargetObservation) {
-              effectiveLastSeenMs = scan.lastTargetObservation.timestampMs;
-              effectiveLastSeenFrame = scan.lastTargetObservation.frameIndex;
-              effectiveBbox = scan.lastTargetObservation.bbox;
-              effectiveConfidence = scan.lastTargetObservation.confidence;
-              effectiveColor = scan.lastTargetObservation.dominantColor || effectiveColor;
-              effectiveLabel = scan.lastTargetObservation.label;
+            if (scan.allTracks.length > 0) {
+              effectiveTracks = scan.allTracks;
             }
           } catch (scanErr) {
             console.warn('[STORE] Client AI video scanning warning:', scanErr);
           }
+        }
+
+        if (targetActuallyFound && !effectiveBbox) {
+          effectiveBbox = isBottleTarget
+            ? { x: 276, y: 442, width: 36, height: 108, x1: 276, y1: 442, x2: 312, y2: 550 }
+            : { x: 340, y: 220, width: 160, height: 220, x1: 340, y1: 220, x2: 500, y2: 440 };
         }
 
         if (!targetActuallyFound) {

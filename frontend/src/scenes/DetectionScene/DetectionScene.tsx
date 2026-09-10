@@ -10,7 +10,6 @@ import { useExperienceStore } from '../../store/useExperienceStore';
 import { searchExperienceController } from '../../services/searchExperienceController';
 import { referenceCalibration } from '../../config/referenceCalibration';
 import { ArrowLeft, FileText, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
-import { Detection3DMapper, type VisualizationTarget } from '../../services/detection3DMapper';
 
 // Ambient 4-pointed sparkle star in bottom right corner (from reference video)
 const AmbientBrandingStar: React.FC<{ position?: [number, number, number] }> = ({
@@ -83,7 +82,6 @@ export const DetectionScene: React.FC<DetectionSceneProps> = ({ timelineTime }) 
     showResultsView,
     setShowResultsView,
     setRotationProgress,
-    winningCameraId,
     progressDetails,
   } = useExperienceStore();
 
@@ -117,52 +115,6 @@ export const DetectionScene: React.FC<DetectionSceneProps> = ({ timelineTime }) 
   const targetClass = searchSession.targetClass || searchQuery || 'bottle';
   const targetColor = searchSession.targetColor || '';
 
-  // Map REAL YOLO 2D Detection to 3D via Camera Intrinsics & Pinhole Projection
-  // Strictly derived from real video analysis lastTargetObservation / detection.boundingBox!
-  // NO hardcoded coordinates!
-  const activeTarget3D = useMemo<VisualizationTarget | null>(() => {
-    const det = searchSession?.detection;
-    if (det?.boundingBox) {
-      return Detection3DMapper.mapDetectionTo3D(
-        {
-          sessionId: searchSession.sessionId || '',
-          cameraId: winningCameraId || searchSession.cameraId || 'CAM_01',
-          trackId: searchSession.trackId ? Number(searchSession.trackId) : (det.trackId != null ? Number(det.trackId) : null),
-          className: searchSession.target || searchQuery,
-          confidence: searchSession.confidence ?? det.confidence,
-          boundingBox: det.boundingBox,
-        },
-        undefined,
-        'RAY_ONLY'
-      );
-    }
-    return null;
-  }, [
-    searchSession?.detection,
-    searchSession?.sessionId,
-    searchSession?.cameraId,
-    searchSession?.trackId,
-    searchSession?.target,
-    searchSession?.confidence,
-    winningCameraId,
-    searchQuery,
-  ]);
-
-  const targetAngles = useMemo(() => {
-    if (activeTarget3D) {
-      return {
-        yawRad: activeTarget3D.desiredAngles.yawRad,
-        pitchRad: activeTarget3D.desiredAngles.pitchRad,
-      };
-    }
-    if (isTargetAcquired || isDetected) {
-      return {
-        yawRad: -0.65,
-        pitchRad: 0.18,
-      };
-    }
-    return null;
-  }, [activeTarget3D, isTargetAcquired, isDetected]);
 
   // CCTV Rig Mount Position:
   // For all real searches, the CCTV rig stays anchored at its physical studio mount [0.35, 0.15, 0.0].
@@ -210,6 +162,52 @@ export const DetectionScene: React.FC<DetectionSceneProps> = ({ timelineTime }) 
       scale: referenceCalibration.scene2.cctvScale,
     };
   }, [isDemoScene3, isDemoScene4]);
+
+  // Calibrate 3D Tracking Beam towards target on surveillance monitor
+  const targetAngles = useMemo(() => {
+    if (!isTargetAcquired && !isDetected) return null;
+
+    const cctvPos = cctvConfig.position;
+    const monPos = monitorConfig.position;
+
+    // Offset aiming position based on real detection bounding box on monitor screen
+    const det = searchSession?.detection;
+    const bbox = det?.boundingBox;
+    let targetX = monPos[0];
+    let targetY = monPos[1];
+    let targetZ = monPos[2];
+
+    if (bbox) {
+      const bx = bbox.x ?? bbox.x1 ?? 0;
+      const by = bbox.y ?? bbox.y1 ?? 0;
+      const bw = bbox.width ?? (bbox.x2 != null && bbox.x1 != null ? bbox.x2 - bbox.x1 : 0);
+      const bh = bbox.height ?? (bbox.y2 != null && bbox.y1 != null ? bbox.y2 - bbox.y1 : 0);
+      const cx = bx + bw / 2;
+      const cy = by + bh / 2;
+
+      // Normalize coordinates against standard 1920x1080 (-0.5 to +0.5)
+      const normX = (cx / 1920) - 0.5;
+      const normY = (cy / 1080) - 0.5;
+
+      // Monitor screen quad width is ~1.19m, height is ~0.68m
+      targetX += normX * 1.1;
+      targetY -= normY * 0.6;
+    }
+
+    const dx = targetX - cctvPos[0];
+    const dy = targetY - cctvPos[1];
+    const dz = targetZ - cctvPos[2];
+
+    // Compute mechanical yaw (pan) and pitch (tilt) in Three.js coordinate system
+    const yawRad = Math.atan2(dx, dz);
+    const distXZ = Math.sqrt(dx * dx + dz * dz);
+    const pitchRad = Math.atan2(-dy, distXZ);
+
+    return {
+      yawRad,
+      pitchRad,
+    };
+  }, [isTargetAcquired, isDetected, cctvConfig.position, monitorConfig.position, searchSession?.detection]);
 
   // Demo pan/tilt overrides for 10-second offline reference timeline
   const demoAngles = useMemo(() => {

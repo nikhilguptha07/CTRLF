@@ -199,11 +199,17 @@ export const CinematicCCTVCamera: React.FC<CinematicCCTVCameraProps> = ({
         tiltGroupRef.current.rotation.x = 0.22;
       }
     } else if (isTargetLocked && targetYawRad !== undefined && targetPitchRad !== undefined) {
-      // Smoothly pan & tilt toward real last-known target position
+      // Smoothly pan & tilt toward real last-known target position via shortest angular path
       if (panGroupRef.current) {
+        const curYaw = panGroupRef.current.rotation.y;
+        let diff = (targetYawRad - curYaw) % (Math.PI * 2);
+        if (diff > Math.PI) diff -= Math.PI * 2;
+        if (diff < -Math.PI) diff += Math.PI * 2;
+        const normalizedTargetYaw = curYaw + diff;
+
         panGroupRef.current.rotation.y = THREE.MathUtils.damp(
-          panGroupRef.current.rotation.y,
-          targetYawRad,
+          curYaw,
+          normalizedTargetYaw,
           3.2,
           clampedDelta
         );
