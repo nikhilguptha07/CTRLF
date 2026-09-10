@@ -59,7 +59,7 @@ export class DetectionController {
                 bbox: detRecord?.boundingBox,
                 label: detRecord?.detectedLabel || session.objectName || 'Object',
                 confidence: detRecord?.confidence,
-                trackId: detRecord?.trackId,
+                trackId: detRecord?.trackId != null ? Number(detRecord.trackId) : null,
                 dominantColor: detRecord?.dominantColor,
               });
               res.setHeader('Content-Type', extracted.contentType || 'image/jpeg');
