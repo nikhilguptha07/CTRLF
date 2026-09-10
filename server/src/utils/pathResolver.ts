@@ -121,34 +121,32 @@ export function resolveEvidencePath(evidenceIdOrPath: string, type: 'annotated' 
     const files = fs.readdirSync(evidenceDir);
     const targetSub = type === 'original' ? 'orig' : 'annotated';
     
-    // Check if specifically asking for initial / in-hand (frame 10)
+    // 1. Exact match with type (e.g. filename contains evidenceIdOrPath AND targetSub)
+    if (evidenceIdOrPath && evidenceIdOrPath !== 'default' && evidenceIdOrPath !== 'latest') {
+      const match = files.find(f => f.includes(evidenceIdOrPath) && f.includes(targetSub));
+      if (match) {
+        return path.resolve(evidenceDir, match);
+      }
+
+      // 2. Secondary match (any file containing the id/clean name)
+      const anyMatch = files.find(f => f.includes(evidenceIdOrPath));
+      if (anyMatch) {
+        return path.resolve(evidenceDir, anyMatch);
+      }
+    }
+
+    // 3. Only if specifically asking for initial / in-hand (frame 10)
     if (evidenceIdOrPath.includes('10') || evidenceIdOrPath.includes('hand') || evidenceIdOrPath.includes('initial')) {
       const handMatch = files.find(f => f.includes('frame_10') && f.includes(targetSub));
       if (handMatch) return path.resolve(evidenceDir, handMatch);
     }
 
-    // Default & Last Known Spot: Prioritize the genuine resting frame (frame 110 on table)
-    const lastSpotMatch = files.find(f => (f.includes('frame_last_spot') || f.includes('frame_110')) && f.includes(targetSub));
-    if (lastSpotMatch) {
-      return path.resolve(evidenceDir, lastSpotMatch);
-    }
-
-    // Exact match with type
-    const match = files.find(f => f.includes(evidenceIdOrPath) && f.includes(targetSub));
-    if (match) {
-      return path.resolve(evidenceDir, match);
-    }
-
-    // Secondary match (any file containing the id)
-    const anyMatch = files.find(f => f.includes(evidenceIdOrPath));
-    if (anyMatch) {
-      return path.resolve(evidenceDir, anyMatch);
-    }
-
-    // Tertiary match: Fallback to genuine extracted video frame matching the requested type
-    const fallbackMatch = files.find(f => f.includes(targetSub) && (f.endsWith('.jpg') || f.endsWith('.png') || f.endsWith('.jpeg')));
-    if (fallbackMatch) {
-      return path.resolve(evidenceDir, fallbackMatch);
+    // 4. Only if explicitly asking for last spot or frame 110:
+    if (evidenceIdOrPath.includes('frame_last_spot') || evidenceIdOrPath.includes('frame_110') || evidenceIdOrPath === 'last_spot') {
+      const lastSpotMatch = files.find(f => (f.includes('frame_last_spot') || f.includes('frame_110')) && f.includes(targetSub));
+      if (lastSpotMatch) {
+        return path.resolve(evidenceDir, lastSpotMatch);
+      }
     }
   } catch (err) {
     logger.warn('Error reading evidence directory in resolveEvidencePath', { err });

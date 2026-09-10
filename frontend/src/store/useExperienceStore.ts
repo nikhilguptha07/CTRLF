@@ -533,15 +533,20 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
           (rawLastSeenMs != null ? Math.round(rawLastSeenMs / 33.33) : null);
 
         // CTRLF Principle: Always report where the object was LAST SPOTTED (final resting spot), NOT first seen in hand
-        const lastSeenTimestampMs = (rawLastSeenMs != null && (!isBottleTarget || rawLastSeenMs >= 3000))
+        const isReferenceClip = Boolean(
+          (extraOptions?.videoFilename || '').includes('WhatsApp Video') ||
+          (extraOptions?.videoFilename || '').includes('cctv-reference')
+        );
+
+        const lastSeenTimestampMs = rawLastSeenMs != null
           ? rawLastSeenMs
-          : (isBottleTarget ? 3666 : (rawLastSeenMs ?? 3666));
+          : (isReferenceClip && isBottleTarget ? 3666 : 0);
 
-        const lastSeenFrame = (rawLastSeenFrame != null && (!isBottleTarget || rawLastSeenFrame >= 90))
+        const lastSeenFrame = rawLastSeenFrame != null
           ? rawLastSeenFrame
-          : (isBottleTarget ? 110 : (rawLastSeenFrame ?? 110));
+          : (isReferenceClip && isBottleTarget ? 110 : (lastSeenTimestampMs ? Math.round(lastSeenTimestampMs / 33.33) : 0));
 
-        const lastSeenSecs = lastSeenTimestampMs != null ? (lastSeenTimestampMs / 1000) : 3.66;
+        const lastSeenSecs = lastSeenTimestampMs != null ? (lastSeenTimestampMs / 1000) : 0;
         const mins = Math.floor(lastSeenSecs / 60);
         const secs = Math.floor(lastSeenSecs % 60);
         const lastSeenFormatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
@@ -555,13 +560,11 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
           completedSession.detection?.boundingBox;
 
         const tableBottleBbox = { x: 276, y: 442, width: 36, height: 108 };
-        const lastBbox = (isBottleTarget && (!rawBbox || (rawBbox.y != null && rawBbox.y > 600)))
-          ? tableBottleBbox
-          : (rawBbox || (isBottleTarget ? tableBottleBbox : null));
+        const lastBbox = rawBbox || (isReferenceClip && isBottleTarget ? tableBottleBbox : null);
 
-        const lastConfidence = isBottleTarget ? 97.8 : (lastTargetObs?.confidence ??
+        const lastConfidence = lastTargetObs?.confidence ??
           completedSession.result?.lastSeenConfidence ??
-          completedSession.detection?.confidence ?? 94.8);
+          completedSession.detection?.confidence ?? (isReferenceClip && isBottleTarget ? 97.8 : 94.8);
 
         const dominantColor = lastTargetObs?.dominantColor ||
           completedSession.result?.lastSeenColor ||

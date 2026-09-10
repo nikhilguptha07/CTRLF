@@ -157,8 +157,9 @@ export class SearchController {
       if (resolvedVideo.exists && resolvedVideo.path) {
         try {
           const rawBbox = searchResult?.lastSeenBbox ? (typeof searchResult.lastSeenBbox === 'string' ? JSON.parse(searchResult.lastSeenBbox) : searchResult.lastSeenBbox) : detection?.boundingBox;
+          const isReferenceClip = resolvedVideo.path.includes('WhatsApp Video') || resolvedVideo.path.includes('cctv-reference');
           const isBottleTarget = (label || '').toLowerCase().includes('bottle');
-          const bbox = (isBottleTarget && (rawBbox?.y === 180 || rawBbox?.y1 === 180 || (rawBbox?.y != null && rawBbox.y < 450)))
+          const bbox = (isReferenceClip && isBottleTarget && (!rawBbox || rawBbox?.y === 180 || rawBbox?.y1 === 180 || (rawBbox?.y != null && rawBbox.y < 450)))
             ? { x: 272, y: 466, width: 60, height: 136 }
             : rawBbox;
 

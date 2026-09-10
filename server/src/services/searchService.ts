@@ -406,7 +406,12 @@ export class SearchService {
           bestCandidate.lastSeenTimestampMs = bestCandidate.timestampMs;
           bestCandidate.lastSeenFrame = bestCandidate.frameIndex;
         }
-        evidenceFramePath = `/api/search/${searchId}/evidence/frame?type=annotated`;
+        const actualDiskFrame = (videoResult.evidenceFrames && videoResult.evidenceFrames.length > 0)
+          ? videoResult.evidenceFrames[0]
+          : (videoResult.evidenceItems && videoResult.evidenceItems.length > 0 && videoResult.evidenceItems[0].annotated_path)
+            ? videoResult.evidenceItems[0].annotated_path
+            : null;
+        evidenceFramePath = actualDiskFrame || `/api/search/${searchId}/evidence/frame?type=annotated`;
 
         if (isTargetFound && bestCandidate) {
           socketManager.emitTargetAcquired(searchId, bestCandidate);
