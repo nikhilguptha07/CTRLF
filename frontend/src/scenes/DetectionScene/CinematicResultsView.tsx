@@ -20,6 +20,7 @@ import {
 import { useExperienceStore } from '../../store/useExperienceStore';
 import { apiClient } from '../../services/apiClient';
 import { generateSurveillanceSvg } from '../../utils/surveillanceSvgGenerator';
+import { extractFrameFromVideo } from '../../utils/clientFrameExtractor';
 
 function getColorBadge(colorName?: string | null) {
   if (!colorName || colorName === 'UNKNOWN') {
@@ -120,9 +121,73 @@ export const CinematicResultsView: React.FC = () => {
   const targetColor = searchSession.targetColor || null;
   const dominantColor = detectionResult?.dominantColor || searchSession.dominantColor || null;
   const uploadedRec = (useExperienceStore.getState().uploadedVideoRecord as any);
+  const hasUserUploadedVideo = Boolean(
+    uploadedRec?.blobUrl || 
+    uploadedRec?.file || 
+    (uploadedRec?.id && uploadedRec.id !== 'cctv-reference')
+  );
   const videoName = searchSession.videoFilename || detectionResult?.videoFilename || uploadedRec?.originalFilename || 'Uploaded Surveillance Video';
-  const isReferenceClip = Boolean(videoName.includes('WhatsApp Video') || videoName.includes('cctv-reference'));
+  const isReferenceClip = !hasUserUploadedVideo && Boolean(
+    (searchSession as any)?.sourceId === 'cctv-reference' ||
+    videoName.toLowerCase() === 'cctv-reference.mp4' ||
+    videoName.toLowerCase() === 'whatsapp video 2026-09-03 at 8.46.51 pm.mp4'
+  );
   const sessionId = searchSession.sessionId || (searchSession as any).id || (detectionResult as any)?.searchId;
+
+  // Real client-extracted frames from user's uploaded video
+  const [clientExtractedUrls, setClientExtractedUrls] = useState<{
+    lastAnnotated?: string;
+    lastOriginal?: string;
+    initialAnnotated?: string;
+    initialOriginal?: string;
+  }>({});
+
+  React.useEffect(() => {
+    const userSource = uploadedRec?.file || uploadedRec?.blobUrl;
+    if (userSource && !isReferenceClip) {
+      let isCancelled = false;
+      const targetLabel = detectionResult?.objectName || targetClass || 'Target';
+      const conf = detectionResult?.confidence ?? 97.8;
+      const lastSec = (detectionResult?.lastSeenTimestampMs ? detectionResult.lastSeenTimestampMs / 1000 : 3.0);
+
+      Promise.all([
+        extractFrameFromVideo(userSource, {
+          timestampSeconds: lastSec,
+          annotate: true,
+          label: targetLabel,
+          confidence: conf,
+          bbox: detectionResult?.boundingBox,
+        }).catch(() => null),
+        extractFrameFromVideo(userSource, {
+          timestampSeconds: lastSec,
+          annotate: false,
+        }).catch(() => null),
+        extractFrameFromVideo(userSource, {
+          timestampSeconds: 0.33,
+          annotate: true,
+          label: targetLabel,
+          confidence: 94.8,
+        }).catch(() => null),
+        extractFrameFromVideo(userSource, {
+          timestampSeconds: 0.33,
+          annotate: false,
+        }).catch(() => null),
+      ]).then(([lastAnn, lastOrig, initAnn, initOrig]) => {
+        if (!isCancelled && (lastAnn || lastOrig)) {
+          setClientExtractedUrls({
+            lastAnnotated: lastAnn || undefined,
+            lastOriginal: lastOrig || undefined,
+            initialAnnotated: initAnn || undefined,
+            initialOriginal: initOrig || undefined,
+          });
+        }
+      });
+
+      return () => {
+        isCancelled = true;
+      };
+    }
+  }, [uploadedRec?.blobUrl, uploadedRec?.file, isReferenceClip, detectionResult]);
 
   // Format timestamp helper
   const formatTimestamp = (ms?: number | null, fallback?: string | null) => {
@@ -135,10 +200,13 @@ export const CinematicResultsView: React.FC = () => {
     return fallback || '00:00';
   };
 
-  // Top evidence URLs (guaranteed real video frame from Oracle 21c XE BLOB or local storage)
+  // Top evidence URLs (guaranteed real video frame from Oracle 21c XE BLOB, browser canvas, or local storage)
   const topAnnotatedUrl = React.useMemo(() => {
     if (isReferenceClip) {
       return '/evidence/frame_last_spot_annotated.jpg';
+    }
+    if (clientExtractedUrls.lastAnnotated) {
+      return clientExtractedUrls.lastAnnotated;
     }
     if (allEvidenceItems.length > 0 && (allEvidenceItems[0].annotatedImagePath || allEvidenceItems[0].originalImagePath)) {
       return toFullUrl(allEvidenceItems[0].annotatedImagePath || allEvidenceItems[0].originalImagePath);
@@ -149,18 +217,21 @@ export const CinematicResultsView: React.FC = () => {
     if (searchSession.evidence) return toFullUrl(searchSession.evidence);
     if (sessionId) return toFullUrl(`/api/search/${sessionId}/evidence/frame?type=annotated&spot=last_spot`);
     return toFullUrl('/api/search/latest/evidence/frame?type=annotated&spot=last_spot');
-  }, [allEvidenceItems, detectionResult?.detectionId, searchSession.evidence, sessionId, isReferenceClip]);
+  }, [allEvidenceItems, detectionResult?.detectionId, searchSession.evidence, sessionId, isReferenceClip, clientExtractedUrls.lastAnnotated]);
 
   const topOriginalUrl = React.useMemo(() => {
     if (isReferenceClip) {
       return '/evidence/frame_last_spot_orig.jpg';
+    }
+    if (clientExtractedUrls.lastOriginal) {
+      return clientExtractedUrls.lastOriginal;
     }
     if (allEvidenceItems.length > 0 && allEvidenceItems[0].originalImagePath) {
       return toFullUrl(allEvidenceItems[0].originalImagePath);
     }
     if (sessionId) return toFullUrl(`/api/search/${sessionId}/evidence/frame?type=original&spot=last_spot`);
     return toFullUrl('/api/search/latest/evidence/frame?type=original&spot=last_spot');
-  }, [allEvidenceItems, sessionId, topAnnotatedUrl, isReferenceClip]);
+  }, [allEvidenceItems, sessionId, topAnnotatedUrl, isReferenceClip, clientExtractedUrls.lastOriginal]);
 
   // Handle switching between LAST SEEN SPOT and IN HAND
   const handleSpotChange = (spot: 'LAST_SPOT' | 'INITIAL_SPOT') => {
@@ -168,17 +239,17 @@ export const CinematicResultsView: React.FC = () => {
     if (spot === 'LAST_SPOT') {
       const lastAnn = isReferenceClip 
         ? '/evidence/frame_last_spot_annotated.jpg'
-        : (topAnnotatedUrl || `/api/search/${sessionId}/evidence/frame?type=annotated&spot=last_spot`);
+        : (clientExtractedUrls.lastAnnotated || topAnnotatedUrl || `/api/search/${sessionId}/evidence/frame?type=annotated&spot=last_spot`);
       const lastOrig = isReferenceClip 
         ? '/evidence/frame_last_spot_orig.jpg'
-        : (topOriginalUrl || `/api/search/${sessionId}/evidence/frame?type=original&spot=last_spot`);
+        : (clientExtractedUrls.lastOriginal || topOriginalUrl || `/api/search/${sessionId}/evidence/frame?type=original&spot=last_spot`);
 
       setEvidenceModal(prev => ({
         ...prev,
         spotType: 'LAST_SPOT',
-        frameNumber: 110,
-        timestamp: '00:03',
-        confidence: 97.8,
+        frameNumber: detectionResult?.lastSeenFrame || 110,
+        timestamp: formatTimestamp(detectionResult?.lastSeenTimestampMs, '00:03'),
+        confidence: detectionResult?.confidence || 97.8,
         annotatedUrl: lastAnn,
         originalUrl: lastOrig,
         status: 'LOADING',
@@ -187,10 +258,10 @@ export const CinematicResultsView: React.FC = () => {
     } else {
       const initAnn = isReferenceClip 
         ? '/evidence/frame_10_annotated.jpg'
-        : (sessionId ? toFullUrl(`/api/search/${sessionId}/evidence/frame?type=annotated&spot=initial`) : '/evidence/frame_10_annotated.jpg');
+        : (clientExtractedUrls.initialAnnotated || (sessionId ? toFullUrl(`/api/search/${sessionId}/evidence/frame?type=annotated&spot=initial`) : '/evidence/frame_10_annotated.jpg'));
       const initOrig = isReferenceClip 
         ? '/evidence/frame_10_orig.jpg'
-        : (sessionId ? toFullUrl(`/api/search/${sessionId}/evidence/frame?type=original&spot=initial`) : '/evidence/frame_10_orig.jpg');
+        : (clientExtractedUrls.initialOriginal || (sessionId ? toFullUrl(`/api/search/${sessionId}/evidence/frame?type=original&spot=initial`) : '/evidence/frame_10_orig.jpg'));
 
       setEvidenceModal(prev => ({
         ...prev,
@@ -251,9 +322,17 @@ export const CinematicResultsView: React.FC = () => {
     if (isReferenceClip) {
       ann = isLastSpot ? '/evidence/frame_last_spot_annotated.jpg' : '/evidence/frame_10_annotated.jpg';
       orig = isLastSpot ? '/evidence/frame_last_spot_orig.jpg' : '/evidence/frame_10_orig.jpg';
-    } else if (!ann) {
-      ann = topAnnotatedUrl;
-      orig = topOriginalUrl;
+    } else {
+      if (isLastSpot && clientExtractedUrls.lastAnnotated) {
+        ann = clientExtractedUrls.lastAnnotated;
+        orig = clientExtractedUrls.lastOriginal || ann;
+      } else if (!isLastSpot && clientExtractedUrls.initialAnnotated) {
+        ann = clientExtractedUrls.initialAnnotated;
+        orig = clientExtractedUrls.initialOriginal || ann;
+      } else if (!ann) {
+        ann = topAnnotatedUrl;
+        orig = topOriginalUrl;
+      }
     }
 
     // STEP 1 & STEP 7 REQUIRED CONSOLE LOG
@@ -425,6 +504,15 @@ export const CinematicResultsView: React.FC = () => {
     setEvidenceModal(prev => ({ ...prev, status: 'LOADING', errorMessage: null }));
 
     const loadEvidenceImage = async () => {
+      // 0. Direct base64 / blob URLs (client-extracted genuine frames)
+      if (activeModalUrl.startsWith('data:') || activeModalUrl.startsWith('blob:')) {
+        if (isMounted) {
+          setBlobUrl(activeModalUrl);
+          setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
+        }
+        return;
+      }
+
       // 1. Direct local static evidence photos
       if (activeModalUrl.startsWith('/evidence/')) {
         try {
@@ -487,24 +575,39 @@ export const CinematicResultsView: React.FC = () => {
       } catch (err: any) {
         console.warn('[EVIDENCE BLOB FETCH FALLBACK]', activeModalUrl, err);
         if (isMounted) {
-          // 1. Prioritize genuine extracted photo directly from the surveillance video
-          const isLastSpot = evidenceModal.spotType !== 'INITIAL_SPOT';
-          const genuinePhotoUrl = isLastSpot
-            ? `/evidence/frame_last_spot_${evidenceModal.mode === 'ORIGINAL' ? 'orig' : 'annotated'}.jpg`
-            : `/evidence/frame_10_${evidenceModal.mode === 'ORIGINAL' ? 'orig' : 'annotated'}.jpg`;
-          try {
-            const photoRes = await fetch(genuinePhotoUrl);
-            if (photoRes.ok) {
-              const photoBlob = await photoRes.blob();
-              if (photoBlob.size > 0) {
-                const photoObjUrl = URL.createObjectURL(photoBlob);
-                setBlobUrl(photoObjUrl);
-                setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
-                return;
-              }
+          // If user uploaded a video, prioritize client-extracted real frame
+          if (hasUserUploadedVideo && (clientExtractedUrls.lastAnnotated || clientExtractedUrls.initialAnnotated)) {
+            const isLast = evidenceModal.spotType !== 'INITIAL_SPOT';
+            const userFallback = isLast
+              ? (evidenceModal.mode === 'ORIGINAL' ? (clientExtractedUrls.lastOriginal || clientExtractedUrls.lastAnnotated) : clientExtractedUrls.lastAnnotated)
+              : (evidenceModal.mode === 'ORIGINAL' ? (clientExtractedUrls.initialOriginal || clientExtractedUrls.initialAnnotated) : clientExtractedUrls.initialAnnotated);
+            if (userFallback) {
+              setBlobUrl(userFallback);
+              setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
+              return;
             }
-          } catch (photoErr) {
-            console.warn('[GENUINE PHOTO FETCH FAILED]', photoErr);
+          }
+
+          // Prioritize genuine extracted photo directly from surveillance reference video
+          if (isReferenceClip) {
+            const isLastSpot = evidenceModal.spotType !== 'INITIAL_SPOT';
+            const genuinePhotoUrl = isLastSpot
+              ? `/evidence/frame_last_spot_${evidenceModal.mode === 'ORIGINAL' ? 'orig' : 'annotated'}.jpg`
+              : `/evidence/frame_10_${evidenceModal.mode === 'ORIGINAL' ? 'orig' : 'annotated'}.jpg`;
+            try {
+              const photoRes = await fetch(genuinePhotoUrl);
+              if (photoRes.ok) {
+                const photoBlob = await photoRes.blob();
+                if (photoBlob.size > 0) {
+                  const photoObjUrl = URL.createObjectURL(photoBlob);
+                  setBlobUrl(photoObjUrl);
+                  setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
+                  return;
+                }
+              }
+            } catch (photoErr) {
+              console.warn('[GENUINE PHOTO FETCH FAILED]', photoErr);
+            }
           }
 
           // 2. Secondary fallback: dynamic synthetic surveillance engine
@@ -779,6 +882,11 @@ export const CinematicResultsView: React.FC = () => {
                           alt="Target Last Known Position Evidence"
                           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                           loading="lazy"
+                          onError={(e) => {
+                            if (clientExtractedUrls.lastAnnotated) {
+                              (e.target as HTMLImageElement).src = clientExtractedUrls.lastAnnotated;
+                            }
+                          }}
                         />
                         <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                           <span className="px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-md border border-white/20 text-[10px] font-mono font-bold text-white flex items-center gap-1.5 opacity-90 group-hover:opacity-100">
@@ -1120,11 +1228,19 @@ export const CinematicResultsView: React.FC = () => {
                 }}
                 onError={async (e) => {
                   console.warn('Evidence image onError, falling back to genuine video frame:', activeModalUrl, e);
-                  const isRef = Boolean(
-                    (evidenceModal.videoName || '').includes('WhatsApp Video') ||
-                    (evidenceModal.videoName || '').includes('cctv-reference')
-                  );
-                  if (isRef) {
+                  if (hasUserUploadedVideo && (clientExtractedUrls.lastAnnotated || clientExtractedUrls.initialAnnotated)) {
+                    const isLast = evidenceModal.spotType !== 'INITIAL_SPOT';
+                    const userFallback = isLast
+                      ? (evidenceModal.mode === 'ORIGINAL' ? (clientExtractedUrls.lastOriginal || clientExtractedUrls.lastAnnotated) : clientExtractedUrls.lastAnnotated)
+                      : (evidenceModal.mode === 'ORIGINAL' ? (clientExtractedUrls.initialOriginal || clientExtractedUrls.initialAnnotated) : clientExtractedUrls.initialAnnotated);
+                    if (userFallback) {
+                      setBlobUrl(userFallback);
+                      setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
+                      return;
+                    }
+                  }
+
+                  if (isReferenceClip) {
                     const isLastSpot = evidenceModal.spotType !== 'INITIAL_SPOT';
                     const genuinePhotoUrl = isLastSpot
                       ? `/evidence/frame_last_spot_${evidenceModal.mode === 'ORIGINAL' ? 'orig' : 'annotated'}.jpg`

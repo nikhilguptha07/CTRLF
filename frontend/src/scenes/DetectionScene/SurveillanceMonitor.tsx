@@ -92,11 +92,11 @@ export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
   const videoSrc = useMemo(() => {
     if (propVideoUrl) return propVideoUrl;
     if (uploadedVideoRecord?.blobUrl) return uploadedVideoRecord.blobUrl;
-    const filename = searchSession?.videoFilename || detectionResult?.videoFilename || '';
-    if (filename.includes('WhatsApp') || filename.includes('2026-09-03') || filename.includes('f2b31c43')) {
+    const filename = (searchSession?.videoFilename || detectionResult?.videoFilename || '').toLowerCase();
+    if (filename === 'whatsapp video 2026-09-03 at 8.46.51 pm.mp4' || filename === 'cctv-reference.mp4' || filename.includes('f2b31c43')) {
       return '/reference/detected-cctv.mp4';
     }
-    if (detectionResult?.found) {
+    if (detectionResult?.found && filename === '') {
       return '/reference/detected-cctv.mp4';
     }
     return '/reference/cctv-reference.mp4';

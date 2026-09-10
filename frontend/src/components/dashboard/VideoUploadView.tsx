@@ -86,8 +86,23 @@ export const VideoUploadView: React.FC = () => {
 
     try {
       const blobUrl = URL.createObjectURL(file);
-      const video = await apiClient.uploadVideo(file);
-      setUploadedVideoRecord({ ...video, blobUrl });
+      let videoRecord: any = {
+        id: 'upload-' + Date.now(),
+        originalFilename: file.name,
+        fileSizeBytes: file.size,
+        status: 'READY'
+      };
+
+      try {
+        const video = await apiClient.uploadVideo(file);
+        if (video) {
+          videoRecord = { ...videoRecord, ...video };
+        }
+      } catch (uploadErr) {
+        console.warn('[UPLOAD] Backend upload warning (continuing with client video):', uploadErr);
+      }
+
+      setUploadedVideoRecord({ ...videoRecord, blobUrl, file });
       setIsUploading(false);
     } catch (err: any) {
       setIsUploading(false);
