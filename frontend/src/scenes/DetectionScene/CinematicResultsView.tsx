@@ -57,7 +57,14 @@ function getColorBadge(colorName?: string | null) {
 
 function toFullUrl(pathOrUrl?: string | null): string {
   if (!pathOrUrl) return '';
-  if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://')) return pathOrUrl;
+  if (
+    pathOrUrl.startsWith('http://') || 
+    pathOrUrl.startsWith('https://') || 
+    pathOrUrl.startsWith('data:') || 
+    pathOrUrl.startsWith('blob:')
+  ) {
+    return pathOrUrl;
+  }
   const baseUrl = apiClient.getBaseUrl();
   const cleanPath = pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`;
   return `${baseUrl}${cleanPath}`;
@@ -120,7 +127,7 @@ export const CinematicResultsView: React.FC = () => {
   const targetClass = searchSession.targetClass || searchQuery || 'Object';
   const targetColor = searchSession.targetColor || null;
   const dominantColor = detectionResult?.dominantColor || searchSession.dominantColor || null;
-  const uploadedRec = (useExperienceStore.getState().uploadedVideoRecord as any);
+  const uploadedRec = useExperienceStore(s => s.uploadedVideoRecord as any);
   const hasUserUploadedVideo = Boolean(
     uploadedRec?.blobUrl || 
     uploadedRec?.file || 
@@ -513,6 +520,13 @@ export const CinematicResultsView: React.FC = () => {
         return;
       }
 
+      // Direct data: or blob: URI from client extraction
+      if (activeModalUrl.startsWith('data:') || activeModalUrl.startsWith('blob:')) {
+        setBlobUrl(activeModalUrl);
+        setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
+        return;
+      }
+
       // 1. Direct local static evidence photos
       if (activeModalUrl.startsWith('/evidence/')) {
         try {
@@ -576,7 +590,7 @@ export const CinematicResultsView: React.FC = () => {
         console.warn('[EVIDENCE BLOB FETCH FALLBACK]', activeModalUrl, err);
         if (isMounted) {
           // If user uploaded a video, prioritize client-extracted real frame
-          if (hasUserUploadedVideo && (clientExtractedUrls.lastAnnotated || clientExtractedUrls.initialAnnotated)) {
+          if (hasUserUploadedVideo) {
             const isLast = evidenceModal.spotType !== 'INITIAL_SPOT';
             const userFallback = isLast
               ? (evidenceModal.mode === 'ORIGINAL' ? (clientExtractedUrls.lastOriginal || clientExtractedUrls.lastAnnotated) : clientExtractedUrls.lastAnnotated)
@@ -585,6 +599,29 @@ export const CinematicResultsView: React.FC = () => {
               setBlobUrl(userFallback);
               setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
               return;
+            }
+
+            const userSrc = uploadedRec?.file || uploadedRec?.blobUrl;
+            if (userSrc) {
+              try {
+                const sec = isLast
+                  ? (detectionResult?.lastSeenTimestampMs ? detectionResult.lastSeenTimestampMs / 1000 : 3.0)
+                  : 0.33;
+                const directFrame = await extractFrameFromVideo(userSrc, {
+                  timestampSeconds: sec,
+                  annotate: evidenceModal.mode === 'ANNOTATED',
+                  label: evidenceModal.objectName || targetClass || 'Target',
+                  confidence: evidenceModal.confidence || 95.0,
+                  bbox: detectionResult?.boundingBox,
+                });
+                if (directFrame) {
+                  setBlobUrl(directFrame);
+                  setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
+                  return;
+                }
+              } catch (onDemandErr) {
+                console.warn('[ON-DEMAND FRAME EXTRACTION ERROR]', onDemandErr);
+              }
             }
           }
 

@@ -218,7 +218,7 @@ export function generateSurveillanceSvg(options: SurveillanceFrameOptions): stri
       CTRL-F AI SURVEILLANCE v2.5
     </text>
     <text x="1232" y="72" text-anchor="end" fill="#64748b" font-size="11">
-      1080p FHD • 30.00 FPS • ORACLE 21c ARCHIVE
+      1080p FHD • 30.00 FPS • SURVEILLANCE ARCHIVE
     </text>
 
     <!-- Bottom-Left Forensic Timestamp -->

@@ -125,13 +125,15 @@ export const DashboardWindow: React.FC = () => {
 
         {/* Right: Log in, Sign up button, Avatar */}
         <div className="flex items-center gap-3 sm:gap-4">
-          <button 
-            type="button" 
-            onClick={() => setActiveFeedTab('settings')}
-            className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
-          >
-            Operator 01
-          </button>
+          {(activeFeedTab === 'home' || activeFeedTab === 'overview') && (
+            <button 
+              type="button" 
+              onClick={() => setActiveFeedTab('settings')}
+              className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+            >
+              Operator 01
+            </button>
+          )}
           <button
             type="button"
             onClick={() => { setActiveFeedTab('search'); setStage('OBJECT_INPUT'); }}
@@ -254,14 +256,16 @@ export const DashboardWindow: React.FC = () => {
             </button>
           </nav>
 
-          {/* Bottom badge */}
-          <div 
-            onClick={() => { setActiveFeedTab('settings'); setStage('HOME'); }}
-            className="p-2 rounded-xl bg-slate-100/80 hover:bg-white border border-slate-200/70 text-[10px] text-slate-700 flex items-center gap-2 cursor-pointer transition-all shadow-2xs"
-          >
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-            <span className="truncate font-medium">Oracle 21c · Ready</span>
-          </div>
+          {/* Bottom badge - Overview only */}
+          {(activeFeedTab === 'home' || activeFeedTab === 'overview') && (
+            <div 
+              onClick={() => { setActiveFeedTab('settings'); setStage('HOME'); }}
+              className="p-2 rounded-xl bg-slate-100/80 hover:bg-white border border-slate-200/70 text-[10px] text-slate-700 flex items-center gap-2 cursor-pointer transition-all shadow-2xs"
+            >
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <span className="truncate font-medium">Oracle 21c · Ready</span>
+            </div>
+          )}
         </aside>
 
         {/* Center Dynamic Content Area */}
