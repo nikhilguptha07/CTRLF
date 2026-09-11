@@ -256,6 +256,12 @@ export async function detectObjectsInVideo(
     let objectUrlToRevoke: string | null = null;
 
     const cleanup = () => {
+      try {
+        video.pause();
+        if (video.parentNode) {
+          video.parentNode.removeChild(video);
+        }
+      } catch {}
       if (objectUrlToRevoke) {
         URL.revokeObjectURL(objectUrlToRevoke);
         objectUrlToRevoke = null;
@@ -278,6 +284,17 @@ export async function detectObjectsInVideo(
     const video = document.createElement('video');
     video.muted = true;
     video.playsInline = true;
+    video.preload = 'auto';
+
+    video.style.position = 'fixed';
+    video.style.top = '-9999px';
+    video.style.left = '-9999px';
+    video.style.width = '320px';
+    video.style.height = '180px';
+    video.style.opacity = '0.001';
+    video.style.pointerEvents = 'none';
+    video.style.zIndex = '-99999';
+    document.body.appendChild(video);
 
     if (typeof videoSource === 'string') {
       if (!videoSource.startsWith('blob:') && !videoSource.startsWith('data:')) {
@@ -344,28 +361,33 @@ export async function detectObjectsInVideo(
           const t = sampleTimes[i];
           const frameIdx = Math.round(t * 30);
 
-          // Robust seek with video frame readiness
+          // Robust seek with video frame readiness and brief playback
           await new Promise<void>((seekResolve) => {
             let done = false;
-            const onFinish = () => {
+            const onReady = () => {
               if (done) return;
               done = true;
-              video.removeEventListener('seeked', onFinish);
               clearTimeout(seekTimer);
+              video.pause();
+              seekResolve();
+            };
+
+            const seekTimer = setTimeout(onReady, 1200);
+            video.addEventListener('seeked', () => {
               if ('requestVideoFrameCallback' in video) {
                 try {
-                  (video as any).requestVideoFrameCallback(() => seekResolve());
+                  (video as any).requestVideoFrameCallback(() => onReady());
                   return;
                 } catch {}
               }
-              requestAnimationFrame(() => seekResolve());
-            };
-            const seekTimer = setTimeout(onFinish, 1200);
-            video.addEventListener('seeked', onFinish);
+              requestAnimationFrame(() => onReady());
+            }, { once: true });
+
             try {
               video.currentTime = t;
+              video.play().catch(() => {});
             } catch {
-              onFinish();
+              onReady();
             }
           });
 

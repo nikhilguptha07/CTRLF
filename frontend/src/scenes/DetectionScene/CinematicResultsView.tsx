@@ -134,10 +134,12 @@ export const CinematicResultsView: React.FC = () => {
     (uploadedRec?.id && uploadedRec.id !== 'cctv-reference')
   );
   const videoName = searchSession.videoFilename || detectionResult?.videoFilename || uploadedRec?.originalFilename || 'Uploaded Surveillance Video';
-  const isReferenceClip = !hasUserUploadedVideo && Boolean(
+  const isReferenceClip = Boolean(
     (searchSession as any)?.sourceId === 'cctv-reference' ||
-    videoName.toLowerCase() === 'cctv-reference.mp4' ||
-    videoName.toLowerCase() === 'whatsapp video 2026-09-03 at 8.46.51 pm.mp4'
+    videoName.toLowerCase().includes('cctv-reference') ||
+    videoName.toLowerCase().includes('whatsapp video 2026-09-03') ||
+    (uploadedRec?.originalFilename || '').toLowerCase().includes('cctv-reference') ||
+    (uploadedRec?.originalFilename || '').toLowerCase().includes('whatsapp video 2026-09-03')
   );
   const sessionId = searchSession.sessionId || (searchSession as any).id || (detectionResult as any)?.searchId;
 

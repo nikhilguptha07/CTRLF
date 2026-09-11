@@ -328,7 +328,8 @@ export class SearchService {
             processingFps,
             searchId,
             (input as any).targetClass,
-            (input as any).targetColor
+            (input as any).targetColor,
+            video.originalFilename
           );
         } finally {
           clearInterval(progressPoller);

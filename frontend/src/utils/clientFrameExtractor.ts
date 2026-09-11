@@ -31,6 +31,18 @@ export async function extractFrameFromVideo(
     const video = document.createElement('video');
     video.muted = true;
     video.playsInline = true;
+    video.preload = 'auto';
+
+    // Must be in DOM for Chromium GPU video decoding pipeline to attach texture surface
+    video.style.position = 'fixed';
+    video.style.top = '-9999px';
+    video.style.left = '-9999px';
+    video.style.width = '320px';
+    video.style.height = '180px';
+    video.style.opacity = '0.001';
+    video.style.pointerEvents = 'none';
+    video.style.zIndex = '-99999';
+    document.body.appendChild(video);
 
     let objectUrlToRevoke: string | null = null;
     if (typeof videoSource === 'string') {
@@ -51,6 +63,12 @@ export async function extractFrameFromVideo(
       video.removeEventListener('loadedmetadata', onLoadedMetadata);
       video.removeEventListener('seeked', onSeeked);
       video.removeEventListener('error', onError);
+      try {
+        video.pause();
+        if (video.parentNode) {
+          video.parentNode.removeChild(video);
+        }
+      } catch {}
       if (objectUrlToRevoke) {
         URL.revokeObjectURL(objectUrlToRevoke);
       }
@@ -96,24 +114,85 @@ export async function extractFrameFromVideo(
       }
     };
 
+    const captureWithValidation = () => {
+      if (isDone) return;
+      try {
+        const width = video.videoWidth || 640;
+        const height = video.videoHeight || 360;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        if (!ctx) {
+          finishWithCanvas();
+          return;
+        }
+
+        ctx.drawImage(video, 0, 0, width, height);
+
+        // Verify that drawn frame is not completely black (GPU decoder buffer warmup check)
+        const sampleW = Math.min(width, 100);
+        const sampleH = Math.min(height, 100);
+        const sample = ctx.getImageData(0, 0, sampleW, sampleH).data;
+        let isBlack = true;
+        for (let i = 0; i < sample.length; i += 4) {
+          if (sample[i] > 8 || sample[i + 1] > 8 || sample[i + 2] > 8) {
+            isBlack = false;
+            break;
+          }
+        }
+
+        if (isBlack && (options.timestampSeconds || 0) < (video.duration || 1.0) - 0.1) {
+          // Play for 80ms to push frames through GPU pipeline and re-render
+          video.play().catch(() => {});
+          setTimeout(() => {
+            video.pause();
+            finishWithCanvas();
+          }, 80);
+          return;
+        }
+
+        finishWithCanvas();
+      } catch {
+        finishWithCanvas();
+      }
+    };
+
     let fallbackTimer: any = null;
 
     const onSeeked = () => {
-      finishWithCanvas();
+      if ('requestVideoFrameCallback' in video) {
+        try {
+          (video as any).requestVideoFrameCallback(() => {
+            video.pause();
+            captureWithValidation();
+          });
+          return;
+        } catch {}
+      }
+
+      setTimeout(() => {
+        video.pause();
+        requestAnimationFrame(() => captureWithValidation());
+      }, 50);
     };
 
-    const onLoadedMetadata = () => {
+    const onLoadedMetadata = async () => {
       const duration = video.duration || 1.0;
       // Target time with slight offset to guarantee seeked event triggers
       const targetTime = Math.min(Math.max(0.01, options.timestampSeconds ?? 0.01), Math.max(0.01, duration - 0.05));
       video.currentTime = targetTime;
 
-      // Fallback timer: if seeked doesn't fire within 1.5s but video is ready, capture whatever frame is ready
+      try {
+        await video.play();
+      } catch {}
+
+      // Fallback timer: if seeked doesn't fire within 2.5s but video is ready, capture whatever frame is ready
       fallbackTimer = setTimeout(() => {
         if (!isDone && video.readyState >= 2) {
-          finishWithCanvas();
+          captureWithValidation();
         }
-      }, 1500);
+      }, 2500);
     };
 
     const onError = () => {

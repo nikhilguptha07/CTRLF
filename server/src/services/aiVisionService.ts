@@ -544,7 +544,8 @@ export class MockVisionProvider implements VisionProvider {
     sampleFps = 4.0,
     sessionId?: string,
     targetClass?: string | null,
-    targetColor?: string | null
+    targetColor?: string | null,
+    originalFilename?: string | null
   ): Promise<VideoInferenceResult> {
     const q = query.toLowerCase();
     const isUnicornAbsent = ['unicorn', 'ghost', 'dinosaur', 'spaceship'].includes(q);
@@ -593,7 +594,11 @@ export class MockVisionProvider implements VisionProvider {
           normalizedHeight: 0.30,
         };
 
-    const isReferenceClip = (videoPath || '').toLowerCase().includes('cctv-reference') || (videoPath || '').toLowerCase().includes('whatsapp video 2026-09-03');
+    const isReferenceClip =
+      (videoPath || '').toLowerCase().includes('cctv-reference') ||
+      (videoPath || '').toLowerCase().includes('whatsapp video 2026-09-03') ||
+      (originalFilename || '').toLowerCase().includes('cctv-reference') ||
+      (originalFilename || '').toLowerCase().includes('whatsapp video 2026-09-03');
     const fallbackTimestampMs = isReferenceClip ? 3666 : 1000;
     const fallbackFrameIndex = isReferenceClip ? 110 : 30;
 
@@ -836,11 +841,12 @@ export class AiVisionService {
     sampleFps = 4.0,
     sessionId?: string,
     targetClass?: string | null,
-    targetColor?: string | null
+    targetColor?: string | null,
+    originalFilename?: string | null
   ): Promise<VideoInferenceResult> {
     if (this.provider.processVideo) {
       try {
-        return await this.provider.processVideo(videoPath, query, sampleFps, sessionId, targetClass, targetColor);
+        return await (this.provider.processVideo as any)(videoPath, query, sampleFps, sessionId, targetClass, targetColor, originalFilename);
       } catch (err: any) {
         if (
           err.message?.includes('AI_SERVICE_UNAVAILABLE') ||
@@ -852,7 +858,7 @@ export class AiVisionService {
             { target: query }
           );
           const mock = new MockVisionProvider();
-          return mock.processVideo(videoPath, query, sampleFps, sessionId, targetClass, targetColor);
+          return mock.processVideo(videoPath, query, sampleFps, sessionId, targetClass, targetColor, originalFilename);
         }
         throw err;
       }

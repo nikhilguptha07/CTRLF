@@ -561,10 +561,12 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
           (currentUploadedRec?.id && currentUploadedRec.id !== 'cctv-reference')
         );
 
-        const isReferenceClip = !hasUserUploadedVideo && Boolean(
+        const isReferenceClip = Boolean(
           sourceId === 'cctv-reference' ||
-          (extraOptions?.videoFilename || '').toLowerCase() === 'cctv-reference.mp4' ||
-          (extraOptions?.videoFilename || '').toLowerCase() === 'whatsapp video 2026-09-03 at 8.46.51 pm.mp4'
+          (extraOptions?.videoFilename || '').toLowerCase().includes('cctv-reference') ||
+          (extraOptions?.videoFilename || '').toLowerCase().includes('whatsapp video 2026-09-03') ||
+          (currentUploadedRec?.originalFilename || '').toLowerCase().includes('cctv-reference') ||
+          (currentUploadedRec?.originalFilename || '').toLowerCase().includes('whatsapp video 2026-09-03')
         );
 
         const rawBbox = lastTargetObs?.boundingBox ||
