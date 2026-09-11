@@ -3,8 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --font-inter: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 * {
@@ -18,10 +19,28 @@ html, body, #root {
   height: 100%;
   overflow: hidden;
   background-color: #02050e;
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
   user-select: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+/* Global typography refinements */
+body, input, button, select, textarea {
+  font-family: var(--font-sans);
+  letter-spacing: -0.012em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.025em;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+code, kbd, samp, pre, .font-mono {
+  font-family: var(--font-mono) !important;
+  letter-spacing: -0.015em;
 }
 
 /* Premium Floating Glass Panel according to exact specification:

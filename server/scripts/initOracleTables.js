@@ -205,11 +205,15 @@ const ddl = [
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
   )`,
   `CREATE TABLE CAMERA_STREAM_STATUS (
-      id VARCHAR2(64) PRIMARY KEY,
-      camera_id VARCHAR2(64) NOT NULL,
-      status VARCHAR2(50) NOT NULL,
-      fps NUMBER,
-      bitrate NUMBER,
+      camera_id VARCHAR2(64) PRIMARY KEY,
+      status VARCHAR2(50) DEFAULT 'STOPPED' NOT NULL,
+      connected_at TIMESTAMP WITH TIME ZONE,
+      last_frame_at TIMESTAMP WITH TIME ZONE,
+      last_error VARCHAR2(500),
+      current_fps NUMBER(5, 2) DEFAULT 0.0,
+      frames_received NUMBER(10) DEFAULT 0,
+      frames_dropped NUMBER(10) DEFAULT 0,
+      reconnect_attempts NUMBER(5) DEFAULT 0,
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
   )`
 ];
