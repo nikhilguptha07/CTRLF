@@ -19,7 +19,7 @@ export const IntroScene: React.FC = () => {
     <div
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      className="relative w-full h-full overflow-hidden bg-gradient-to-b from-[#eef2f6] via-[#f8fafc] to-[#e2e8f0] flex items-center justify-center"
+      className="relative w-full h-full overflow-hidden bg-gradient-to-b from-[#eef2f6] via-[#f8fafc] to-[#e2e8f0] flex flex-col items-center justify-center pt-12 sm:pt-14 pb-4"
       style={{
         perspective: '1200px',
       }}
@@ -38,11 +38,11 @@ export const IntroScene: React.FC = () => {
       {/* Atmospheric Soft Vignette and Tint */}
       <div className="absolute inset-0 z-10 pointer-events-none bg-radial from-transparent via-white/20 to-slate-200/40" />
 
-      {/* Centered Floating Dashboard with Micro-Tilt Parallax */}
+      {/* Centered Floating Dashboard with Micro-Tilt Parallax and Generous Top Clearance */}
       <div
         className="relative z-20 w-full max-w-5xl px-4 flex items-center justify-center transition-transform duration-200 ease-out"
         style={{
-          transform: `rotateX(${-mousePos.y * 2.5}deg) rotateY(${mousePos.x * 3}deg) translateZ(10px)`,
+          transform: `rotateX(${-mousePos.y * 2.2}deg) rotateY(${mousePos.x * 2.8}deg) translateZ(10px)`,
         }}
       >
         <DashboardWindow />

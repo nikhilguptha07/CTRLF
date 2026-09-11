@@ -61,20 +61,20 @@ export const DashboardTopControls: React.FC<DashboardTopControlsProps> = ({
     <nav 
       aria-label="Dashboard system controls"
       id="dashboard-top-controls"
-      className="fixed top-3 right-3 sm:top-4 sm:right-4 z-50 flex items-center gap-2 sm:gap-2.5 flex-wrap justify-end max-w-[calc(100vw-1.5rem)] pointer-events-auto transition-all duration-200 animate-fade-in font-sans"
+      className="fixed top-2.5 right-3 sm:top-3 sm:right-5 z-50 flex items-center gap-2 sm:gap-2.5 flex-wrap justify-end max-w-[calc(100vw-1.5rem)] pointer-events-auto transition-all duration-200 animate-fade-in font-sans"
     >
       {/* 1. Oracle 21c XE Operational Status Indicator */}
       <button 
         type="button"
         id="top-control-oracle"
         onClick={handleOracleClick}
-        className="bg-white/95 backdrop-blur-xl rounded-2xl px-3 py-1.5 sm:px-3.5 sm:py-2 border border-white/90 shadow-xs hover:shadow-md hover:border-emerald-200 transition-all flex items-center gap-2 text-xs cursor-pointer group"
+        className="bg-white/95 backdrop-blur-xl rounded-xl px-3 py-1.5 border border-white/90 shadow-xs hover:shadow-md hover:border-emerald-200 transition-all flex items-center gap-2 text-xs cursor-pointer group bubble-btn bubble-pill"
         title="View Oracle 21c Database Health & Schema"
         style={{
           boxShadow: '0 4px 15px -3px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(255, 255, 255, 0.9) inset',
         }}
       >
-        <div className="w-5 h-5 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+        <div className="w-4.5 h-4.5 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
           <Database className="w-3.5 h-3.5" />
         </div>
         <span className="text-[11px] font-bold text-slate-800 tracking-tight hidden md:inline">
@@ -92,14 +92,14 @@ export const DashboardTopControls: React.FC<DashboardTopControlsProps> = ({
       {/* 2. Operator Profile / Login Button */}
       <div 
         id="top-control-operator"
-        className="bg-white/95 backdrop-blur-xl rounded-2xl px-3 py-1.5 sm:px-3.5 sm:py-2 border border-white/90 shadow-xs hover:shadow-md transition-all flex items-center gap-2 text-xs"
+        className="bg-white/95 backdrop-blur-xl rounded-xl px-3 py-1.5 border border-white/90 shadow-xs hover:shadow-md transition-all flex items-center gap-2 text-xs bubble-btn bubble-pill"
         style={{
           boxShadow: '0 4px 15px -3px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(255, 255, 255, 0.9) inset',
         }}
       >
         {isAuthenticated && currentUser ? (
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-lg bg-indigo-50 text-[#4361ee] flex items-center justify-center shrink-0">
+            <div className="w-4.5 h-4.5 rounded-lg bg-indigo-50 text-[#4361ee] flex items-center justify-center shrink-0">
               <ShieldCheck className="w-3.5 h-3.5" />
             </div>
             <span className="font-bold text-[11px] text-slate-900 max-w-[110px] truncate">
@@ -124,7 +124,7 @@ export const DashboardTopControls: React.FC<DashboardTopControlsProps> = ({
             className="flex items-center gap-2 text-slate-700 hover:text-[#4361ee] font-semibold text-xs transition-colors cursor-pointer group"
             title="Open Operator Authentication"
           >
-            <div className="w-5 h-5 rounded-lg bg-indigo-50 text-[#4361ee] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <div className="w-4.5 h-4.5 rounded-lg bg-indigo-50 text-[#4361ee] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
               <LogIn className="w-3.5 h-3.5" />
             </div>
             <span className="text-[11px] font-bold">OPERATOR LOGIN</span>
@@ -135,7 +135,7 @@ export const DashboardTopControls: React.FC<DashboardTopControlsProps> = ({
       {/* 3. System Status, Audio Mute & 10s Demo Controls */}
       <div 
         id="top-control-system"
-        className="bg-white/95 backdrop-blur-xl rounded-2xl px-3 py-1.5 sm:px-3.5 sm:py-2 border border-white/90 shadow-xs hover:shadow-md transition-all flex items-center gap-2.5 text-xs text-slate-800"
+        className="bg-white/95 backdrop-blur-xl rounded-xl px-3 py-1.5 border border-white/90 shadow-xs hover:shadow-md transition-all flex items-center gap-2.5 text-xs text-slate-800 bubble-btn bubble-pill"
         style={{
           boxShadow: '0 4px 15px -3px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(255, 255, 255, 0.9) inset',
         }}

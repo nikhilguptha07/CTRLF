@@ -121,14 +121,14 @@ export const DashboardWindow: React.FC = () => {
     <div
       id="dashboard-window"
       ref={windowRef}
-      className="w-full max-w-5xl h-[610px] rounded-3xl bg-white/90 backdrop-blur-2xl border border-white/95 shadow-2xl flex flex-col overflow-hidden relative select-none font-sans"
+      className="w-full max-w-5xl h-[560px] sm:h-[570px] max-h-[calc(100vh-125px)] rounded-3xl bg-white/90 backdrop-blur-2xl border border-white/95 shadow-2xl flex flex-col overflow-hidden relative select-none font-sans"
       style={{
         transformStyle: 'preserve-3d',
         boxShadow: '0 25px 65px -15px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.9) inset',
       }}
     >
       {/* 1. Top SaaS Application Bar with Glassmorphic Finish */}
-      <header className="h-14 px-5 sm:px-6 border-b border-slate-200/70 flex items-center justify-between shrink-0 bg-white/60 backdrop-blur-md relative z-10 text-xs">
+      <header className="h-13 px-5 sm:px-6 border-b border-slate-200/70 flex items-center justify-between shrink-0 bg-white/60 backdrop-blur-md relative z-10 text-xs">
         
         {/* Left: Brand Identity & SaaS Tag */}
         <div 
@@ -149,7 +149,7 @@ export const DashboardWindow: React.FC = () => {
         {/* Center: SaaS Omnibar Search */}
         <form 
           onSubmit={handleHeaderSearchSubmit}
-          className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100/90 border border-slate-200/80 text-slate-700 w-64 sm:w-80 shadow-2xs focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:bg-white transition-all"
+          className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100/90 border border-slate-200/80 text-slate-700 w-72 sm:w-88 shadow-2xs focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:bg-white transition-all"
         >
           <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
           <input
@@ -170,47 +170,19 @@ export const DashboardWindow: React.FC = () => {
           )}
         </form>
 
-        {/* Right: Operational Status, Operator Pill, CTA */}
-        <div className="flex items-center gap-2.5 sm:gap-3.5">
-          {/* Oracle 21c Live Status Pill with Bubble Feature */}
-          <button
-            type="button"
-            onClick={() => setShowOracleModal(true)}
-            title="Oracle 21c Database Health & Hash Audit"
-            className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50/90 border border-emerald-200/80 text-[11px] font-medium text-emerald-800 hover:bg-emerald-100 transition-colors cursor-pointer shadow-2xs bubble-btn bubble-pill"
-          >
-            <span className="w-2 h-2 rounded-full bg-emerald-500 bubble-beacon" />
-            <span className="font-semibold">Oracle 21c</span>
-          </button>
-
-          {/* User Sign In / Profile with Bubble Feature */}
-          {isAuthenticated && currentUser ? (
-            <div 
-              onClick={() => setActiveFeedTab('settings')}
-              title="Operator Settings"
-              className="bubble-btn bubble-pill flex items-center gap-2 px-3 py-1 bg-slate-100/90 hover:bg-slate-200/80 border border-slate-200/80 cursor-pointer transition-colors"
+        {/* Right: Clean, Uncrowded Action Button (No Duplicate Oracle / User Profile) */}
+        <div className="flex items-center gap-2.5">
+          {activeFeedTab !== 'home' && activeFeedTab !== 'overview' && (
+            <button
+              type="button"
+              onClick={() => { setActiveFeedTab('home'); setStage('HOME'); }}
+              className="bubble-btn bubble-pill px-3 py-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 text-xs font-semibold transition-colors cursor-pointer"
             >
-              <div className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
-                {(currentUser.fullName || currentUser.username || 'O')[0].toUpperCase()}
-              </div>
-              <span className="font-semibold text-slate-800 text-xs hidden sm:inline">
-                {currentUser.username}
-              </span>
-              <span className="text-[9px] font-mono uppercase px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-700 font-bold">
-                {currentUser.role}
-              </span>
-            </div>
-          ) : (
-            <button 
-              type="button" 
-              onClick={() => setShowAuthModal(true)}
-              className="bubble-btn bubble-pill px-3.5 py-1 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100/80 transition-colors cursor-pointer"
-            >
-              Sign In
+              Overview
             </button>
           )}
 
-          {/* Primary CTA with Bubble Feature */}
+          {/* Primary Action Button with Bubble Effect */}
           <button
             type="button"
             onClick={() => {
@@ -223,7 +195,7 @@ export const DashboardWindow: React.FC = () => {
             }}
             className="bubble-btn bubble-pill px-4 py-1.5 bg-[#4361ee] hover:bg-[#3854d9] text-white text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
           >
-            <Search className="w-3 h-3" />
+            <Search className="w-3.5 h-3.5" />
             <span>Find Item</span>
           </button>
         </div>
