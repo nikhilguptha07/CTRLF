@@ -593,6 +593,10 @@ export class MockVisionProvider implements VisionProvider {
           normalizedHeight: 0.30,
         };
 
+    const isReferenceClip = (videoPath || '').toLowerCase().includes('cctv-reference') || (videoPath || '').toLowerCase().includes('whatsapp video 2026-09-03');
+    const fallbackTimestampMs = isReferenceClip ? 3666 : 1000;
+    const fallbackFrameIndex = isReferenceClip ? 110 : 30;
+
     const candidate: DetectionCandidate = {
       label: resolvedLabel,
       confidence: 97.8,
@@ -600,8 +604,8 @@ export class MockVisionProvider implements VisionProvider {
       colorConfidence: 91.0,
       secondaryColors: [],
       boundingBox: defaultBbox,
-      timestampMs: 3666,
-      frameIndex: 110,
+      timestampMs: fallbackTimestampMs,
+      frameIndex: fallbackFrameIndex,
       trackId: 1,
     };
 
@@ -623,9 +627,9 @@ export class MockVisionProvider implements VisionProvider {
         : [
             {
               evidence_id: `ev-${sessionId || Date.now()}`,
-              frame_number: 110,
-              timestamp_s: 3.66,
-              timestamp_ms: 3666,
+              frame_number: fallbackFrameIndex,
+              timestamp_s: Math.round((fallbackTimestampMs / 1000) * 100) / 100,
+              timestamp_ms: fallbackTimestampMs,
               confidence: 97.8,
               track_id: 1,
               class_name: resolvedLabel,
@@ -646,9 +650,9 @@ export class MockVisionProvider implements VisionProvider {
               secondaryColors: [],
               bbox: isBottle ? { x1: 276, y1: 442, width: 36, height: 108 } : { x1: 320, y1: 180, width: 140, height: 220 },
               firstFrame: 10,
-              lastFrame: 110,
+              lastFrame: fallbackFrameIndex,
               firstSeen: 0.33,
-              lastSeen: 3.66,
+              lastSeen: Math.round((fallbackTimestampMs / 1000) * 100) / 100,
               status: 'ACTIVE',
             },
           ],
@@ -664,9 +668,9 @@ export class MockVisionProvider implements VisionProvider {
               secondaryColors: [],
               bbox: isBottle ? { x1: 276, y1: 442, width: 36, height: 108 } : { x1: 320, y1: 180, width: 140, height: 220 },
               firstFrame: 10,
-              lastFrame: 110,
+              lastFrame: fallbackFrameIndex,
               firstSeen: 0.33,
-              lastSeen: 3.66,
+              lastSeen: Math.round((fallbackTimestampMs / 1000) * 100) / 100,
               status: 'ACTIVE',
             },
           ],

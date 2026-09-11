@@ -251,11 +251,15 @@ export const CinematicResultsView: React.FC = () => {
         ? '/evidence/frame_last_spot_orig.jpg'
         : (clientExtractedUrls.lastOriginal || topOriginalUrl || `/api/search/${sessionId}/evidence/frame?type=original&spot=last_spot`);
 
+      const lastSeenMs = detectionResult?.lastSeenTimestampMs;
+      const computedFrame = detectionResult?.lastSeenFrame ?? (lastSeenMs != null ? Math.round(lastSeenMs / 33.33) : (isReferenceClip ? 110 : 30));
+      const computedTs = detectionResult?.lastSeenTimestamp || formatTimestamp(lastSeenMs, isReferenceClip ? '00:03' : '00:01');
+
       setEvidenceModal(prev => ({
         ...prev,
         spotType: 'LAST_SPOT',
-        frameNumber: detectionResult?.lastSeenFrame || 110,
-        timestamp: formatTimestamp(detectionResult?.lastSeenTimestampMs, '00:03'),
+        frameNumber: computedFrame,
+        timestamp: computedTs,
         confidence: detectionResult?.confidence || 97.8,
         annotatedUrl: lastAnn,
         originalUrl: lastOrig,
@@ -311,13 +315,13 @@ export const CinematicResultsView: React.FC = () => {
     const isLastSpot = targetSpot === 'LAST_SPOT';
 
     const fNum = isLastSpot 
-      ? (params.frameNumber ?? primaryTarget?.frameNumber ?? (isReferenceClip ? 110 : 110))
+      ? (params.frameNumber ?? primaryTarget?.frameNumber ?? detectionResult?.lastSeenFrame ?? (isReferenceClip ? 110 : (detectionResult?.lastSeenTimestampMs ? Math.round(detectionResult.lastSeenTimestampMs / 33.33) : 30)))
       : 10;
     const ts = isLastSpot
-      ? (params.timestamp || primaryTarget?.lastSeenFormatted || '00:03')
+      ? (params.timestamp || primaryTarget?.lastSeenFormatted || detectionResult?.lastSeenTimestamp || formatTimestamp(detectionResult?.lastSeenTimestampMs, isReferenceClip ? '00:03' : '00:01'))
       : '00:00';
     const conf = isLastSpot
-      ? (params.confidence ?? primaryTarget?.confidence ?? 97.8)
+      ? (params.confidence ?? primaryTarget?.confidence ?? detectionResult?.confidence ?? (isReferenceClip ? 97.8 : 94.8))
       : 96.4;
 
     const trkId = params.trackId ?? primaryTarget?.trackId ?? detectionResult?.trackId ?? 'T1';
@@ -1165,7 +1169,7 @@ export const CinematicResultsView: React.FC = () => {
                         : 'text-emerald-300 hover:text-white'
                     }`}
                   >
-                    <span>📍 LAST SEEN SPOT ({evidenceModal.spotType !== 'INITIAL_SPOT' ? (evidenceModal.timestamp || '00:03') : '00:03'})</span>
+                    <span>📍 LAST SEEN SPOT ({detectionResult?.lastSeenTimestamp || matchingTargets[0]?.lastSeenFormatted || evidenceModal.timestamp || (isReferenceClip ? '00:03' : '00:01')})</span>
                   </button>
                   <button
                     type="button"

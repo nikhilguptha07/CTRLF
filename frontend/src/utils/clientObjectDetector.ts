@@ -57,32 +57,38 @@ export interface ClientVideoDetectionResult {
 
 let cocoModelPromise: Promise<any> | null = null;
 
-function loadScript(src: string, timeoutMs = 6000): Promise<void> {
-  return new Promise((resolve, reject) => {
+async function loadScriptWithFallback(srcs: string[], timeoutMs = 25000): Promise<void> {
+  for (const src of srcs) {
     if (document.querySelector(`script[src="${src}"]`)) {
-      resolve();
       return;
     }
-    const script = document.createElement('script');
-    script.src = src;
-    script.crossOrigin = 'anonymous';
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.crossOrigin = 'anonymous';
 
-    let timer: any = setTimeout(() => {
-      script.onerror = null;
-      script.onload = null;
-      reject(new Error(`Timed out loading AI vision script: ${src}`));
-    }, timeoutMs);
+        const timer = setTimeout(() => {
+          script.onerror = null;
+          script.onload = null;
+          reject(new Error(`Timed out loading AI vision script: ${src}`));
+        }, timeoutMs);
 
-    script.onload = () => {
-      clearTimeout(timer);
-      resolve();
-    };
-    script.onerror = () => {
-      clearTimeout(timer);
-      reject(new Error(`Failed to load external AI vision script: ${src}`));
-    };
-    document.head.appendChild(script);
-  });
+        script.onload = () => {
+          clearTimeout(timer);
+          resolve();
+        };
+        script.onerror = () => {
+          clearTimeout(timer);
+          reject(new Error(`Failed to load external AI vision script: ${src}`));
+        };
+        document.head.appendChild(script);
+      });
+      return;
+    } catch {
+      // Try next mirror
+    }
+  }
 }
 
 export async function getLoadedCocoModel(): Promise<any> {
@@ -94,10 +100,16 @@ export async function getLoadedCocoModel(): Promise<any> {
         return await (window as any).cocoSsd.load();
       }
       if (!(window as any).tf) {
-        await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js', 6000);
+        await loadScriptWithFallback([
+          'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js',
+          'https://unpkg.com/@tensorflow/tfjs@4.22.0/dist/tf.min.js',
+        ], 25000);
       }
       if (!(window as any).cocoSsd) {
-        await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js', 6000);
+        await loadScriptWithFallback([
+          'https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js',
+          'https://unpkg.com/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js',
+        ], 25000);
       }
       if ((window as any).cocoSsd) {
         return await (window as any).cocoSsd.load();
@@ -117,18 +129,18 @@ export async function getLoadedCocoModel(): Promise<any> {
 const SYNONYMS: Record<string, string[]> = {
   bottle: ['bottle', 'flask', 'thermos', 'can', 'water bottle', 'water', 'drink', 'beverage', 'container', 'tumbler', 'beer bottle', 'wine bottle', 'plastic bottle'],
   cup: ['cup', 'mug', 'glass', 'tumbler', 'coffee cup', 'teacup', 'chalice', 'drink', 'bottle'],
-  laptop: ['laptop', 'computer', 'pc', 'notebook', 'macbook', 'chromebook', 'desktop', 'monitor', 'screen'],
+  laptop: ['laptop', 'computer', 'pc', 'notebook', 'macbook', 'chromebook', 'desktop', 'monitor', 'screen', 'tv', 'keyboard', 'book'],
   'cell phone': ['cell phone', 'phone', 'mobile', 'smartphone', 'iphone', 'android', 'device', 'telephone', 'gadget', 'handset', 'mobile phone'],
   backpack: ['backpack', 'bag', 'schoolbag', 'knapsack', 'rucksack', 'satchel', 'pack'],
   handbag: ['handbag', 'purse', 'bag', 'tote', 'clutch', 'pouch', 'shoulder bag'],
   suitcase: ['suitcase', 'luggage', 'baggage', 'briefcase', 'valise', 'travel bag', 'bag', 'carry-on'],
   chair: ['chair', 'seat', 'stool', 'armchair', 'bench'],
   couch: ['couch', 'sofa', 'lounge', 'futon', 'settee', 'loveseat'],
-  tv: ['tv', 'television', 'monitor', 'screen', 'display', 'computer screen', 'cctv'],
+  tv: ['tv', 'television', 'monitor', 'screen', 'display', 'computer screen', 'cctv', 'laptop'],
   book: ['book', 'notebook', 'diary', 'magazine', 'journal', 'paper', 'binder', 'novel', 'document', 'textbook'],
   refrigerator: ['refrigerator', 'fridge', 'freezer', 'cooler'],
   mouse: ['mouse', 'computer mouse', 'trackpad', 'pointer'],
-  keyboard: ['keyboard', 'keypad'],
+  keyboard: ['keyboard', 'keypad', 'laptop'],
   clock: ['clock', 'watch', 'timer', 'smartwatch', 'wristwatch', 'wall clock', 'time'],
   umbrella: ['umbrella', 'parasol'],
   person: ['person', 'human', 'man', 'woman', 'individual', 'suspect', 'pedestrian', 'boy', 'girl', 'people', 'someone'],
@@ -238,10 +250,6 @@ export async function detectObjectsInVideo(
   };
 
   const model = await getLoadedCocoModel().catch(() => null);
-  if (!model) {
-    console.warn('[clientObjectDetector] TensorFlow model unavailable, skipping client frame scan');
-    return emptyResult;
-  }
 
   return new Promise((resolve) => {
     let resolved = false;
@@ -261,11 +269,11 @@ export async function detectObjectsInVideo(
       resolve(res);
     };
 
-    // Overall safety timeout (10 seconds max)
+    // Overall safety timeout (25 seconds max)
     const overallTimer = setTimeout(() => {
-      console.warn('[clientObjectDetector] 10s timeout reached, concluding scan gracefully');
+      console.warn('[clientObjectDetector] 25s timeout reached, concluding scan gracefully');
       safeResolve(emptyResult);
-    }, 10000);
+    }, 25000);
 
     const video = document.createElement('video');
     video.muted = true;
@@ -281,14 +289,14 @@ export async function detectObjectsInVideo(
       video.src = objectUrlToRevoke;
     }
 
-    // Video metadata load timeout (3.5 seconds)
+    // Video metadata load timeout (8 seconds)
     const metadataTimer = setTimeout(() => {
       if (!resolved && (!video.videoWidth || !video.duration)) {
         console.warn('[clientObjectDetector] Video metadata load timeout');
         clearTimeout(overallTimer);
         safeResolve(emptyResult);
       }
-    }, 3500);
+    }, 8000);
 
     video.onloadedmetadata = async () => {
       clearTimeout(metadataTimer);
@@ -309,13 +317,13 @@ export async function detectObjectsInVideo(
           return;
         }
 
-        // Determine 10 sample timestamps evenly across the video
-        const stepSec = Math.max(0.4, duration / 11);
+        // Determine sample timestamps evenly from 0.05s across the video
+        const stepSec = Math.max(0.25, duration / 16);
         const sampleTimes: number[] = [];
-        for (let t = 0.2; t < duration - 0.1; t += stepSec) {
-          sampleTimes.push(t);
+        for (let t = 0.05; t < duration; t += stepSec) {
+          sampleTimes.push(Math.round(t * 100) / 100);
         }
-        if (sampleTimes.length === 0) sampleTimes.push(0.1);
+        if (sampleTimes.length === 0) sampleTimes.push(0.05);
 
         const targetObservations: DetectedTargetObservation[] = [];
         const classTracker = new Map<string, {
@@ -336,7 +344,7 @@ export async function detectObjectsInVideo(
           const t = sampleTimes[i];
           const frameIdx = Math.round(t * 30);
 
-          // Seek video to timestamp with safety timeout
+          // Robust seek with video frame readiness
           await new Promise<void>((seekResolve) => {
             let done = false;
             const onFinish = () => {
@@ -344,9 +352,15 @@ export async function detectObjectsInVideo(
               done = true;
               video.removeEventListener('seeked', onFinish);
               clearTimeout(seekTimer);
-              seekResolve();
+              if ('requestVideoFrameCallback' in video) {
+                try {
+                  (video as any).requestVideoFrameCallback(() => seekResolve());
+                  return;
+                } catch {}
+              }
+              requestAnimationFrame(() => seekResolve());
             };
-            const seekTimer = setTimeout(onFinish, 450);
+            const seekTimer = setTimeout(onFinish, 1200);
             video.addEventListener('seeked', onFinish);
             try {
               video.currentTime = t;
@@ -363,12 +377,14 @@ export async function detectObjectsInVideo(
             continue;
           }
 
-          // Run COCO-SSD detection on frame
+          // Run detection on frame if model is available
           let predictions: any[] = [];
-          try {
-            predictions = await model.detect(canvas);
-          } catch (detErr) {
-            console.warn('[clientObjectDetector] Model detect error on frame:', detErr);
+          if (model) {
+            try {
+              predictions = await model.detect(canvas);
+            } catch (detErr) {
+              console.warn('[clientObjectDetector] Model detect error on frame:', detErr);
+            }
           }
 
           // Report scan progress
