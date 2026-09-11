@@ -98,7 +98,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
               setActiveFeedTab('cctv');
               setStage('HOME');
             }}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/90 border border-slate-200 text-slate-700 text-xs font-semibold shadow-2xs hover:bg-white hover:text-slate-900 transition-all cursor-pointer"
+            className="bubble-btn bubble-pill flex items-center gap-1.5 px-3 py-1 bg-white/90 border border-slate-200 text-slate-700 text-xs font-semibold shadow-2xs hover:bg-white hover:text-slate-900 transition-all cursor-pointer"
           >
             <Camera className="w-3 h-3 text-indigo-600" />
             <span>4 Cameras Live</span>
@@ -107,7 +107,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
         </div>
       </div>
 
-      {/* 2. SaaS KPI Metric Tiles */}
+      {/* 2. SaaS KPI Metric Tiles with Bubble Feature */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         {/* Metric 1: Active Cameras */}
         <div 
@@ -118,14 +118,14 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
             }
             setActiveFeedTab('cctv');
           }}
-          className="p-2.5 rounded-2xl bg-white/70 hover:bg-white/90 border border-slate-200/80 shadow-2xs transition-all cursor-pointer group"
+          className="bubble-btn p-2.5 rounded-2xl bg-white/75 hover:bg-white/95 border border-slate-200/80 shadow-2xs transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium mb-1">
             <div className="flex items-center gap-1.5">
               <Camera className="w-3.5 h-3.5 text-indigo-600" />
               <span>CCTV Streams</span>
             </div>
-            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="bubble-pill text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
               SYNC
             </span>
           </div>
@@ -138,13 +138,13 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
         </div>
 
         {/* Metric 2: AI Vision Engine */}
-        <div className="p-2.5 rounded-2xl bg-white/70 border border-slate-200/80 shadow-2xs">
+        <div className="bubble-btn p-2.5 rounded-2xl bg-white/75 border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium mb-1">
             <div className="flex items-center gap-1.5">
               <Cpu className="w-3.5 h-3.5 text-blue-600" />
               <span>AI Vision</span>
             </div>
-            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200">
+            <span className="bubble-pill text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
               YOLOv8
             </span>
           </div>
@@ -156,18 +156,19 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
           </div>
         </div>
 
-        {/* Metric 3: Database Integrity */}
+        {/* Metric 3: Database Integrity (Clickable Database Badge) */}
         <div 
           onClick={() => setShowOracleModal(true)}
           title="Inspect Oracle 21c Database"
-          className="p-2.5 rounded-2xl bg-white/70 hover:bg-white/90 border border-slate-200/80 shadow-2xs transition-all cursor-pointer group"
+          className="bubble-btn p-2.5 rounded-2xl bg-white/75 hover:bg-white/95 border border-slate-200/80 shadow-2xs transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium mb-1">
             <div className="flex items-center gap-1.5">
               <Database className="w-3.5 h-3.5 text-emerald-600" />
               <span>Oracle 21c</span>
             </div>
-            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="bubble-pill text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 bubble-beacon" />
               ONLINE
             </span>
           </div>
@@ -188,14 +189,14 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
               setActiveFeedTab('settings');
             }
           }}
-          className="p-2.5 rounded-2xl bg-white/70 hover:bg-white/90 border border-slate-200/80 shadow-2xs transition-all cursor-pointer"
+          className="bubble-btn p-2.5 rounded-2xl bg-white/75 hover:bg-white/95 border border-slate-200/80 shadow-2xs transition-all cursor-pointer"
         >
           <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium mb-1">
             <div className="flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-violet-600" />
               <span>Operator</span>
             </div>
-            <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
+            <span className={`bubble-pill text-[9px] font-bold px-2 py-0.5 rounded-full ${
               isAuthenticated 
                 ? 'bg-violet-50 text-violet-700 border border-violet-200' 
                 : 'bg-amber-50 text-amber-700 border border-amber-200'
@@ -238,7 +239,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
             <button
               type="submit"
               title="Execute Spatial Object Search"
-              className="px-3.5 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+              className="bubble-btn bubble-pill px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs flex items-center gap-1 shadow-xs transition-all cursor-pointer"
             >
               <Search className="w-3 h-3" />
               <span>Scan Feeds</span>
@@ -246,7 +247,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
           </div>
         </form>
 
-        {/* Quick Target Suggestion Chips */}
+        {/* Quick Target Suggestion Chips with Bubble Feature */}
         <div className="flex items-center justify-center gap-1.5 flex-wrap max-w-lg">
           <span className="text-[11px] text-slate-400 font-medium mr-1">Quick Target:</span>
           {QUICK_TARGETS.map((item) => (
@@ -254,7 +255,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
               key={item.label}
               type="button"
               onClick={() => handleQuickTargetClick(item.label)}
-              className="px-2.5 py-1 rounded-lg bg-white/80 hover:bg-white border border-slate-200/80 hover:border-indigo-300 text-[11px] font-medium text-slate-700 hover:text-indigo-600 shadow-2xs transition-all cursor-pointer flex items-center gap-1 active:scale-95"
+              className="bubble-btn bubble-pill px-3 py-1 bg-white/85 hover:bg-white border border-slate-200/80 hover:border-indigo-300 text-[11px] font-medium text-slate-700 hover:text-indigo-600 shadow-2xs transition-all cursor-pointer flex items-center gap-1"
             >
               <span>{item.emoji}</span>
               <span>{item.label}</span>
@@ -273,7 +274,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
             <button
               type="button"
               onClick={() => setShowAuthModal(true)}
-              className="px-3 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] transition-colors cursor-pointer shadow-2xs shrink-0"
+              className="bubble-btn bubble-pill px-3.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] transition-all cursor-pointer shadow-2xs shrink-0"
             >
               Sign In
             </button>
@@ -281,7 +282,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
         )}
       </div>
 
-      {/* 4. Primary SaaS Action Cards */}
+      {/* 4. Primary SaaS Action Cards with Bubble Feature */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* Action 1: Upload Video Archive */}
         <button
@@ -294,7 +295,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
             setActiveFeedTab('upload');
             setStage('HOME');
           }}
-          className="p-3.5 rounded-2xl bg-white/80 hover:bg-white border border-slate-200/80 hover:border-slate-300 shadow-2xs hover:shadow-sm text-left transition-all group cursor-pointer flex items-center justify-between"
+          className="bubble-btn p-3.5 rounded-2xl bg-white/85 hover:bg-white border border-slate-200/80 hover:border-slate-300 shadow-2xs hover:shadow-sm text-left transition-all group cursor-pointer flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-slate-100 group-hover:bg-indigo-50 border border-slate-200/70 group-hover:border-indigo-100 flex items-center justify-center text-slate-700 group-hover:text-indigo-600 transition-colors shrink-0">
@@ -303,7 +304,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="font-bold text-slate-900 text-xs sm:text-sm">Upload Video Archive</span>
-                <span className="text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded bg-slate-100 text-slate-600">
+                <span className="bubble-pill text-[9px] font-mono font-semibold px-2 py-0.2 rounded-full bg-slate-100 text-slate-600">
                   Offline
                 </span>
               </div>
@@ -320,16 +321,16 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
           id="connect-live-cctv-btn"
           type="button"
           onClick={handleConnect}
-          className="p-3.5 rounded-2xl bg-gradient-to-r from-[#4361ee] to-[#3a56d4] hover:from-[#3a56d4] hover:to-[#2e46be] text-white shadow-md shadow-indigo-200/60 hover:shadow-indigo-300/80 text-left transition-all group cursor-pointer flex items-center justify-between"
+          className="bubble-btn p-3.5 rounded-2xl bg-gradient-to-r from-[#4361ee] to-[#3a56d4] hover:from-[#3a56d4] hover:to-[#2e46be] text-white shadow-md shadow-indigo-200/60 hover:shadow-indigo-300/80 text-left transition-all group cursor-pointer flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center text-white shrink-0">
-              <Camera className="w-5 h-5 animate-pulse" />
+              <Camera className="w-5 h-5 bubble-beacon" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="font-bold text-white text-xs sm:text-sm">Connect to Live CC Cam</span>
-                <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-white/25 text-white">
+                <span className="bubble-pill text-[9px] font-mono font-bold px-2 py-0.2 rounded-full bg-white/25 text-white">
                   Live
                 </span>
               </div>
@@ -346,7 +347,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
       <div className="space-y-2 pt-2 border-t border-slate-200/70">
         <div className="flex items-center justify-between text-xs font-bold text-slate-800">
           <div className="flex items-center gap-1.5">
-            <Radio className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
+            <Radio className="w-3.5 h-3.5 text-emerald-500 bubble-beacon" />
             <span>Surveillance Feeds & Audit Trail</span>
           </div>
           <button
@@ -358,7 +359,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
               }
               setActiveFeedTab('cctv');
             }}
-            className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+            className="bubble-btn bubble-pill px-2.5 py-0.5 text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
           >
             <span>View All Feeds</span>
             <ArrowRight className="w-3 h-3" />
@@ -366,7 +367,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
         </div>
 
         <div className="grid grid-cols-12 gap-2.5 items-center text-xs text-slate-700">
-          {/* Stream 01 Status Tile */}
+          {/* Stream 01 Status Tile with Bubble Feature */}
           <div
             onClick={() => {
               if (!isAuthenticated) {
@@ -375,21 +376,21 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
               }
               setActiveFeedTab('cctv');
             }}
-            className="col-span-12 sm:col-span-6 flex items-center justify-between p-2 rounded-xl bg-white/70 hover:bg-white border border-slate-200/80 shadow-2xs cursor-pointer transition-all"
+            className="bubble-btn col-span-12 sm:col-span-6 flex items-center justify-between p-2 rounded-2xl bg-white/75 hover:bg-white border border-slate-200/80 shadow-2xs cursor-pointer transition-all"
           >
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-emerald-500 bubble-beacon" />
               <div>
                 <span className="font-bold text-slate-800 text-[11px] block">CCTV Stream 01 (Overhead)</span>
                 <span className="text-[10px] text-slate-400 font-mono">1080p @ 30fps • 4.2 Mbps</span>
               </div>
             </div>
-            <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
+            <span className="bubble-pill text-[9px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
               ONLINE
             </span>
           </div>
 
-          {/* Audit Logs Quick Link */}
+          {/* Audit Logs Quick Link with Bubble Feature */}
           <div
             onClick={() => {
               if (!isAuthenticated) {
@@ -398,7 +399,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
               }
               setActiveFeedTab('logs');
             }}
-            className="col-span-12 sm:col-span-6 flex items-center justify-between p-2 rounded-xl bg-white/70 hover:bg-white border border-slate-200/80 shadow-2xs cursor-pointer transition-all"
+            className="bubble-btn col-span-12 sm:col-span-6 flex items-center justify-between p-2 rounded-2xl bg-white/75 hover:bg-white border border-slate-200/80 shadow-2xs cursor-pointer transition-all"
           >
             <div className="flex items-center gap-2">
               <Database className="w-3.5 h-3.5 text-indigo-500" />
@@ -407,7 +408,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
                 <span className="text-[10px] text-slate-400 font-medium">Genesis Chain Active</span>
               </div>
             </div>
-            <span className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5">
+            <span className="bubble-pill px-2.5 py-0.5 text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5">
               <span>Inspect Logs</span>
               <ArrowRight className="w-3 h-3" />
             </span>

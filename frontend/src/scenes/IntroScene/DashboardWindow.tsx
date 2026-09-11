@@ -172,23 +172,23 @@ export const DashboardWindow: React.FC = () => {
 
         {/* Right: Operational Status, Operator Pill, CTA */}
         <div className="flex items-center gap-2.5 sm:gap-3.5">
-          {/* Oracle 21c Live Status Pill */}
+          {/* Oracle 21c Live Status Pill with Bubble Feature */}
           <button
             type="button"
             onClick={() => setShowOracleModal(true)}
             title="Oracle 21c Database Health & Hash Audit"
-            className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50/90 border border-emerald-200/80 text-[11px] font-medium text-emerald-800 hover:bg-emerald-100 transition-colors cursor-pointer shadow-2xs"
+            className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50/90 border border-emerald-200/80 text-[11px] font-medium text-emerald-800 hover:bg-emerald-100 transition-colors cursor-pointer shadow-2xs bubble-btn bubble-pill"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500 bubble-beacon" />
             <span className="font-semibold">Oracle 21c</span>
           </button>
 
-          {/* User Sign In / Profile */}
+          {/* User Sign In / Profile with Bubble Feature */}
           {isAuthenticated && currentUser ? (
             <div 
               onClick={() => setActiveFeedTab('settings')}
               title="Operator Settings"
-              className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-100/90 hover:bg-slate-200/80 border border-slate-200/80 cursor-pointer transition-colors"
+              className="bubble-btn bubble-pill flex items-center gap-2 px-3 py-1 bg-slate-100/90 hover:bg-slate-200/80 border border-slate-200/80 cursor-pointer transition-colors"
             >
               <div className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
                 {(currentUser.fullName || currentUser.username || 'O')[0].toUpperCase()}
@@ -204,13 +204,13 @@ export const DashboardWindow: React.FC = () => {
             <button 
               type="button" 
               onClick={() => setShowAuthModal(true)}
-              className="px-3 py-1 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100/80 transition-colors cursor-pointer"
+              className="bubble-btn bubble-pill px-3.5 py-1 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100/80 transition-colors cursor-pointer"
             >
               Sign In
             </button>
           )}
 
-          {/* Primary CTA */}
+          {/* Primary CTA with Bubble Feature */}
           <button
             type="button"
             onClick={() => {
@@ -221,7 +221,7 @@ export const DashboardWindow: React.FC = () => {
               setActiveFeedTab('search');
               setStage('OBJECT_INPUT');
             }}
-            className="px-3.5 py-1.5 rounded-xl bg-[#4361ee] hover:bg-[#3854d9] text-white text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
+            className="bubble-btn bubble-pill px-4 py-1.5 bg-[#4361ee] hover:bg-[#3854d9] text-white text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
           >
             <Search className="w-3 h-3" />
             <span>Find Item</span>
@@ -245,7 +245,7 @@ export const DashboardWindow: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleNavClick('home', 'HOME')}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer ${
+                  className={`bubble-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer ${
                     (activeFeedTab === 'home' || activeFeedTab === 'overview') && stage === 'HOME'
                       ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
                       : 'text-slate-600 hover:bg-white/80 font-medium'
@@ -261,7 +261,7 @@ export const DashboardWindow: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleNavClick('cctv', 'HOME')}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer ${
+                  className={`bubble-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer ${
                     activeFeedTab === 'cctv' && stage === 'HOME'
                       ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
                       : 'text-slate-600 hover:bg-white/80 font-medium'
@@ -271,7 +271,7 @@ export const DashboardWindow: React.FC = () => {
                     <Camera className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">CCTV Feeds</span>
                   </div>
-                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
+                  <span className={`bubble-pill text-[9px] font-bold px-2 py-0.5 ${
                     activeFeedTab === 'cctv' && stage === 'HOME'
                       ? 'bg-white/20 text-white'
                       : 'bg-emerald-100 text-emerald-700'
@@ -284,7 +284,7 @@ export const DashboardWindow: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleNavClick('heatmaps', 'HOME')}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer ${
+                  className={`bubble-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer ${
                     activeFeedTab === 'heatmaps' && stage === 'HOME'
                       ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
                       : 'text-slate-600 hover:bg-white/80 font-medium'
@@ -294,7 +294,7 @@ export const DashboardWindow: React.FC = () => {
                     <Layers className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">Spatial Map</span>
                   </div>
-                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
+                  <span className={`bubble-pill text-[9px] font-bold px-2 py-0.5 ${
                     activeFeedTab === 'heatmaps' && stage === 'HOME'
                       ? 'bg-white/20 text-white'
                       : 'bg-slate-100 text-slate-600'
@@ -315,7 +315,7 @@ export const DashboardWindow: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleNavClick('search', 'OBJECT_INPUT')}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer ${
+                  className={`bubble-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer ${
                     isFormView
                       ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
                       : 'text-slate-600 hover:bg-white/80 font-medium'
@@ -325,7 +325,7 @@ export const DashboardWindow: React.FC = () => {
                     <Search className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">Find Object</span>
                   </div>
-                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
+                  <span className={`bubble-pill text-[9px] font-bold px-2 py-0.5 ${
                     isFormView ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'
                   }`}>
                     AI
@@ -336,7 +336,7 @@ export const DashboardWindow: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleNavClick('upload', 'HOME')}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer ${
+                  className={`bubble-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer ${
                     activeFeedTab === 'upload' && stage === 'HOME'
                       ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
                       : 'text-slate-600 hover:bg-white/80 font-medium'
@@ -352,7 +352,7 @@ export const DashboardWindow: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleNavClick('logs', 'HOME')}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer ${
+                  className={`bubble-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer ${
                     (activeFeedTab === 'logs' || activeFeedTab === 'history') && stage === 'HOME'
                       ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
                       : 'text-slate-600 hover:bg-white/80 font-medium'
@@ -362,7 +362,7 @@ export const DashboardWindow: React.FC = () => {
                     <Clock className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">Audit Logs</span>
                   </div>
-                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
+                  <span className={`bubble-pill text-[9px] font-bold px-2 py-0.5 ${
                     (activeFeedTab === 'logs' || activeFeedTab === 'history') && stage === 'HOME'
                       ? 'bg-white/20 text-white'
                       : 'bg-slate-100 text-slate-500'
@@ -383,7 +383,7 @@ export const DashboardWindow: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleNavClick('settings', 'HOME')}
-                  className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer ${
+                  className={`bubble-btn w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer ${
                     activeFeedTab === 'settings' && stage === 'HOME'
                       ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
                       : 'text-slate-600 hover:bg-white/80 font-medium'
@@ -398,7 +398,7 @@ export const DashboardWindow: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => navigate('/admin')}
-                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer bg-indigo-50/90 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 shadow-2xs font-semibold mt-1"
+                    className="bubble-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer bg-indigo-50/90 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 shadow-2xs font-semibold mt-1"
                     title="Open Dedicated Admin Console"
                   >
                     <div className="flex items-center gap-2">
@@ -412,18 +412,18 @@ export const DashboardWindow: React.FC = () => {
             </div>
           </div>
 
-          {/* Bottom Database Telemetry Badge */}
+          {/* Bottom Database Telemetry Badge with Bubble Feature */}
           <div 
             onClick={() => setShowOracleModal(true)}
             title="Oracle 21c Database Health & Schema Inspector"
-            className="p-2.5 rounded-2xl bg-slate-100/90 hover:bg-white border border-slate-200/80 text-[10px] text-slate-700 flex flex-col gap-1 cursor-pointer transition-all shadow-2xs group"
+            className="bubble-btn bubble-pill p-2.5 bg-slate-100/90 hover:bg-white border border-slate-200/80 text-[10px] text-slate-700 flex flex-col gap-1 cursor-pointer transition-all shadow-2xs group"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 font-bold text-slate-800">
-                <Database className="w-3 h-3 text-indigo-600" />
+                <Database className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Oracle 21c XE</span>
               </div>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-emerald-500 bubble-beacon" />
             </div>
             <div className="flex items-center justify-between text-[9px] text-slate-500 font-medium">
               <span>Status: Active</span>
