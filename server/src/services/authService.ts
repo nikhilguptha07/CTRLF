@@ -63,7 +63,8 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS);
     const userId = uuidv4();
-    const role = (input.role as UserRole) || 'USER';
+    const totalUsers = await userRepository.countTotal();
+    const role: UserRole = input.role ? (input.role as UserRole) : (totalUsers === 0 ? 'ADMIN' : 'USER');
     const username = input.username || input.email.split('@')[0].toLowerCase();
 
     const payload: JwtPayload = {
@@ -313,6 +314,10 @@ export class AuthService {
    * Pre-seeds authoritative users for testing & development if USERS table is empty
    */
   async seedDefaultUsers(): Promise<void> {
+    if (process.env.SEED_DEFAULT_USERS !== 'true' && process.env.NODE_ENV !== 'test') {
+      logger.info('Default user seeding is disabled (SEED_DEFAULT_USERS is not set). Database starts empty.');
+      return;
+    }
     const fallbackUser = await userRepository.findById('1');
     if (!fallbackUser) {
       const hash = await bcrypt.hash('SystemPass123!', SALT_ROUNDS);
