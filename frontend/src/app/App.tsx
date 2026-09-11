@@ -10,6 +10,9 @@ import { AuthModal } from '../components/auth/AuthModal';
 import { DashboardTopControls } from '../components/dashboard/DashboardTopControls';
 import { OracleStatusModal } from '../components/database/OracleStatusModal';
 import { DemoPlayerHUD } from '../components/dashboard/DemoPlayerHUD';
+import { useAdminRouter } from '../hooks/useAdminRouter';
+import { AdminConsole } from '../components/admin/AdminConsole';
+import { AdminAccessDenied } from '../components/admin/AdminAccessDenied';
 
 export default function App() {
   const { 
@@ -18,12 +21,16 @@ export default function App() {
     toggleSound,
     showAuthModal,
     setShowAuthModal,
+    authModalMode,
     showOracleModal,
     setShowOracleModal,
     setActiveFeedTab,
+    currentUser,
+    isAuthenticated,
     setCurrentUser,
     checkAuth
   } = useExperienceStore();
+  const { navigate, isAdminRoute } = useAdminRouter();
   const [isPlayingDemo, setIsPlayingDemo] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
 
@@ -187,6 +194,30 @@ export default function App() {
     }
   }, [isDetectionView]);
 
+  if (isAdminRoute) {
+    const isAuthorizedAdmin = isAuthenticated && currentUser?.role === 'ADMIN';
+    return (
+      <div className="relative w-screen h-screen overflow-hidden bg-slate-100 font-sans select-none">
+        {isAuthorizedAdmin ? (
+          <AdminConsole onReturnToDashboard={() => navigate('/')} />
+        ) : (
+          <AdminAccessDenied
+            onReturnToDashboard={() => navigate('/')}
+            onOpenLogin={() => setShowAuthModal(true)}
+          />
+        )}
+
+        {/* Oracle 21c Authentication Modal for Admin Login / Switch Account */}
+        <AuthModal
+          isOpen={showAuthModal}
+          initialMode={authModalMode}
+          onClose={() => setShowAuthModal(false)}
+          onSuccess={(user) => setCurrentUser(user)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-black select-none font-sans">
       
@@ -231,6 +262,7 @@ export default function App() {
       {/* Oracle 21c Authentication Modal */}
       <AuthModal
         isOpen={showAuthModal}
+        initialMode={authModalMode}
         onClose={() => setShowAuthModal(false)}
         onSuccess={(user) => setCurrentUser(user)}
       />

@@ -156,9 +156,12 @@ interface ExperienceState {
   currentUser: any | null;
   isAuthenticated: boolean;
   showAuthModal: boolean;
+  authModalMode: 'login' | 'register';
   showOracleModal: boolean;
   setCurrentUser: (user: any | null) => void;
   setShowAuthModal: (show: boolean) => void;
+  setAuthModalMode: (mode: 'login' | 'register') => void;
+  openAuthModal: (mode?: 'login' | 'register') => void;
   setShowOracleModal: (show: boolean) => void;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
@@ -264,7 +267,10 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
     }
   },
 
+  authModalMode: 'login',
   setShowAuthModal: (showAuthModal) => set({ showAuthModal }),
+  setAuthModalMode: (authModalMode) => set({ authModalMode }),
+  openAuthModal: (mode = 'login') => set({ authModalMode: mode, showAuthModal: true }),
   setShowOracleModal: (showOracleModal) => set({ showOracleModal }),
 
   logout: async () => {

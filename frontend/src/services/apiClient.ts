@@ -221,7 +221,10 @@ class ApiClient {
     });
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
-      throw new Error(errData?.error?.message || errData?.message || 'Authentication failed');
+      const detailedIssues = Array.isArray(errData?.error?.details) && errData.error.details.length > 0
+        ? errData.error.details.map((d: any) => d.message || d.field).join('. ')
+        : null;
+      throw new Error(detailedIssues || errData?.error?.message || errData?.message || 'Authentication failed');
     }
     const json = await res.json();
     if (json.data?.accessToken) {
@@ -239,7 +242,10 @@ class ApiClient {
     });
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
-      throw new Error(errData?.error?.message || errData?.message || 'Registration failed');
+      const detailedIssues = Array.isArray(errData?.error?.details) && errData.error.details.length > 0
+        ? errData.error.details.map((d: any) => d.message || d.field).join('. ')
+        : null;
+      throw new Error(detailedIssues || errData?.error?.message || errData?.message || 'Registration failed');
     }
     const json = await res.json();
     if (json.data?.accessToken) {
@@ -294,6 +300,243 @@ class ApiClient {
       throw new Error(json.error?.message || json.message || 'Failed to clear database');
     }
     return json.data;
+  }
+
+  // --- Admin Console API Methods ---
+
+  async getAdminOverview(): Promise<any> {
+    const res = await this.request('/api/admin/overview');
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || err.message || `Failed to fetch admin overview (${res.status})`);
+    }
+    const json = await res.json();
+    return json.data;
+  }
+
+  async getAdminDatabase(): Promise<any> {
+    const res = await this.request('/api/admin/database');
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || err.message || `Failed to fetch database telemetry (${res.status})`);
+    }
+    const json = await res.json();
+    return json.data;
+  }
+
+  async getAdminUsers(params?: { search?: string; role?: string; status?: string; page?: number; limit?: number }): Promise<any> {
+    const qs = new URLSearchParams();
+    if (params?.search) qs.set('search', params.search);
+    if (params?.role) qs.set('role', params.role);
+    if (params?.status) qs.set('status', params.status);
+    if (params?.page) qs.set('page', String(params.page));
+    if (params?.limit) qs.set('limit', String(params.limit));
+    const query = qs.toString() ? `?${qs.toString()}` : '';
+
+    const res = await this.request(`/api/admin/users${query}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || err.message || `Failed to fetch users (${res.status})`);
+    }
+    const json = await res.json();
+    return json.data;
+  }
+
+  async adminCreateUser(data: { username?: string; email: string; fullName: string; password: string; role?: string }): Promise<any> {
+    const res = await this.request('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.error?.message || json.message || `Failed to create user (${res.status})`);
+    }
+    return json.data;
+  }
+
+  async adminUpdateUser(id: string, updates: { role?: string; isActive?: boolean; fullName?: string; password?: string }): Promise<any> {
+    const res = await this.request(`/api/admin/users/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.error?.message || json.message || `Failed to update user (${res.status})`);
+    }
+    return json.data;
+  }
+
+  async getAdminCameras(params?: { search?: string; status?: string; page?: number; limit?: number }): Promise<any> {
+    const qs = new URLSearchParams();
+    if (params?.search) qs.set('search', params.search);
+    if (params?.status) qs.set('status', params.status);
+    if (params?.page) qs.set('page', String(params.page));
+    if (params?.limit) qs.set('limit', String(params.limit));
+    const query = qs.toString() ? `?${qs.toString()}` : '';
+
+    const res = await this.request(`/api/admin/cameras${query}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || err.message || `Failed to fetch cameras (${res.status})`);
+    }
+    const json = await res.json();
+    return json.data;
+  }
+
+  async adminCreateCamera(data: { name: string; location: string; protocol?: string; uri?: string; priority?: number }): Promise<any> {
+    const res = await this.request('/api/admin/cameras', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.error?.message || json.message || `Failed to create camera (${res.status})`);
+    }
+    return json.data;
+  }
+
+  async adminUpdateCamera(id: string, updates: any): Promise<any> {
+    const res = await this.request(`/api/admin/cameras/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.error?.message || json.message || `Failed to update camera (${res.status})`);
+    }
+    return json.data;
+  }
+
+  async getAdminSearchSessions(params?: { search?: string; status?: string; source?: string; page?: number; limit?: number }): Promise<any> {
+    const qs = new URLSearchParams();
+    if (params?.search) qs.set('search', params.search);
+    if (params?.status) qs.set('status', params.status);
+    if (params?.source) qs.set('source', params.source);
+    if (params?.page) qs.set('page', String(params.page));
+    if (params?.limit) qs.set('limit', String(params.limit));
+    const query = qs.toString() ? `?${qs.toString()}` : '';
+
+    const res = await this.request(`/api/admin/search-sessions${query}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || err.message || `Failed to fetch search sessions (${res.status})`);
+    }
+    const json = await res.json();
+    return json.data;
+  }
+
+  async getAdminSearchSessionDetail(id: string): Promise<any> {
+    const res = await this.request(`/api/admin/search-sessions/${encodeURIComponent(id)}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || err.message || `Failed to fetch session details (${res.status})`);
+    }
+    const json = await res.json();
+    return json.data;
+  }
+
+  async getAdminDetections(params?: { search?: string; camera?: string; session?: string; page?: number; limit?: number }): Promise<any> {
+    const qs = new URLSearchParams();
+    if (params?.search) qs.set('search', params.search);
+    if (params?.camera) qs.set('camera', params.camera);
+    if (params?.session) qs.set('session', params.session);
+    if (params?.page) qs.set('page', String(params.page));
+    if (params?.limit) qs.set('limit', String(params.limit));
+    const query = qs.toString() ? `?${qs.toString()}` : '';
+
+    const res = await this.request(`/api/admin/detections${query}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || err.message || `Failed to fetch detections (${res.status})`);
+    }
+    const json = await res.json();
+    return json.data;
+  }
+
+  async getAdminDetectionDetail(id: string | number): Promise<any> {
+    const res = await this.request(`/api/admin/detections/${encodeURIComponent(id)}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || err.message || `Failed to fetch detection details (${res.status})`);
+    }
+    const json = await res.json();
+    return json.data;
+  }
+
+  async getAdminTracks(params?: { search?: string; camera?: string; session?: string; page?: number; limit?: number }): Promise<any> {
+    const qs = new URLSearchParams();
+    if (params?.search) qs.set('search', params.search);
+    if (params?.camera) qs.set('camera', params.camera);
+    if (params?.session) qs.set('session', params.session);
+    if (params?.page) qs.set('page', String(params.page));
+    if (params?.limit) qs.set('limit', String(params.limit));
+    const query = qs.toString() ? `?${qs.toString()}` : '';
+
+    const res = await this.request(`/api/admin/tracks${query}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || err.message || `Failed to fetch tracks (${res.status})`);
+    }
+    const json = await res.json();
+    return json.data;
+  }
+
+  async getAdminAuditLogs(params?: { search?: string; action?: string; status?: string; page?: number; limit?: number }): Promise<any> {
+    const qs = new URLSearchParams();
+    if (params?.search) qs.set('search', params.search);
+    if (params?.action) qs.set('action', params.action);
+    if (params?.status) qs.set('status', params.status);
+    if (params?.page) qs.set('page', String(params.page));
+    if (params?.limit) qs.set('limit', String(params.limit));
+    const query = qs.toString() ? `?${qs.toString()}` : '';
+
+    const res = await this.request(`/api/admin/audit-logs${query}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || err.message || `Failed to fetch audit logs (${res.status})`);
+    }
+    const json = await res.json();
+    return json.data;
+  }
+
+  async getAdminTableData(tableName: string, params?: { page?: number; limit?: number; search?: string }): Promise<any> {
+    const qs = new URLSearchParams();
+    if (params?.page) qs.set('page', String(params.page));
+    if (params?.limit) qs.set('limit', String(params.limit));
+    if (params?.search) qs.set('search', params.search);
+    const query = qs.toString() ? `?${qs.toString()}` : '';
+
+    const res = await this.request(`/api/admin/tables/${encodeURIComponent(tableName)}${query}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || err.message || `Failed to fetch table data for ${tableName} (${res.status})`);
+    }
+    const json = await res.json();
+    return json.data;
+  }
+
+  async createAdminUser(data: { username?: string; email: string; fullName: string; password: string; role?: string }): Promise<any> {
+    return this.adminCreateUser(data);
+  }
+
+  async updateAdminUser(id: string, updates: { role?: string; status?: string; isActive?: boolean; fullName?: string; password?: string }): Promise<any> {
+    return this.adminUpdateUser(id, updates);
+  }
+
+  async createAdminCamera(data: { name: string; location: string; protocol?: string; uri?: string; priority?: number }): Promise<any> {
+    return this.adminCreateCamera(data);
+  }
+
+  async updateAdminCamera(id: string, updates: any): Promise<any> {
+    return this.adminUpdateCamera(id, updates);
+  }
+
+  async getAdminTableExplorer(tableName: string, params?: { page?: number; limit?: number; search?: string }): Promise<any> {
+    return this.getAdminTableData(tableName, params);
   }
 
   getBaseUrl(): string {

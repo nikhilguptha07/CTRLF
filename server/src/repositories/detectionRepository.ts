@@ -364,6 +364,48 @@ export class DetectionRepository {
       createdAt: new Date(row.CREATED_AT),
     }));
   }
+
+  /**
+   * Get all detections across sessions for admin inspection
+   */
+  async findAll(limit = 100): Promise<import('../types/detection').OracleDetectionRecord[]> {
+    const sql = `
+      SELECT DETECTION_ID, USER_ID, SEARCH_ID, CAMERA_ID, OBJECT_NAME, CONFIDENCE,
+             TIMESTAMP_SECONDS, VIDEO_TIMESTAMP, FRAME_NUMBER,
+             BOUNDING_BOX_X, BOUNDING_BOX_Y, BOUNDING_BOX_WIDTH, BOUNDING_BOX_HEIGHT,
+             DETECTION_STATUS, CREATED_AT,
+             CASE WHEN DETECTION_IMAGE IS NOT NULL THEN 1 ELSE 0 END AS HAS_IMAGE
+      FROM DETECTIONS
+      ORDER BY CREATED_AT DESC
+    `;
+    const result = await db.execute<any>(sql);
+    const rows = result.rows || [];
+    return rows.slice(0, limit).map((row) => ({
+      detectionId: row.DETECTION_ID || row.ID,
+      userId: row.USER_ID,
+      searchId: row.SEARCH_ID,
+      cameraId: row.CAMERA_ID,
+      objectName: row.OBJECT_NAME,
+      confidence: Number(row.CONFIDENCE),
+      timestampSeconds: Number(row.TIMESTAMP_SECONDS),
+      videoTimestamp: row.VIDEO_TIMESTAMP,
+      frameNumber: Number(row.FRAME_NUMBER),
+      boundingBox: {
+        x: Number(row.BOUNDING_BOX_X),
+        y: Number(row.BOUNDING_BOX_Y),
+        width: Number(row.BOUNDING_BOX_WIDTH),
+        height: Number(row.BOUNDING_BOX_HEIGHT),
+      },
+      detectionStatus: row.DETECTION_STATUS,
+      hasImage: Boolean(row.HAS_IMAGE),
+      createdAt: new Date(row.CREATED_AT),
+    }));
+  }
+
+  async countTotal(): Promise<number> {
+    const all = await this.findAll(5000);
+    return all.length;
+  }
 }
 
 export const detectionRepository = new DetectionRepository();

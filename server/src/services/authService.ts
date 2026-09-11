@@ -109,7 +109,8 @@ export class AuthService {
   }
 
   async login(input: LoginInput, ipAddress?: string, userAgent?: string, requestId?: string): Promise<AuthTokens> {
-    const identifier = input.identifier || input.email || input.username;
+    const rawIdentifier = input.identifier || input.email || input.username || '';
+    const identifier = rawIdentifier.trim();
     if (!identifier) {
       throw new AppError('CREDENTIALS_REQUIRED', 'Email or username is required', 400);
     }

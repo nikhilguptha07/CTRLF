@@ -17,12 +17,13 @@ import { apiClient } from '../../services/apiClient';
 
 interface AuthModalProps {
   isOpen: boolean;
+  initialMode?: 'login' | 'register';
   onClose: () => void;
   onSuccess: (user: any) => void;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => {
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'login', onClose, onSuccess }) => {
+  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -39,12 +40,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showForgotModal, setShowForgotModal] = useState(false);
 
+  React.useEffect(() => {
+    if (isOpen) {
+      if (initialMode) {
+        setMode(initialMode);
+      }
+      setErrorMessage(null);
+      setSuccessMessage(null);
+    }
+  }, [isOpen, initialMode]);
+
   if (!isOpen) return null;
 
-  const handleQuickFill = (roleType: 'admin' | 'operator' | 'user') => {
+  const handleQuickFill = (roleType: 'admin' | 'operator' | 'user' | 'nikhil') => {
     setMode('login');
     setErrorMessage(null);
-    if (roleType === 'admin') {
+    if (roleType === 'nikhil') {
+      setIdentifier('nikhilguptha07@gmail.com');
+      setPassword('Password123!');
+    } else if (roleType === 'admin') {
       setIdentifier('admin@ctrlf.local');
       setPassword('Password123!');
     } else if (roleType === 'operator') {
@@ -163,9 +177,31 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
 
         {/* Alert Messages */}
         {errorMessage && (
-          <div className="mx-6 mt-3 p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-rose-700 text-xs animate-fade-in">
-            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-rose-500" />
-            <span className="font-medium">{errorMessage}</span>
+          <div className="mx-6 mt-3 p-3 bg-rose-50 border border-rose-200 rounded-xl space-y-1.5 text-rose-700 text-xs animate-fade-in">
+            <div className="flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-rose-500" />
+              <span className="font-medium">{errorMessage}</span>
+            </div>
+            {mode === 'login' && (
+              <div className="pl-6 pt-0.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('register');
+                    setErrorMessage(null);
+                    if (identifier.includes('@')) {
+                      setEmail(identifier.trim());
+                    } else if (identifier) {
+                      setUsername(identifier.trim());
+                    }
+                  }}
+                  className="text-[11px] font-bold text-[#4361ee] hover:underline inline-flex items-center gap-1 cursor-pointer"
+                >
+                  <span>Need an account? Click here to Sign Up</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -320,17 +356,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="SecurePass123!"
+                    placeholder="Password123!"
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-10 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#4361ee] focus:ring-2 focus:ring-indigo-500/20"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+                <p className="text-[10px] text-slate-500 mt-1 pl-1">
+                  Must include at least 1 uppercase, 1 lowercase letter, and 1 number.
+                </p>
               </div>
             </>
           )}
@@ -348,7 +387,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
               </span>
             ) : (
               <>
-                <span>{mode === 'login' ? 'Authenticate & Enter' : 'Create & Provision Access'}</span>
+                <span>{mode === 'login' ? 'Authenticate & Enter' : 'Create Account & Sign In'}</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -356,12 +395,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
         </form>
 
         {/* Quick Fill Testing Credentials Toolbar */}
-        <div className="px-6 py-3.5 bg-slate-50/90 border-t border-slate-100 flex items-center justify-between text-xs">
+        <div className="px-6 py-3.5 bg-slate-50/90 border-t border-slate-100 flex items-center justify-between text-xs flex-wrap gap-2">
           <span className="text-slate-500 font-medium flex items-center gap-1">
             <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
             Quick Test Fill:
           </span>
-          <div className="flex gap-1.5">
+          <div className="flex gap-1.5 flex-wrap">
+            <button
+              type="button"
+              onClick={() => handleQuickFill('nikhil')}
+              className="px-2.5 py-1 rounded-lg bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-semibold text-[11px] transition-colors shadow-2xs cursor-pointer"
+              title="Nikhil (Admin)"
+            >
+              Nikhil (Admin)
+            </button>
             <button
               type="button"
               onClick={() => handleQuickFill('admin')}

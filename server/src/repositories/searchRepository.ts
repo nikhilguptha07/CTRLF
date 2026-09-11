@@ -369,6 +369,62 @@ export class SearchRepository {
       createdAt: r.CREATED_AT ? new Date(r.CREATED_AT) : (r.createdAt ? new Date(r.createdAt) : new Date()),
     };
   }
+
+  async findAllTracks(limit = 100): Promise<any[]> {
+    const sql = `
+      SELECT id, search_id, track_id, class_name, confidence, frame_index,
+             timestamp_ms, bbox_x, bbox_y, bbox_width, bbox_height, status, created_at
+      FROM OBJECT_TRACKS
+      ORDER BY created_at DESC
+    `;
+    const result = await db.execute<any>(sql);
+    const rows = result.rows || [];
+    return rows.slice(0, limit).map((r) => ({
+      id: r.ID || r.id,
+      searchId: r.SEARCH_ID || r.searchId,
+      trackId: r.TRACK_ID !== undefined ? r.TRACK_ID : r.trackId,
+      className: r.CLASS_NAME !== undefined ? r.CLASS_NAME : r.className,
+      confidence: r.CONFIDENCE !== undefined ? Number(r.CONFIDENCE) : Number(r.confidence || 0),
+      frameIndex: r.FRAME_INDEX !== undefined ? Number(r.FRAME_INDEX) : Number(r.frameIndex || 0),
+      timestampMs: r.TIMESTAMP_MS !== undefined ? Number(r.TIMESTAMP_MS) : Number(r.timestampMs || 0),
+      bboxX: r.BBOX_X !== undefined ? Number(r.BBOX_X) : Number(r.bboxX || 0),
+      bboxY: r.BBOX_Y !== undefined ? Number(r.BBOX_Y) : Number(r.bboxY || 0),
+      bboxWidth: r.BBOX_WIDTH !== undefined ? Number(r.BBOX_WIDTH) : Number(r.bboxWidth || 0),
+      bboxHeight: r.BBOX_HEIGHT !== undefined ? Number(r.BBOX_HEIGHT) : Number(r.bboxHeight || 0),
+      status: r.STATUS || r.status || 'TRACKING',
+      dominantColor: r.DOMINANT_COLOR !== undefined ? r.DOMINANT_COLOR : (r.dominantColor || 'ANY'),
+      secondaryColors: [],
+      createdAt: r.CREATED_AT ? new Date(r.CREATED_AT) : (r.createdAt ? new Date(r.createdAt) : new Date()),
+    }));
+  }
+
+  async countTotalSessions(): Promise<number> {
+    try {
+      const res = await db.execute<any>('SELECT COUNT(*) AS CNT FROM SEARCH_SESSIONS');
+      if (res.rows && res.rows[0]) {
+        const c = res.rows[0].CNT ?? res.rows[0].cnt;
+        if (c !== undefined) return Number(c);
+      }
+    } catch {
+      // fallback
+    }
+    const all = await this.findAll(5000);
+    return all.length;
+  }
+
+  async countTotalTracks(): Promise<number> {
+    try {
+      const res = await db.execute<any>('SELECT COUNT(*) AS CNT FROM OBJECT_TRACKS');
+      if (res.rows && res.rows[0]) {
+        const c = res.rows[0].CNT ?? res.rows[0].cnt;
+        if (c !== undefined) return Number(c);
+      }
+    } catch {
+      // fallback
+    }
+    const all = await this.findAllTracks(5000);
+    return all.length;
+  }
 }
 
 export const searchRepository = new SearchRepository();

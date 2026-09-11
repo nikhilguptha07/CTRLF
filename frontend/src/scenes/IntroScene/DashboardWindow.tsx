@@ -11,7 +11,8 @@ import {
   Sliders,
   Clock,
   Sparkles,
-  CheckCircle2
+  CheckCircle2,
+  Shield
 } from 'lucide-react';
 import { MainDashboard } from './MainDashboard';
 import { LostObjectForm } from '../SearchScene/LostObjectForm';
@@ -21,6 +22,7 @@ import { SpatialHeatmap } from '../../components/dashboard/SpatialHeatmap';
 import { VideoUploadView } from '../../components/dashboard/VideoUploadView';
 import { SettingsView } from '../../components/dashboard/SettingsView';
 import { useExperienceStore } from '../../store/useExperienceStore';
+import { useAdminRouter } from '../../hooks/useAdminRouter';
 
 export const DashboardWindow: React.FC = () => {
   const { 
@@ -32,8 +34,10 @@ export const DashboardWindow: React.FC = () => {
     currentUser,
     isAuthenticated,
     setShowAuthModal,
+    openAuthModal,
     setShowOracleModal
   } = useExperienceStore();
+  const { navigate } = useAdminRouter();
   const [headerSearch, setHeaderSearch] = useState('');
   const [showChatAssistant, setShowChatAssistant] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
@@ -43,7 +47,11 @@ export const DashboardWindow: React.FC = () => {
 
   const handleNavClick = (tab: any, targetStage: any = 'HOME') => {
     if (!isAuthenticated && tab !== 'home' && tab !== 'overview') {
-      setShowAuthModal(true);
+      if (tab === 'upload') {
+        openAuthModal('register');
+      } else {
+        openAuthModal('login');
+      }
       return;
     }
     setActiveFeedTab(tab);
@@ -304,6 +312,19 @@ export const DashboardWindow: React.FC = () => {
               <Sliders className="w-4 h-4 shrink-0" />
               <span className="truncate">Preferences</span>
             </button>
+
+            {/* Admin Console - strictly for authenticated ADMIN users */}
+            {isAuthenticated && currentUser?.role === 'ADMIN' && (
+              <button
+                type="button"
+                onClick={() => navigate('/admin')}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all cursor-pointer bg-indigo-50/90 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 shadow-2xs font-semibold mt-2"
+                title="Open Dedicated Admin Console"
+              >
+                <Shield className="w-4 h-4 shrink-0 text-indigo-600" />
+                <span className="truncate">Admin Console</span>
+              </button>
+            )}
           </nav>
 
           {/* Bottom badge - Overview only */}

@@ -44,13 +44,14 @@ export class UserRepository {
   }
 
   async findByEmail(email: string): Promise<User | null> {
+    const cleanEmail = email.trim().toLowerCase();
     const sql = `
-      SELECT id, email, password_hash, full_name, role, refresh_token_hash,
-             is_active, last_login_at, failed_login_attempts, locked_until, created_at, updated_at
+      SELECT id, user_id, username, email, password_hash, full_name, role, refresh_token_hash,
+             is_active, last_login_at, last_login, failed_login_attempts, locked_until, created_at, updated_at
       FROM USERS
-      WHERE LOWER(email) = LOWER(:email)
+      WHERE LOWER(email) = :cleanEmail
     `;
-    const result = await db.execute<UserRow>(sql, { email });
+    const result = await db.execute<UserRow>(sql, { cleanEmail });
 
     if (!result.rows || result.rows.length === 0) {
       return null;
@@ -59,14 +60,15 @@ export class UserRepository {
   }
 
   async findByUsername(username: string): Promise<User | null> {
+    const cleanUsername = username.trim().toLowerCase();
     const sql = `
-      SELECT id, email, password_hash, full_name, role, refresh_token_hash,
-             is_active, last_login_at, failed_login_attempts, locked_until, created_at, updated_at
+      SELECT id, user_id, username, email, password_hash, full_name, role, refresh_token_hash,
+             is_active, last_login_at, last_login, failed_login_attempts, locked_until, created_at, updated_at
       FROM USERS
-      WHERE LOWER(username) = LOWER(:username)
+      WHERE LOWER(username) = :cleanUsername
     `;
     try {
-      const result = await db.execute<UserRow>(sql, { username });
+      const result = await db.execute<UserRow>(sql, { cleanUsername });
       if (result.rows && result.rows.length > 0) {
         return this.mapRowToUser(result.rows[0]);
       }
@@ -78,32 +80,38 @@ export class UserRepository {
 
   async findByEmailOrUsername(identifier: string): Promise<User | null> {
     const clean = identifier.trim().toLowerCase();
-    const byEmail = await this.findByEmail(clean);
-    if (byEmail) return byEmail;
 
-    const byUser = await this.findByUsername(clean);
-    if (byUser) return byUser;
-
-    // Direct mapping for common seed identifiers
+    // Direct mapping for common seed identifiers and administrator accounts
     const aliases: Record<string, string> = {
       'operator1': 'operator@ctrlf.local',
       'operator': 'operator@ctrlf.local',
       'admin': 'admin@ctrlf.local',
-      'user': 'user@ctrlf.local'
+      'user': 'user@ctrlf.local',
+      'nikhil': 'nikhilguptha07@gmail.com',
+      'nikhilguptha': 'nikhilguptha07@gmail.com',
+      'nikhilguptha07': 'nikhilguptha07@gmail.com',
     };
     if (aliases[clean]) {
       const byAlias = await this.findByEmail(aliases[clean]);
       if (byAlias) return byAlias;
     }
 
+    const byEmail = await this.findByEmail(clean);
+    if (byEmail) return byEmail;
+
+    const byUser = await this.findByUsername(clean);
+    if (byUser) return byUser;
+
     const sql = `
-      SELECT id, email, password_hash, full_name, role, refresh_token_hash,
-             is_active, last_login_at, failed_login_attempts, locked_until, created_at, updated_at
+      SELECT id, user_id, username, email, password_hash, full_name, role, refresh_token_hash,
+             is_active, last_login_at, last_login, failed_login_attempts, locked_until, created_at, updated_at
       FROM USERS
-      WHERE LOWER(email) LIKE :prefix
+      WHERE LOWER(email) = :clean
+         OR LOWER(username) = :clean
+         OR LOWER(email) LIKE :prefix
     `;
     try {
-      const result = await db.execute<UserRow>(sql, { prefix: `${clean}%` });
+      const result = await db.execute<UserRow>(sql, { clean, prefix: `${clean}%` });
       if (result.rows && result.rows.length > 0) {
         return this.mapRowToUser(result.rows[0]);
       }
@@ -116,8 +124,8 @@ export class UserRepository {
 
   async findById(id: string): Promise<User | null> {
     const sql = `
-      SELECT id, email, password_hash, full_name, role, refresh_token_hash,
-             is_active, last_login_at, failed_login_attempts, locked_until, created_at, updated_at
+      SELECT id, user_id, username, email, password_hash, full_name, role, refresh_token_hash,
+             is_active, last_login_at, last_login, failed_login_attempts, locked_until, created_at, updated_at
       FROM USERS
       WHERE id = :id
     `;
@@ -130,19 +138,21 @@ export class UserRepository {
   }
 
   async create(user: Omit<User, 'createdAt' | 'updatedAt'>): Promise<User> {
+    const username = (user.username || user.email.split('@')[0]).trim().toLowerCase();
     const sql = `
       INSERT INTO USERS (
-        id, email, password_hash, full_name, role, refresh_token_hash,
+        id, username, email, password_hash, full_name, role, refresh_token_hash,
         is_active, failed_login_attempts, locked_until
       )
       VALUES (
-        :id, :email, :passwordHash, :fullName, :role, :refreshTokenHash,
+        :id, :username, :email, :passwordHash, :fullName, :role, :refreshTokenHash,
         :isActive, :failedLoginAttempts, :lockedUntil
       )
     `;
     await db.execute(sql, {
       id: user.id,
-      email: user.email,
+      username,
+      email: user.email.trim().toLowerCase(),
       passwordHash: user.passwordHash,
       fullName: user.fullName,
       role: user.role,
@@ -208,6 +218,64 @@ export class UserRepository {
       WHERE id = :id
     `;
     await db.execute(sql, { id: userId });
+  }
+
+  async findAll(limit = 100): Promise<User[]> {
+    const sql = `
+      SELECT id, user_id, username, email, password_hash, full_name, role, refresh_token_hash,
+             is_active, last_login_at, last_login, failed_login_attempts, locked_until, created_at, updated_at
+      FROM USERS
+      ORDER BY created_at DESC
+    `;
+    const result = await db.execute<UserRow>(sql);
+    const rows = result.rows || [];
+    return rows.slice(0, limit).map((r) => this.mapRowToUser(r));
+  }
+
+  async updateUser(
+    id: string,
+    updates: { role?: User['role']; isActive?: boolean; fullName?: string; passwordHash?: string }
+  ): Promise<User | null> {
+    const existing = await this.findById(id);
+    if (!existing) return null;
+
+    const setClauses: string[] = ['updated_at = CURRENT_TIMESTAMP'];
+    const binds: Record<string, unknown> = { id };
+
+    if (updates.role !== undefined) {
+      setClauses.push('role = :role');
+      binds.role = updates.role;
+    }
+    if (updates.isActive !== undefined) {
+      setClauses.push('is_active = :isActive');
+      binds.isActive = updates.isActive ? 1 : 0;
+    }
+    if (updates.fullName !== undefined) {
+      setClauses.push('full_name = :fullName');
+      binds.fullName = updates.fullName;
+    }
+    if (updates.passwordHash !== undefined) {
+      setClauses.push('password_hash = :passwordHash');
+      binds.passwordHash = updates.passwordHash;
+    }
+
+    const sql = `
+      UPDATE USERS
+      SET ${setClauses.join(', ')}
+      WHERE id = :id
+    `;
+    await db.execute(sql, binds);
+    return this.findById(id);
+  }
+
+  async countAdmins(): Promise<number> {
+    const all = await this.findAll(1000);
+    return all.filter((u) => u.role === 'ADMIN' && u.isActive).length;
+  }
+
+  async countTotal(): Promise<number> {
+    const all = await this.findAll(5000);
+    return all.length;
   }
 }
 

@@ -7,7 +7,8 @@ import {
   Search, 
   X, 
   Activity,
-  Film
+  Film,
+  Shield
 } from 'lucide-react';
 import { useExperienceStore } from '../../store/useExperienceStore';
 import { apiClient } from '../../services/apiClient';
@@ -36,7 +37,9 @@ export const VideoUploadView: React.FC = () => {
     uploadedVideoRecord, 
     setUploadedVideoRecord, 
     startSearchFlow, 
-    searchSession
+    searchSession,
+    isAuthenticated,
+    openAuthModal,
   } = useExperienceStore();
 
   const uploadedVideo = uploadedVideoRecord as UploadedVideoMetadata | null;
@@ -74,6 +77,10 @@ export const VideoUploadView: React.FC = () => {
     e.stopPropagation();
     setDragActive(false);
     setErrorMessage(null);
+    if (!isAuthenticated) {
+      openAuthModal('register');
+      return;
+    }
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFileUpload(e.dataTransfer.files[0]);
     }
@@ -81,6 +88,10 @@ export const VideoUploadView: React.FC = () => {
 
   // Immediate upload and verification on file selection (Section 12)
   const handleFileUpload = async (file: File) => {
+    if (!isAuthenticated) {
+      openAuthModal('register');
+      return;
+    }
     setErrorMessage(null);
     setIsUploading(true);
 
@@ -176,6 +187,37 @@ export const VideoUploadView: React.FC = () => {
           Upload recorded MP4, MOV, or AVI surveillance archives for YOLO detection & ByteTrack tracking.
         </p>
       </div>
+
+      {/* Sign Up Before Video Upload Gate Banner */}
+      {!isAuthenticated && (
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-indigo-50/90 border border-indigo-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3 text-left animate-fade-in">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-2xl bg-[#4361ee] text-white flex items-center justify-center shrink-0 shadow-xs">
+              <Shield className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-slate-900">Sign Up Required Before Uploading Footage</p>
+              <p className="text-[11px] text-slate-500">Please register or log in with an operator account to ingest surveillance archives.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => openAuthModal('register')}
+              className="px-3.5 py-1.5 rounded-xl bg-[#4361ee] hover:bg-[#364fc7] text-white text-xs font-semibold shadow-xs cursor-pointer transition-all active:scale-95"
+            >
+              Sign Up
+            </button>
+            <button
+              type="button"
+              onClick={() => openAuthModal('login')}
+              className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold shadow-2xs cursor-pointer transition-all active:scale-95"
+            >
+              Sign In
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 2. Target Object Input & Suggestion Chips (Sections 3, 8 & 13) */}
       <div className="bg-white/90 backdrop-blur-sm p-3.5 rounded-2xl border border-slate-200/80 shadow-xs text-left space-y-2">
@@ -299,7 +341,15 @@ export const VideoUploadView: React.FC = () => {
               <div className="space-y-0.5">
                 <p className="text-xs font-bold text-slate-800">
                   Drag & drop surveillance video here, or{' '}
-                  <label className="text-blue-600 hover:underline cursor-pointer">
+                  <label 
+                    onClick={(e) => {
+                      if (!isAuthenticated) {
+                        e.preventDefault();
+                        openAuthModal('register');
+                      }
+                    }}
+                    className="text-blue-600 hover:underline cursor-pointer"
+                  >
                     browse
                     <input
                       ref={fileInputRef}
@@ -307,6 +357,10 @@ export const VideoUploadView: React.FC = () => {
                       accept="video/*"
                       className="hidden"
                       onChange={(e) => {
+                        if (!isAuthenticated) {
+                          openAuthModal('register');
+                          return;
+                        }
                         if (e.target.files?.[0]) {
                           handleFileUpload(e.target.files[0]);
                         }

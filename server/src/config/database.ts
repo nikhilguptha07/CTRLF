@@ -264,48 +264,41 @@ class OracleDatabaseManager implements DatabasePool {
       return { rows: found ? ([found] as T[]) : [] };
     }
 
-    if (normalized.startsWith('UPDATE USERS SET REFRESH_TOKEN_HASH')) {
-      const user = this.inMemoryTables.users.find((u) => u.ID === bindObj.id);
-      if (user) {
-        user.REFRESH_TOKEN_HASH = bindObj.refreshTokenHash;
+    if (normalized.startsWith('SELECT COUNT(')) {
+      for (const key of Object.keys(this.inMemoryTables)) {
+        if (normalized.includes(`FROM ${key.toUpperCase()}`)) {
+          const count = this.inMemoryTables[key].length;
+          return { rows: [{ TOTAL: count, COUNT: count, CNT: count }] as T[] };
+        }
       }
-      return { rowsAffected: user ? 1 : 0 };
+      return { rows: [{ TOTAL: 0, COUNT: 0, CNT: 0 }] as T[] };
     }
 
-    if (normalized.startsWith('UPDATE USERS SET FAILED_LOGIN_ATTEMPTS = :ATTEMPTS')) {
-      const user = this.inMemoryTables.users.find((u) => u.ID === bindObj.id);
-      if (user) {
-        user.FAILED_LOGIN_ATTEMPTS = Number(bindObj.attempts);
-        user.UPDATED_AT = new Date();
+    if (normalized.startsWith('SELECT') && normalized.includes('FROM USERS')) {
+      let users = [...this.inMemoryTables.users];
+      if (bindObj.role) {
+        users = users.filter((u) => u.ROLE === bindObj.role);
       }
-      return { rowsAffected: user ? 1 : 0 };
+      return { rows: users as T[] };
     }
 
-    if (normalized.startsWith('UPDATE USERS SET FAILED_LOGIN_ATTEMPTS = 0')) {
+    if (normalized.startsWith('UPDATE USERS')) {
       const user = this.inMemoryTables.users.find((u) => u.ID === bindObj.id);
       if (user) {
-        user.FAILED_LOGIN_ATTEMPTS = 0;
-        user.LOCKED_UNTIL = null;
-        user.UPDATED_AT = new Date();
-      }
-      return { rowsAffected: user ? 1 : 0 };
-    }
-
-    if (normalized.startsWith('UPDATE USERS SET LOCKED_UNTIL')) {
-      const user = this.inMemoryTables.users.find((u) => u.ID === bindObj.id);
-      if (user) {
-        user.LOCKED_UNTIL = bindObj.lockedUntil ? new Date(bindObj.lockedUntil as any) : null;
-        user.UPDATED_AT = new Date();
-      }
-      return { rowsAffected: user ? 1 : 0 };
-    }
-
-    if (normalized.startsWith('UPDATE USERS SET LAST_LOGIN_AT')) {
-      const user = this.inMemoryTables.users.find((u) => u.ID === bindObj.id);
-      if (user) {
-        user.LAST_LOGIN_AT = new Date();
-        user.FAILED_LOGIN_ATTEMPTS = 0;
-        user.LOCKED_UNTIL = null;
+        if (bindObj.refreshTokenHash !== undefined) user.REFRESH_TOKEN_HASH = bindObj.refreshTokenHash;
+        if (bindObj.attempts !== undefined) user.FAILED_LOGIN_ATTEMPTS = Number(bindObj.attempts);
+        if (bindObj.lockedUntil !== undefined) user.LOCKED_UNTIL = bindObj.lockedUntil ? new Date(bindObj.lockedUntil as any) : null;
+        if (bindObj.role !== undefined) user.ROLE = bindObj.role;
+        if (bindObj.isActive !== undefined) user.IS_ACTIVE = bindObj.isActive ? 1 : 0;
+        if (bindObj.fullName !== undefined) user.FULL_NAME = bindObj.fullName;
+        if (bindObj.passwordHash !== undefined) user.PASSWORD_HASH = bindObj.passwordHash;
+        if (normalized.includes('FAILED_LOGIN_ATTEMPTS = 0')) {
+          user.FAILED_LOGIN_ATTEMPTS = 0;
+          user.LOCKED_UNTIL = null;
+        }
+        if (normalized.includes('LAST_LOGIN_AT = CURRENT_TIMESTAMP')) {
+          user.LAST_LOGIN_AT = new Date();
+        }
         user.UPDATED_AT = new Date();
       }
       return { rowsAffected: user ? 1 : 0 };
@@ -330,6 +323,23 @@ class OracleDatabaseManager implements DatabasePool {
       };
       this.inMemoryTables.cameras.push(row);
       return { rowsAffected: 1, rows: [row as T] };
+    }
+
+    if (normalized.startsWith('SELECT COUNT(*)')) {
+      const match = normalized.match(/FROM\s+([A-Za-z0-9_]+)/i);
+      if (match) {
+        const table = match[1].toLowerCase();
+        let list: any[] = [];
+        if (table === 'users') list = this.inMemoryTables.users;
+        else if (table === 'cameras') list = this.inMemoryTables.cameras;
+        else if (table === 'search_sessions') list = this.inMemoryTables.search_sessions;
+        else if (table === 'object_tracks') list = this.inMemoryTables.object_tracks;
+        else if (table === 'detections') list = this.inMemoryTables.detections;
+        else if (table === 'audit_logs') list = this.inMemoryTables.audit_logs;
+        else if (table === 'searches') list = this.inMemoryTables.searches;
+        else if ((this.inMemoryTables as any)[table]) list = (this.inMemoryTables as any)[table];
+        return { rows: [{ CNT: list.length, cnt: list.length }] as T[] };
+      }
     }
 
     if (normalized.startsWith('SELECT') && normalized.includes('FROM CAMERAS')) {
