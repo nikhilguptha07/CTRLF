@@ -17,10 +17,14 @@ export class AuditController {
     try {
       const verification = await auditService.verifyAuditChain();
       return sendSuccess(res, {
+        verified: verification.valid,
+        chainValid: verification.valid,
+        totalBlocks: verification.verifiedCount,
         status: verification.valid ? 'VALID' : 'TAMPERED',
         verifiedCount: verification.verifiedCount,
         tamperedRecordId: verification.tamperedRecordId,
         reason: verification.reason || null,
+        message: verification.valid ? 'Audit hash chain intact and verified.' : 'Hash mismatch detected.',
         timestamp: new Date().toISOString(),
       });
     } catch (err) {

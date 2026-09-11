@@ -15,13 +15,13 @@ import { Camera } from '../types/camera';
 const APPROVED_TABLES = [
   'USERS',
   'CAMERAS',
-  'VIDEO_FILES',
+  'VIDEOS',
   'SEARCH_SESSIONS',
   'SEARCH_TARGETS',
   'DETECTIONS',
   'OBJECT_TRACKS',
   'SEARCH_RESULTS',
-  'CAMERA_EVENTS',
+  'CAMERA_STREAM_STATUS',
   'AUDIT_LOGS',
 ] as const;
 
@@ -103,14 +103,14 @@ export class AdminService {
               count = inMem.object_tracks?.length || 0;
             } else if (key === 'audit_logs') {
               count = inMem.audit_logs?.length || 0;
-            } else if (key === 'video_files') {
+            } else if (key === 'videos' || key === 'video_files') {
               count = inMem.videos?.length || inMem.video_files?.length || 0;
             } else if (key === 'search_targets') {
               count = inMem.search_targets?.length || 0;
             } else if (key === 'search_results') {
               count = inMem.search_results?.length || 0;
-            } else if (key === 'camera_events') {
-              count = inMem.camera_events?.length || 0;
+            } else if (key === 'camera_stream_status' || key === 'camera_events') {
+              count = inMem.camera_stream_status?.length || inMem.camera_events?.length || 0;
             }
           } else {
             const res = await db.execute<any>(`SELECT COUNT(*) AS CNT FROM ${table}`);
@@ -123,12 +123,14 @@ export class AdminService {
         const descriptions: Record<string, string> = {
           USERS: 'Operator accounts, security roles, and authentication state',
           CAMERAS: 'Surveillance hardware streams, RTSP links, and PTZ controllers',
+          VIDEOS: 'Forensic footage recordings and optical source files',
           VIDEO_FILES: 'Forensic footage recordings and optical source files',
           SEARCH_SESSIONS: 'Temporal object search sessions and tracking queries',
           SEARCH_TARGETS: 'Semantic target classes, color specifications, and labels',
           DETECTIONS: 'YOLOv8 bounding boxes, confidence ratings, and timestamps',
           OBJECT_TRACKS: 'ByteTrack persistent multi-frame spatial trajectories',
           SEARCH_RESULTS: 'Final verified search conclusions and forensic evidence',
+          CAMERA_STREAM_STATUS: 'Real-time camera streaming health and status telemetry',
           CAMERA_EVENTS: 'Hardware heartbeat, connection drops, and reconnect events',
           AUDIT_LOGS: 'Immutable SHA-256 tamper-evident security audit trail',
         };

@@ -366,6 +366,13 @@ export class AuthService {
         role: 'OPERATOR' as UserRole,
       },
       {
+        username: 'nikhil',
+        email: 'nikhilguptha07@gmail.com',
+        password: 'Password123!',
+        fullName: 'Nikhil Guptha',
+        role: 'ADMIN' as UserRole,
+      },
+      {
         username: 'viewer_internal',
         email: 'viewer@controlf.internal',
         password: 'ViewerPass123!',

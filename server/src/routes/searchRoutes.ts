@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { searchController } from '../controllers/searchController';
+import { historyController } from '../controllers/historyController';
 import { optionalAuthenticate, authorize } from '../middleware/authMiddleware';
 import { validateRequest } from '../middleware/validateRequest';
 import { createSearchSchema } from '../validators/searchValidator';
@@ -12,6 +13,9 @@ router.use(optionalAuthenticate);
 // Search Execution endpoints (Requires SEARCH_CREATE)
 router.post('/start', authorize(Permission.SEARCH_CREATE), validateRequest(createSearchSchema), searchController.initiate);
 router.post('/', authorize(Permission.SEARCH_CREATE), validateRequest(createSearchSchema), searchController.initiate);
+
+// Search History alias
+router.get('/history', authorize(Permission.DETECTION_VIEW), historyController.getSearches);
 
 // Search Cancellation (Requires SEARCH_CANCEL)
 router.post('/:searchId/cancel', authorize(Permission.SEARCH_CANCEL), searchController.cancel);

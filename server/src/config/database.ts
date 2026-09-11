@@ -251,7 +251,7 @@ class OracleDatabaseManager implements DatabasePool {
     }
 
     if (normalized.startsWith('SELECT') && normalized.includes('FROM USERS') && (normalized.includes('LOWER(EMAIL)') || normalized.includes('LOWER(USERNAME)'))) {
-      const val = String(bindObj.email || bindObj.identifier || bindObj.clean || bindObj.username || '').toLowerCase();
+      const val = String(bindObj.cleanEmail || bindObj.cleanUsername || bindObj.email || bindObj.identifier || bindObj.clean || bindObj.username || '').toLowerCase();
       const found = this.inMemoryTables.users.find(
         (u) => String(u.EMAIL).toLowerCase() === val || String(u.USERNAME || '').toLowerCase() === val
       );
@@ -260,7 +260,7 @@ class OracleDatabaseManager implements DatabasePool {
 
     if (normalized.startsWith('SELECT') && normalized.includes('FROM USERS') && normalized.includes('WHERE ID = :ID')) {
       const id = String(bindObj.id);
-      const found = this.inMemoryTables.users.find((u) => u.ID === id);
+      const found = this.inMemoryTables.users.find((u) => String(u.ID) === id || String(u.USER_ID) === id);
       return { rows: found ? ([found] as T[]) : [] };
     }
 
@@ -974,7 +974,6 @@ class OracleDatabaseManager implements DatabasePool {
         'EVIDENCE_FILES',
         'SEARCH_SESSIONS',
         'AUDIT_LOGS',
-        'VIDEO_FILES',
         'VIDEOS',
       ];
       for (const tbl of oracleTables) {
