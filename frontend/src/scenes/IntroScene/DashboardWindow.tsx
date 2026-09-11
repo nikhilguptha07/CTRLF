@@ -5,14 +5,16 @@ import {
   Home, 
   Layers, 
   MessageSquare, 
-  User, 
   Camera,
   UploadCloud,
   Sliders,
   Clock,
   Sparkles,
   CheckCircle2,
-  Shield
+  Shield,
+  Database,
+  Radio,
+  ChevronRight
 } from 'lucide-react';
 import { MainDashboard } from './MainDashboard';
 import { LostObjectForm } from '../SearchScene/LostObjectForm';
@@ -119,41 +121,47 @@ export const DashboardWindow: React.FC = () => {
     <div
       id="dashboard-window"
       ref={windowRef}
-      className="w-full max-w-4xl h-[570px] rounded-3xl bg-white/90 backdrop-blur-xl border border-white/90 shadow-2xl flex flex-col overflow-hidden relative select-none font-sans"
+      className="w-full max-w-5xl h-[610px] rounded-3xl bg-white/90 backdrop-blur-2xl border border-white/95 shadow-2xl flex flex-col overflow-hidden relative select-none font-sans"
       style={{
         transformStyle: 'preserve-3d',
-        boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.8) inset',
+        boxShadow: '0 25px 65px -15px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.9) inset',
       }}
     >
-      {/* 1. Top Application Bar */}
-      <header className="h-14 px-6 border-b border-slate-200/60 flex items-center justify-between shrink-0 bg-white/50 backdrop-blur-md relative z-10 text-xs">
+      {/* 1. Top SaaS Application Bar with Glassmorphic Finish */}
+      <header className="h-14 px-5 sm:px-6 border-b border-slate-200/70 flex items-center justify-between shrink-0 bg-white/60 backdrop-blur-md relative z-10 text-xs">
         
-        {/* Left: 3-dot logo + "control f" */}
+        {/* Left: Brand Identity & SaaS Tag */}
         <div 
           onClick={() => { setActiveFeedTab('home'); setStage('HOME'); }}
-          className="flex items-center gap-2.5 cursor-pointer hover:opacity-85 transition-opacity"
+          className="flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition-opacity"
         >
-          <div className="w-5 h-5 flex flex-wrap gap-0.5 items-center justify-center p-0.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-xs shadow-indigo-300">
+            <Radio className="w-3.5 h-3.5 animate-pulse" />
           </div>
-          <span className="font-extrabold text-slate-900 text-sm tracking-tight">control f</span>
+          <div className="flex items-center gap-1.5">
+            <span className="font-extrabold text-slate-900 text-sm tracking-tight">control f</span>
+            <span className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200/80 text-[10px] font-mono font-semibold text-slate-600">
+              v2.4 Pro
+            </span>
+          </div>
         </div>
 
-        {/* Center: Search pill bar */}
+        {/* Center: SaaS Omnibar Search */}
         <form 
           onSubmit={handleHeaderSearchSubmit}
-          className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100/90 border border-slate-200/80 text-slate-700 w-64 sm:w-72 shadow-2xs focus-within:ring-2 focus-within:ring-indigo-500/20"
+          className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100/90 border border-slate-200/80 text-slate-700 w-64 sm:w-80 shadow-2xs focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:bg-white transition-all"
         >
           <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
           <input
             type="text"
             value={headerSearch}
             onChange={(e) => setHeaderSearch(e.target.value)}
-            placeholder="Search object or tool..."
+            placeholder="Search object, cameras, or logs..."
             className="w-full bg-transparent border-none outline-none text-xs text-slate-800 placeholder:text-slate-400 font-medium"
           />
+          <kbd className="hidden md:inline-block px-1.5 py-0.5 text-[9px] font-mono bg-white border border-slate-200 rounded text-slate-400 shadow-2xs">
+            /
+          </kbd>
           {headerSearch && (
             <X 
               onClick={() => setHeaderSearch('')} 
@@ -162,23 +170,47 @@ export const DashboardWindow: React.FC = () => {
           )}
         </form>
 
-        {/* Right: Log in, Sign up button, Avatar */}
-        <div className="flex items-center gap-3 sm:gap-4">
-          {(activeFeedTab === 'home' || activeFeedTab === 'overview') && (
+        {/* Right: Operational Status, Operator Pill, CTA */}
+        <div className="flex items-center gap-2.5 sm:gap-3.5">
+          {/* Oracle 21c Live Status Pill */}
+          <button
+            type="button"
+            onClick={() => setShowOracleModal(true)}
+            title="Oracle 21c Database Health & Hash Audit"
+            className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50/90 border border-emerald-200/80 text-[11px] font-medium text-emerald-800 hover:bg-emerald-100 transition-colors cursor-pointer shadow-2xs"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-semibold">Oracle 21c</span>
+          </button>
+
+          {/* User Sign In / Profile */}
+          {isAuthenticated && currentUser ? (
+            <div 
+              onClick={() => setActiveFeedTab('settings')}
+              title="Operator Settings"
+              className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-100/90 hover:bg-slate-200/80 border border-slate-200/80 cursor-pointer transition-colors"
+            >
+              <div className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
+                {(currentUser.fullName || currentUser.username || 'O')[0].toUpperCase()}
+              </div>
+              <span className="font-semibold text-slate-800 text-xs hidden sm:inline">
+                {currentUser.username}
+              </span>
+              <span className="text-[9px] font-mono uppercase px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-700 font-bold">
+                {currentUser.role}
+              </span>
+            </div>
+          ) : (
             <button 
               type="button" 
-              onClick={() => {
-                if (!isAuthenticated) {
-                  setShowAuthModal(true);
-                } else {
-                  setActiveFeedTab('settings');
-                }
-              }}
-              className="text-xs font-semibold text-slate-700 hover:text-slate-900 transition-colors cursor-pointer"
+              onClick={() => setShowAuthModal(true)}
+              className="px-3 py-1 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100/80 transition-colors cursor-pointer"
             >
-              {isAuthenticated && currentUser ? (currentUser.fullName || currentUser.username) : 'Sign In'}
+              Sign In
             </button>
           )}
+
+          {/* Primary CTA */}
           <button
             type="button"
             onClick={() => {
@@ -189,159 +221,219 @@ export const DashboardWindow: React.FC = () => {
               setActiveFeedTab('search');
               setStage('OBJECT_INPUT');
             }}
-            className="px-4 py-1.5 rounded-xl bg-[#4361ee] hover:bg-[#3a56d4] text-white text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer"
+            className="px-3.5 py-1.5 rounded-xl bg-[#4361ee] hover:bg-[#3854d9] text-white text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
           >
-            Find Item
+            <Search className="w-3 h-3" />
+            <span>Find Item</span>
           </button>
-          <div 
-            onClick={() => {
-              if (!isAuthenticated) {
-                setShowAuthModal(true);
-              } else {
-                setActiveFeedTab('settings');
-              }
-            }}
-            title={isAuthenticated ? 'System Preferences' : 'Operator Login'}
-            className="w-7 h-7 rounded-full bg-slate-200 hover:bg-slate-300 flex items-center justify-center text-slate-600 cursor-pointer transition-colors"
-          >
-            <User className="w-4 h-4" />
-          </div>
         </div>
       </header>
 
-      {/* 2. Main Body with Mini Sidebar & Dynamic View */}
+      {/* 2. Main Body with Categorized SaaS Mini Sidebar & Dynamic View */}
       <div className="flex-1 flex overflow-hidden relative z-10">
         
-        {/* Left Mini Sidebar */}
-        <aside className="w-36 sm:w-42 border-r border-slate-200/60 p-3 flex flex-col justify-between shrink-0 bg-white/30 backdrop-blur-sm text-xs select-none">
-          <nav className="space-y-1">
-            {/* Overview / Home */}
-            <button
-              type="button"
-              onClick={() => handleNavClick('home', 'HOME')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all cursor-pointer ${
-                (activeFeedTab === 'home' || activeFeedTab === 'overview') && stage === 'HOME'
-                  ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
-                  : 'text-slate-600 hover:bg-white/80 font-medium'
-              }`}
-            >
-              <Home className="w-4 h-4 shrink-0" />
-              <span className="truncate">Overview</span>
-            </button>
+        {/* Left Categorized Mini Sidebar */}
+        <aside className="w-40 sm:w-44 border-r border-slate-200/70 p-3 flex flex-col justify-between shrink-0 bg-white/40 backdrop-blur-sm text-xs select-none">
+          <div className="space-y-3.5">
+            {/* Group 1: SURVEILLANCE */}
+            <div>
+              <div className="px-2.5 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400">
+                Surveillance
+              </div>
+              <nav className="space-y-0.5">
+                {/* Overview */}
+                <button
+                  type="button"
+                  onClick={() => handleNavClick('home', 'HOME')}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer ${
+                    (activeFeedTab === 'home' || activeFeedTab === 'overview') && stage === 'HOME'
+                      ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
+                      : 'text-slate-600 hover:bg-white/80 font-medium'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Home className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">Overview</span>
+                  </div>
+                </button>
 
-            {/* Find Object / Lost Object */}
-            <button
-              type="button"
-              onClick={() => handleNavClick('search', 'OBJECT_INPUT')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all cursor-pointer ${
-                isFormView
-                  ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
-                  : 'text-slate-600 hover:bg-white/80 font-medium'
-              }`}
-            >
-              <Search className="w-4 h-4 shrink-0" />
-              <span className="truncate">Find Object</span>
-            </button>
+                {/* CCTV Feeds */}
+                <button
+                  type="button"
+                  onClick={() => handleNavClick('cctv', 'HOME')}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer ${
+                    activeFeedTab === 'cctv' && stage === 'HOME'
+                      ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
+                      : 'text-slate-600 hover:bg-white/80 font-medium'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Camera className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">CCTV Feeds</span>
+                  </div>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
+                    activeFeedTab === 'cctv' && stage === 'HOME'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-emerald-100 text-emerald-700'
+                  }`}>
+                    4 Live
+                  </span>
+                </button>
 
-            {/* CCTV Feeds */}
-            <button
-              type="button"
-              onClick={() => handleNavClick('cctv', 'HOME')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all cursor-pointer ${
-                activeFeedTab === 'cctv' && stage === 'HOME'
-                  ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
-                  : 'text-slate-600 hover:bg-white/80 font-medium'
-              }`}
-            >
-              <Camera className="w-4 h-4 shrink-0" />
-              <span className="truncate">CCTV Feeds</span>
-            </button>
-
-            {/* Spatial Heatmap */}
-            <button
-              type="button"
-              onClick={() => handleNavClick('heatmaps', 'HOME')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all cursor-pointer ${
-                activeFeedTab === 'heatmaps' && stage === 'HOME'
-                  ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
-                  : 'text-slate-600 hover:bg-white/80 font-medium'
-              }`}
-            >
-              <Layers className="w-4 h-4 shrink-0" />
-              <span className="truncate">Spatial Map</span>
-            </button>
-
-            {/* Audit Logs */}
-            <button
-              type="button"
-              onClick={() => handleNavClick('logs', 'HOME')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all cursor-pointer ${
-                (activeFeedTab === 'logs' || activeFeedTab === 'history') && stage === 'HOME'
-                  ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
-                  : 'text-slate-600 hover:bg-white/80 font-medium'
-              }`}
-            >
-              <Clock className="w-4 h-4 shrink-0" />
-              <span className="truncate">Audit Logs</span>
-            </button>
-
-            {/* Upload Footage */}
-            <button
-              type="button"
-              onClick={() => handleNavClick('upload', 'HOME')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all cursor-pointer ${
-                activeFeedTab === 'upload' && stage === 'HOME'
-                  ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
-                  : 'text-slate-600 hover:bg-white/80 font-medium'
-              }`}
-            >
-              <UploadCloud className="w-4 h-4 shrink-0" />
-              <span className="truncate">Upload Video</span>
-            </button>
-
-            {/* Preferences */}
-            <button
-              type="button"
-              onClick={() => handleNavClick('settings', 'HOME')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all cursor-pointer ${
-                activeFeedTab === 'settings' && stage === 'HOME'
-                  ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
-                  : 'text-slate-600 hover:bg-white/80 font-medium'
-              }`}
-            >
-              <Sliders className="w-4 h-4 shrink-0" />
-              <span className="truncate">Preferences</span>
-            </button>
-
-            {/* Admin Console - strictly for authenticated ADMIN users */}
-            {isAuthenticated && currentUser?.role === 'ADMIN' && (
-              <button
-                type="button"
-                onClick={() => navigate('/admin')}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all cursor-pointer bg-indigo-50/90 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 shadow-2xs font-semibold mt-2"
-                title="Open Dedicated Admin Console"
-              >
-                <Shield className="w-4 h-4 shrink-0 text-indigo-600" />
-                <span className="truncate">Admin Console</span>
-              </button>
-            )}
-          </nav>
-
-          {/* Bottom badge - Overview only */}
-          {(activeFeedTab === 'home' || activeFeedTab === 'overview') && (
-            <div 
-              onClick={() => setShowOracleModal(true)}
-              title="View Oracle 21c Database Health & Schema"
-              className="p-2 rounded-xl bg-slate-100/80 hover:bg-white border border-slate-200/70 text-[10px] text-slate-700 flex items-center gap-2 cursor-pointer transition-all shadow-2xs group"
-            >
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0 group-hover:scale-125 transition-transform" />
-              <span className="truncate font-semibold">Oracle 21c · Ready</span>
+                {/* Spatial Map */}
+                <button
+                  type="button"
+                  onClick={() => handleNavClick('heatmaps', 'HOME')}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer ${
+                    activeFeedTab === 'heatmaps' && stage === 'HOME'
+                      ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
+                      : 'text-slate-600 hover:bg-white/80 font-medium'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">Spatial Map</span>
+                  </div>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
+                    activeFeedTab === 'heatmaps' && stage === 'HOME'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    3D
+                  </span>
+                </button>
+              </nav>
             </div>
-          )}
+
+            {/* Group 2: INTELLIGENCE */}
+            <div>
+              <div className="px-2.5 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400">
+                Intelligence
+              </div>
+              <nav className="space-y-0.5">
+                {/* Find Object */}
+                <button
+                  type="button"
+                  onClick={() => handleNavClick('search', 'OBJECT_INPUT')}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer ${
+                    isFormView
+                      ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
+                      : 'text-slate-600 hover:bg-white/80 font-medium'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Search className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">Find Object</span>
+                  </div>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
+                    isFormView ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'
+                  }`}>
+                    AI
+                  </span>
+                </button>
+
+                {/* Upload Video */}
+                <button
+                  type="button"
+                  onClick={() => handleNavClick('upload', 'HOME')}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer ${
+                    activeFeedTab === 'upload' && stage === 'HOME'
+                      ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
+                      : 'text-slate-600 hover:bg-white/80 font-medium'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <UploadCloud className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">Upload Video</span>
+                  </div>
+                </button>
+
+                {/* Audit Logs */}
+                <button
+                  type="button"
+                  onClick={() => handleNavClick('logs', 'HOME')}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer ${
+                    (activeFeedTab === 'logs' || activeFeedTab === 'history') && stage === 'HOME'
+                      ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
+                      : 'text-slate-600 hover:bg-white/80 font-medium'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">Audit Logs</span>
+                  </div>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
+                    (activeFeedTab === 'logs' || activeFeedTab === 'history') && stage === 'HOME'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-slate-100 text-slate-500'
+                  }`}>
+                    DB
+                  </span>
+                </button>
+              </nav>
+            </div>
+
+            {/* Group 3: SYSTEM */}
+            <div>
+              <div className="px-2.5 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400">
+                System
+              </div>
+              <nav className="space-y-0.5">
+                {/* Preferences */}
+                <button
+                  type="button"
+                  onClick={() => handleNavClick('settings', 'HOME')}
+                  className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer ${
+                    activeFeedTab === 'settings' && stage === 'HOME'
+                      ? 'bg-[#4361ee] text-white shadow-xs font-semibold'
+                      : 'text-slate-600 hover:bg-white/80 font-medium'
+                  }`}
+                >
+                  <Sliders className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">Preferences</span>
+                </button>
+
+                {/* Admin Console */}
+                {isAuthenticated && currentUser?.role === 'ADMIN' && (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/admin')}
+                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer bg-indigo-50/90 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 shadow-2xs font-semibold mt-1"
+                    title="Open Dedicated Admin Console"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-3.5 h-3.5 shrink-0 text-indigo-600" />
+                      <span className="truncate">Admin Console</span>
+                    </div>
+                    <ChevronRight className="w-3 h-3 text-indigo-400" />
+                  </button>
+                )}
+              </nav>
+            </div>
+          </div>
+
+          {/* Bottom Database Telemetry Badge */}
+          <div 
+            onClick={() => setShowOracleModal(true)}
+            title="Oracle 21c Database Health & Schema Inspector"
+            className="p-2.5 rounded-2xl bg-slate-100/90 hover:bg-white border border-slate-200/80 text-[10px] text-slate-700 flex flex-col gap-1 cursor-pointer transition-all shadow-2xs group"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 font-bold text-slate-800">
+                <Database className="w-3 h-3 text-indigo-600" />
+                <span>Oracle 21c XE</span>
+              </div>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            </div>
+            <div className="flex items-center justify-between text-[9px] text-slate-500 font-medium">
+              <span>Status: Active</span>
+              <span className="font-mono text-emerald-600 font-bold">12ms</span>
+            </div>
+          </div>
         </aside>
 
         {/* Center Dynamic Content Area */}
-        <main className="flex-1 p-5 sm:p-6 overflow-y-auto flex flex-col justify-between bg-gradient-to-b from-white/10 to-white/40 relative">
+        <main className="flex-1 p-5 sm:p-6 overflow-y-auto flex flex-col justify-between bg-gradient-to-b from-white/20 via-white/40 to-slate-50/40 relative">
           {renderActiveView()}
 
           {/* Floating Blue Chat Assistant Button */}
@@ -402,3 +494,4 @@ export const DashboardWindow: React.FC = () => {
     </div>
   );
 };
+
