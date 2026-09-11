@@ -7,6 +7,7 @@ import { auditService } from './auditService';
 import { AppError } from '../middleware/errorHandler';
 import { RegisterInput, LoginInput } from '../validators/authValidator';
 import { AuthTokens, JwtPayload, UserProfile, UserRole, ROLE_PERMISSIONS, User } from '../types/user';
+import { logger } from '../utils/logger';
 
 const SALT_ROUNDS = 12;
 const MAX_FAILED_ATTEMPTS = 5;
