@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { videoController } from '../controllers/videoController';
-import { authenticate, authorize } from '../middleware/authMiddleware';
+import { optionalAuthenticate, authorize } from '../middleware/authMiddleware';
 import { env } from '../config/env';
 import { AppError } from '../middleware/errorHandler';
 import { Permission } from '../types/user';
@@ -31,7 +31,7 @@ const upload = multer({
 
 const router = Router();
 
-router.use(authenticate);
+router.use(optionalAuthenticate);
 
 router.post('/upload', authorize(Permission.VIDEO_UPLOAD), upload.single('video'), videoController.upload);
 router.get('/', authorize(Permission.DETECTION_VIEW), videoController.getAll);

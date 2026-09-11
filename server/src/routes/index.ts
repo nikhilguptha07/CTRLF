@@ -8,7 +8,7 @@ import historyRoutes from './historyRoutes';
 import auditRoutes from './auditRoutes';
 import evidenceRoutes from './evidenceRoutes';
 import adminRoutes from './adminRoutes';
-import { authenticate } from '../middleware/authMiddleware';
+import { authenticate, optionalAuthenticate } from '../middleware/authMiddleware';
 import { db } from '../config/database';
 import { env } from '../config/env';
 
@@ -115,7 +115,7 @@ router.get('/ai/health', async (_req, res, next) => {
 });
 
 // Legacy audit log endpoint - strictly ADMIN restricted
-router.get('/logs', authenticate, async (req, res, next) => {
+router.get('/logs', optionalAuthenticate, async (req, res, next) => {
   try {
     if (req.user?.role !== 'ADMIN') {
       return res.status(403).json({

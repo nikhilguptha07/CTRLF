@@ -569,6 +569,9 @@ export class SearchService {
             path.resolve(process.cwd(), '../reference/cctv-reference.mp4'),
             path.resolve(process.cwd(), 'reference/cctv-reference.mp4'),
             path.resolve(__dirname, '../../../../reference/cctv-reference.mp4'),
+            path.resolve(process.cwd(), '../frontend/public/reference/cctv-reference.mp4'),
+            path.resolve(process.cwd(), 'uploads/videos/cctv-reference.mp4'),
+            path.resolve(__dirname, '../../../uploads/videos/cctv-reference.mp4'),
           ];
           const cctvPath = cctvCandidates.find((cand) => fs.existsSync(cand));
 

@@ -158,6 +158,9 @@ class ApiClient {
     } else {
       this.baseUrl = 'http://localhost:5000';
     }
+    if (typeof window !== 'undefined') {
+      this.accessToken = localStorage.getItem('ctrlf_token');
+    }
   }
 
   setToken(token: string | null) {
@@ -165,6 +168,9 @@ class ApiClient {
   }
 
   getToken(): string | null {
+    if (!this.accessToken && typeof window !== 'undefined') {
+      this.accessToken = localStorage.getItem('ctrlf_token');
+    }
     return this.accessToken;
   }
 
@@ -182,6 +188,9 @@ class ApiClient {
 
   private async request(path: string, options: RequestInit = {}): Promise<Response> {
     const headers = new Headers(options.headers || {});
+    if (!this.accessToken && typeof window !== 'undefined') {
+      this.accessToken = localStorage.getItem('ctrlf_token');
+    }
     if (this.accessToken && !headers.has('Authorization')) {
       headers.set('Authorization', `Bearer ${this.accessToken}`);
     }
@@ -341,7 +350,7 @@ class ApiClient {
     target: string,
     cameraIds?: string[]
   ): Promise<StartSearchResponse & { orchestrator: boolean; cameraCount: number }> {
-    const res = await fetch(`${this.baseUrl}/api/search/start`, {
+    const res = await this.request('/api/search/start', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -368,7 +377,7 @@ class ApiClient {
    */
   async getOrchestratorStatus(sessionId: string): Promise<OrchestratorStatusResponse | null> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/search/${sessionId}/orchestrator`);
+      const res = await this.request(`/api/search/${sessionId}/orchestrator`);
       if (!res.ok) return null;
       const json = await res.json();
       return json.data;
@@ -383,7 +392,7 @@ class ApiClient {
    * Calls GET /api/search/:searchId
    */
   async getSearchSession(sessionId: string): Promise<SearchTelemetrySession> {
-    const res = await fetch(`${this.baseUrl}/api/search/${sessionId}`);
+    const res = await this.request(`/api/search/${sessionId}`);
     if (!res.ok) {
       throw new Error(`Failed to fetch session ${sessionId}`);
     }
@@ -429,7 +438,7 @@ class ApiClient {
    */
   async getSearchHistory(): Promise<any[]> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/history`);
+      const res = await this.request('/api/history');
       if (!res.ok) return [];
       const json = await res.json();
       return json.data || [];
@@ -444,7 +453,7 @@ class ApiClient {
    */
   async getAuditLogs(): Promise<any[]> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/history/audit`);
+      const res = await this.request('/api/history/audit');
       if (!res.ok) return [];
       const json = await res.json();
       return json.data || [];
@@ -458,7 +467,7 @@ class ApiClient {
    * Calls POST /api/search/:searchId/cancel
    */
   async cancelSearch(sessionId: string): Promise<any> {
-    const res = await fetch(`${this.baseUrl}/api/search/${sessionId}/cancel`, {
+    const res = await this.request(`/api/search/${sessionId}/cancel`, {
       method: 'POST',
     });
     if (!res.ok) {
@@ -475,7 +484,7 @@ class ApiClient {
    */
   async getSearchProgress(sessionId: string): Promise<any> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/search/${sessionId}/progress`);
+      const res = await this.request(`/api/search/${sessionId}/progress`);
       if (!res.ok) return null;
       const json = await res.json();
       return json.data;
@@ -490,7 +499,7 @@ class ApiClient {
    */
   async getSearchEvidence(sessionId: string): Promise<any[]> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/search/${sessionId}/evidence`);
+      const res = await this.request(`/api/search/${sessionId}/evidence`);
       if (!res.ok) return [];
       const json = await res.json();
       return json.data || [];
@@ -505,7 +514,7 @@ class ApiClient {
    */
   async getSearchTracks(sessionId: string): Promise<any[]> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/search/${sessionId}/tracks`);
+      const res = await this.request(`/api/search/${sessionId}/tracks`);
       if (!res.ok) return [];
       const json = await res.json();
       return json.data || [];
@@ -556,7 +565,7 @@ class ApiClient {
    */
   async getCameras(): Promise<any[]> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/cameras`);
+      const res = await this.request('/api/cameras');
       if (!res.ok) return [];
       const json = await res.json();
       return json.data || [];
@@ -571,7 +580,7 @@ class ApiClient {
    */
   async getCameraHealth(cameraId: string): Promise<CameraStreamHealth | null> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/cameras/${encodeURIComponent(cameraId)}/health`);
+      const res = await this.request(`/api/cameras/${encodeURIComponent(cameraId)}/health`);
       if (!res.ok) return null;
       const json = await res.json();
       return json.data;
@@ -590,7 +599,7 @@ class ApiClient {
 
   async startCameraStream(cameraId: string): Promise<boolean> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/cameras/${encodeURIComponent(cameraId)}/stream/start`, {
+      const res = await this.request(`/api/cameras/${encodeURIComponent(cameraId)}/stream/start`, {
         method: 'POST',
       });
       const json = await res.json();
@@ -602,7 +611,7 @@ class ApiClient {
 
   async stopCameraStream(cameraId: string): Promise<boolean> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/cameras/${encodeURIComponent(cameraId)}/stream/stop`, {
+      const res = await this.request(`/api/cameras/${encodeURIComponent(cameraId)}/stream/stop`, {
         method: 'POST',
       });
       const json = await res.json();
@@ -624,7 +633,7 @@ class ApiClient {
     password?: string;
   }): Promise<{ reachable: boolean; protocol: string; pingMs: number; capabilities?: any; error?: string }> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/cameras/probe`, {
+      const res = await this.request('/api/cameras/probe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config),
@@ -644,7 +653,7 @@ class ApiClient {
     presetId?: string;
   }): Promise<{ success: boolean; message?: string; pan?: number; tilt?: number; zoom?: number }> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/cameras/${encodeURIComponent(cameraId)}/ptz`, {
+      const res = await this.request(`/api/cameras/${encodeURIComponent(cameraId)}/ptz`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(command),
@@ -658,7 +667,7 @@ class ApiClient {
 
   async getCameraCapabilities(cameraId: string): Promise<any> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/cameras/${encodeURIComponent(cameraId)}/capabilities`);
+      const res = await this.request(`/api/cameras/${encodeURIComponent(cameraId)}/capabilities`);
       const json = await res.json();
       return json.data || null;
     } catch {
@@ -676,7 +685,7 @@ class ApiClient {
     password?: string;
     ptzEnabled?: boolean;
   }): Promise<any> {
-    const res = await fetch(`${this.baseUrl}/api/cameras`, {
+    const res = await this.request('/api/cameras', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(cameraData),
@@ -698,11 +707,7 @@ class ApiClient {
   }
 
   async getDetection(detectionId: string | number): Promise<any> {
-    const token = localStorage.getItem('ctrlf_token');
-    const res = await fetch(`${this.baseUrl}/api/detections/${encodeURIComponent(detectionId)}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      credentials: 'include',
-    });
+    const res = await this.request(`/api/detections/${encodeURIComponent(detectionId)}`);
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.error?.message || 'Detection not found');
@@ -711,14 +716,11 @@ class ApiClient {
   }
 
   async createDetection(detectionData: any): Promise<any> {
-    const token = localStorage.getItem('ctrlf_token');
-    const res = await fetch(`${this.baseUrl}/api/detections`, {
+    const res = await this.request('/api/detections', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      credentials: 'include',
       body: JSON.stringify(detectionData),
     });
     const json = await res.json();

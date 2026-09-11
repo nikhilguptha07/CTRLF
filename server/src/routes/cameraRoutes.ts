@@ -1,14 +1,14 @@
 import { Router } from 'express';
 import { cameraController } from '../controllers/cameraController';
 import { calibrationController } from '../controllers/calibrationController';
-import { authenticate, authorize } from '../middleware/authMiddleware';
+import { optionalAuthenticate, authorize } from '../middleware/authMiddleware';
 import { validateRequest } from '../middleware/validateRequest';
 import { createCameraSchema, updateCameraSchema, ptzCommandSchema } from '../validators/cameraValidator';
 import { Permission } from '../types/user';
 
 const router = Router();
 
-router.use(authenticate);
+router.use(optionalAuthenticate);
 
 router.post('/', authorize(Permission.CAMERA_MANAGE), validateRequest(createCameraSchema), cameraController.create);
 router.get('/', authorize(Permission.CAMERA_VIEW), cameraController.getAll);

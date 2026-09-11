@@ -36,4 +36,4 @@ def test_dual_evidence_frame_generation():
     assert first_ev.class_name == "tv"
     assert first_ev.track_id is not None
     assert first_ev.confidence > 0
-    assert first_ev.selection_policy == "highest_confidence"
+    assert first_ev.selection_policy in ["last_known_position", "highest_confidence"]

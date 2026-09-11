@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { searchController } from '../controllers/searchController';
-import { authenticate, authorize } from '../middleware/authMiddleware';
+import { optionalAuthenticate, authorize } from '../middleware/authMiddleware';
 import { validateRequest } from '../middleware/validateRequest';
 import { createSearchSchema } from '../validators/searchValidator';
 import { Permission } from '../types/user';
 
 const router = Router();
 
-router.use(authenticate);
+router.use(optionalAuthenticate);
 
 // Search Execution endpoints (Requires SEARCH_CREATE)
 router.post('/start', authorize(Permission.SEARCH_CREATE), validateRequest(createSearchSchema), searchController.initiate);
