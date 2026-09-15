@@ -9,7 +9,8 @@ import {
   AlertCircle,
   RotateCcw,
   Check,
-  X
+  X,
+  FolderSearch
 } from 'lucide-react';
 import type { HumanVerificationState, VerificationReason } from '../../types/searchWorkflow';
 
@@ -27,6 +28,7 @@ interface DetectionVerificationCardProps {
   onReject: (reason: VerificationReason, notes?: string) => void;
   onReset?: () => void;
   onInspectEvidence?: () => void;
+  onOpenInvestigation?: () => void;
 }
 
 const REASON_OPTIONS: { id: VerificationReason; label: string; desc: string }[] = [
@@ -51,6 +53,7 @@ export const DetectionVerificationCard: React.FC<DetectionVerificationCardProps>
   onReject,
   onReset,
   onInspectEvidence,
+  onOpenInvestigation,
 }) => {
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [selectedReason, setSelectedReason] = useState<VerificationReason>('WRONG_OBJECT');
@@ -303,26 +306,40 @@ export const DetectionVerificationCard: React.FC<DetectionVerificationCardProps>
 
             {/* CONFIRMED STATE */}
             {verificationState.status === 'CONFIRMED' && (
-              <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-between animate-fade-in">
-                <div className="flex items-center gap-2.5">
-                  <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
-                  <div>
-                    <span className="font-bold text-xs text-emerald-950 block">
-                      Target Match Verified by Human Operator
-                    </span>
-                    <span className="text-[10px] font-mono text-emerald-700 block">
-                      Verified at {verificationState.verifiedAt ? new Date(verificationState.verifiedAt).toLocaleTimeString() : 'Just now'} • Signed by {verificationState.operator || 'Operator'}
-                    </span>
+              <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 flex flex-col gap-2.5 animate-fade-in">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <div>
+                      <span className="font-bold text-xs text-emerald-950 block">
+                        Target Match Verified by Human Operator
+                      </span>
+                      <span className="text-[10px] font-mono text-emerald-700 block">
+                        Verified at {verificationState.verifiedAt ? new Date(verificationState.verifiedAt).toLocaleTimeString() : 'Just now'} • Signed by {verificationState.operator || 'Operator'}
+                      </span>
+                    </div>
                   </div>
+                  {onReset && (
+                    <button
+                      type="button"
+                      onClick={onReset}
+                      className="p-1 rounded text-emerald-700 hover:text-emerald-900 hover:bg-emerald-100/60 transition-colors cursor-pointer"
+                      title="Change verification"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
-                {onReset && (
+
+                {onOpenInvestigation && (
                   <button
                     type="button"
-                    onClick={onReset}
-                    className="p-1 rounded text-emerald-700 hover:text-emerald-900 hover:bg-emerald-100/60 transition-colors cursor-pointer"
-                    title="Change verification"
+                    id="card-open-investigation-btn"
+                    onClick={onOpenInvestigation}
+                    className="w-full py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer"
                   >
-                    <RotateCcw className="w-3.5 h-3.5" />
+                    <FolderSearch className="w-3.5 h-3.5" />
+                    <span>Open Full Investigation Case Docket &rarr;</span>
                   </button>
                 )}
               </div>

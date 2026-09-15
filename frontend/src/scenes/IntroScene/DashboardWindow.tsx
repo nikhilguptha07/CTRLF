@@ -14,7 +14,8 @@ import {
   Shield,
   Database,
   Radio,
-  ChevronRight
+  ChevronRight,
+  FolderSearch
 } from 'lucide-react';
 import { MainDashboard } from './MainDashboard';
 import { LostObjectForm } from '../SearchScene/LostObjectForm';
@@ -23,6 +24,7 @@ import { DetectionLogs } from '../../components/dashboard/DetectionLogs';
 import { SpatialHeatmap } from '../../components/dashboard/SpatialHeatmap';
 import { VideoUploadView } from '../../components/dashboard/VideoUploadView';
 import { SettingsView } from '../../components/dashboard/SettingsView';
+import { InvestigationView } from '../../components/investigation/InvestigationView';
 import { useExperienceStore } from '../../store/useExperienceStore';
 import { useAdminRouter } from '../../hooks/useAdminRouter';
 
@@ -110,6 +112,8 @@ export const DashboardWindow: React.FC = () => {
         return <DetectionLogs />;
       case 'settings':
         return <SettingsView />;
+      case 'investigation':
+        return <InvestigationView />;
       case 'home':
       case 'overview':
       default:
@@ -275,6 +279,30 @@ export const DashboardWindow: React.FC = () => {
                     isFormView ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-800'
                   }`}>
                     AI
+                  </span>
+                </button>
+
+                {/* 4. Investigations */}
+                <button
+                  type="button"
+                  data-nav="investigation"
+                  onClick={() => handleNavClick('investigation', 'HOME')}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
+                    activeFeedTab === 'investigation' && stage === 'HOME'
+                      ? 'bg-slate-900 text-white shadow-xs font-semibold'
+                      : 'text-slate-600 hover:bg-slate-100/90 font-medium'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <FolderSearch className="w-3.5 h-3.5 shrink-0 text-indigo-600" />
+                    <span className="truncate">Investigations</span>
+                  </div>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded font-mono ${
+                    activeFeedTab === 'investigation' && stage === 'HOME'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-indigo-50 text-indigo-700 border border-indigo-200/60'
+                  }`}>
+                    Active
                   </span>
                 </button>
               </nav>

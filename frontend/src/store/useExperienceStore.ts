@@ -61,7 +61,7 @@ export interface DetectionResult {
   } | null;
 }
 
-export type FeedTab = 'home' | 'search' | 'cctv' | 'upload' | 'history' | 'detected' | 'settings' | 'overview' | 'heatmaps' | 'logs';
+export type FeedTab = 'home' | 'search' | 'cctv' | 'upload' | 'history' | 'detected' | 'settings' | 'overview' | 'heatmaps' | 'logs' | 'investigation';
 
 export type AuthoritativeSearchStatus =
   | 'IDLE'
@@ -188,6 +188,10 @@ interface ExperienceState {
   confirmDetection: () => void;
   rejectDetection: (reason: VerificationReason, notes?: string) => void;
   resetVerification: () => void;
+
+  // Investigation state & actions (Phase 5)
+  activeInvestigationId: string | null;
+  openInvestigation: (caseId?: string) => void;
 }
 
 
@@ -305,6 +309,17 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
     });
   },
 
+  // Investigation state & actions (Phase 5)
+  activeInvestigationId: 'INV-2026-00421',
+  openInvestigation: (caseId = 'INV-2026-00421') => {
+    set({
+      activeInvestigationId: caseId,
+      activeFeedTab: 'investigation',
+      stage: 'HOME',
+      showResultsView: false,
+    });
+  },
+
   // Authentication State (Oracle 21c XE)
   currentUser: (() => {
     try {
@@ -419,6 +434,8 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
       set({ activeFeedTab, stage: 'HOME' });
     } else if (activeFeedTab === 'search') {
       set({ activeFeedTab, stage: 'OBJECT_INPUT' });
+    } else if (activeFeedTab === 'investigation') {
+      set({ activeFeedTab, stage: 'HOME' });
     } else {
       set({ activeFeedTab });
     }

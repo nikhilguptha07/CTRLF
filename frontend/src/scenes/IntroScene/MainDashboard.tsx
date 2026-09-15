@@ -49,7 +49,8 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
     searchQuery,
     isAuthenticated,
     setShowAuthModal,
-    setShowOracleModal
+    setShowOracleModal,
+    openInvestigation
   } = useExperienceStore();
 
   const [searchTerm, setSearchTerm] = useState(searchQuery || '');
@@ -123,11 +124,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
 
   // Secondary Action 2: Investigations
   const handleInvestigations = () => {
-    if (!isAuthenticated) {
-      setShowAuthModal(true);
-      return;
-    }
-    setActiveFeedTab('history');
+    openInvestigation();
   };
 
   // Secondary Action 3: Detection History
@@ -159,8 +156,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
 
   // Selected investigation click
   const handleSelectCase = (caseItem: ActiveInvestigation) => {
-    setSearchTerm(caseItem.object);
-    handleSearchSubmit(undefined, caseItem.object);
+    openInvestigation(caseItem.caseId);
   };
 
   // Selected detection click

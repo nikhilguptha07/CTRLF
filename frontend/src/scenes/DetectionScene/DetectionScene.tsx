@@ -20,6 +20,7 @@ import {
   ChevronUp
 } from 'lucide-react';
 import { DetectionVerificationCard } from '../../components/dashboard/DetectionVerificationCard';
+import { investigationService } from '../../services/investigationService';
 
 // Ambient 4-pointed sparkle star in bottom right corner (from reference video)
 const AmbientBrandingStar: React.FC<{ position?: [number, number, number] }> = ({
@@ -98,6 +99,7 @@ export const DetectionScene: React.FC<DetectionSceneProps> = ({ timelineTime }) 
     confirmDetection,
     rejectDetection,
     resetVerification,
+    openInvestigation,
   } = useExperienceStore();
 
   const { camera, lighting, postProcessing } = referenceCalibration;
@@ -106,6 +108,18 @@ export const DetectionScene: React.FC<DetectionSceneProps> = ({ timelineTime }) 
   const [displayDeg, setDisplayDeg] = useState<number>(0);
   const [sweepCount, setSweepCount] = useState<number>(1);
   const [isCardMinimized, setIsCardMinimized] = useState<boolean>(false);
+
+  const handleOpenInvestigation = () => {
+    const newCase = investigationService.createFromSearch({
+      objectName: searchSession.detection?.objectName || searchParameters.object || targetClass || 'Bottle',
+      camera: searchSession.detection?.camera || activeCameraInfo.name,
+      location: searchSession.detection?.location || activeCameraInfo.location,
+      confidence: searchSession.detection?.confidence ?? 94.5,
+      evidenceUrl: searchSession.detection?.evidenceUrl || searchSession.evidence || '/camera_feed_sample.jpg',
+      timestamp: searchSession.detection?.lastSeenTimestamp || searchSession.detection?.timestamp || 'Just now',
+    });
+    openInvestigation(newCase.caseId);
+  };
 
   // Visual states
   const isSearching = stage === 'SEARCHING';
@@ -584,6 +598,7 @@ export const DetectionScene: React.FC<DetectionSceneProps> = ({ timelineTime }) 
                 onReject={rejectDetection}
                 onReset={resetVerification}
                 onInspectEvidence={() => setShowResultsView(true)}
+                onOpenInvestigation={handleOpenInvestigation}
               />
             </div>
           )}
