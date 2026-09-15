@@ -6,7 +6,7 @@ import { referenceCalibration } from '../../config/referenceCalibration';
 
 export interface CinematicCCTVCameraProps {
   mountSide?: 'right' | 'left';
-  beamColor?: 'white' | 'green' | 'red' | 'off';
+  beamColor?: 'white' | 'blue' | 'amber' | 'green' | 'red' | 'off';
   beamIntensity?: number;
   beamProgress?: number;
   panAngle?: number;  // manual yaw override (e.g. for offline timeline demo)
@@ -73,10 +73,12 @@ export const CinematicCCTVCamera: React.FC<CinematicCCTVCameraProps> = ({
   const colorHex = useMemo(() => {
     switch (beamColor) {
       case 'white': return referenceCalibration.beam.colorWhite;
+      case 'blue':  return '#38bdf8';
+      case 'amber': return '#f59e0b';
       case 'green': return referenceCalibration.beam.colorGreen;
       case 'red':   return referenceCalibration.beam.colorRed;
       case 'off':   return '#000000';
-      default:      return '#ffffff';
+      default:      return '#38bdf8';
     }
   }, [beamColor]);
 
@@ -84,10 +86,22 @@ export const CinematicCCTVCamera: React.FC<CinematicCCTVCameraProps> = ({
 
   // Soft atmospheric volumetric beam material
   const volumetricMaterial = useMemo(() => {
-    const core = beamColor === 'white' ? '#ffffff' : beamColor === 'green' ? '#bbf7d0' : '#fecaca';
+    const core = beamColor === 'blue'
+      ? '#e0f2fe'
+      : beamColor === 'amber'
+        ? '#fef3c7'
+        : beamColor === 'white'
+          ? '#ffffff'
+          : beamColor === 'green'
+            ? '#bbf7d0'
+            : '#fecaca';
     const intensity = beamIntensity ?? (beamColor === 'white' 
       ? referenceCalibration.beam.intensity 
-      : beamColor === 'green' 
+      : beamColor === 'blue'
+        ? 2.2
+        : beamColor === 'amber'
+          ? 2.4
+          : beamColor === 'green' 
       ? referenceCalibration.beam.intensity * 1.25 
       : referenceCalibration.beam.intensity * 1.35);
     return createCCTVVolumetricBeamMaterial(colorHex, intensity, core);
