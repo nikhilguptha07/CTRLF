@@ -1,18 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Search, 
-  ChevronDown,
-  Camera,
-  Upload,
-  ArrowRight,
-  Lock,
-  Activity,
-  Database,
-  Cpu,
-  ShieldCheck,
-  Radio
+  Camera, 
+  ArrowRight, 
+  Lock, 
+  RefreshCw, 
+  FolderSearch, 
+  History, 
+  ShieldCheck, 
+  AlertTriangle,
+  Radio,
+  Sliders
 } from 'lucide-react';
 import { useExperienceStore } from '../../store/useExperienceStore';
+import { SystemStatusGrid } from '../../components/dashboard/SystemStatusGrid';
+import { ActiveInvestigations } from '../../components/dashboard/ActiveInvestigations';
+import { RecentDetectionsFeed } from '../../components/dashboard/RecentDetectionsFeed';
+import { SecurityAlertsPanel } from '../../components/dashboard/SecurityAlertsPanel';
+import { 
+  fetchCommandCenterData, 
+  DEFAULT_COMMAND_CENTER_DATA 
+} from '../../services/commandCenterService';
+import type { 
+  CommandCenterPayload, 
+  ActiveInvestigation, 
+  RecentDetection, 
+  SecurityAlert 
+} from '../../types/commandCenter';
 
 interface MainDashboardProps {
   onConnectLiveClick?: () => void;
@@ -35,24 +49,49 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
     searchQuery,
     isAuthenticated,
     setShowAuthModal,
-    currentUser,
     setShowOracleModal
   } = useExperienceStore();
+
   const [searchTerm, setSearchTerm] = useState(searchQuery || '');
+  const [data, setData] = useState<CommandCenterPayload>(DEFAULT_COMMAND_CENTER_DATA);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleConnect = () => {
-    if (!isAuthenticated) {
-      setShowAuthModal(true);
-      return;
-    }
-    if (onConnectLiveClick) {
-      onConnectLiveClick();
-    } else {
-      setActiveFeedTab('search');
-      setStage('OBJECT_INPUT');
-    }
-  };
+  // Live telemetry clock
+  const [currentTimeStr, setCurrentTimeStr] = useState<string>(() => {
+    return new Date().toTimeString().split(' ')[0] + ' UTC';
+  });
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTimeStr(new Date().toTimeString().split(' ')[0] + ' UTC');
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Fetch command center data
+  const loadData = useCallback(async (showFullLoader = false) => {
+    if (showFullLoader) setIsLoading(true);
+    setIsRefreshing(true);
+    setErrorMessage(null);
+    try {
+      const payload = await fetchCommandCenterData();
+      setData(payload);
+    } catch (err: any) {
+      console.warn('[MainDashboard] Telemetry sync notice:', err);
+      setErrorMessage('Operating on cached telemetry. Offline resilience active.');
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData(true);
+  }, [loadData]);
+
+  // Primary Action: Find an Object
   const handleSearchSubmit = (e?: React.FormEvent, targetOverride?: string) => {
     if (e) e.preventDefault();
     if (!isAuthenticated) {
@@ -68,351 +107,310 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
     handleSearchSubmit(undefined, target);
   };
 
+  // Secondary Action 1: Live Cameras
+  const handleLiveCameras = () => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+    if (onConnectLiveClick) {
+      onConnectLiveClick();
+    } else {
+      setActiveFeedTab('cctv');
+      setStage('HOME');
+    }
+  };
+
+  // Secondary Action 2: Investigations
+  const handleInvestigations = () => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+    setActiveFeedTab('history');
+  };
+
+  // Secondary Action 3: Detection History
+  const handleDetectionHistory = () => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+    setActiveFeedTab('history');
+  };
+
+  // Alert actions
+  const handleAlertAction = (alert: SecurityAlert) => {
+    if (alert.type === 'CAMERA_OFFLINE') {
+      handleLiveCameras();
+    } else if (alert.type === 'REVIEW_REQUIRED') {
+      handleDetectionHistory();
+    } else if (alert.type === 'SYSTEM_WARNING') {
+      setShowOracleModal(true);
+    }
+  };
+
+  const handleDismissAlert = (alertId: string) => {
+    setData((prev) => ({
+      ...prev,
+      alerts: prev.alerts.map((a) => (a.id === alertId ? { ...a, resolved: true } : a)),
+    }));
+  };
+
+  // Selected investigation click
+  const handleSelectCase = (caseItem: ActiveInvestigation) => {
+    setSearchTerm(caseItem.object);
+    handleSearchSubmit(undefined, caseItem.object);
+  };
+
+  // Selected detection click
+  const handleSelectDetection = (detection: RecentDetection) => {
+    setSearchTerm(detection.object);
+    handleSearchSubmit(undefined, detection.object);
+  };
+
+  const activeAlertCount = data.alerts.filter((a) => !a.resolved).length;
+
   return (
-    <div className="w-full h-full flex flex-col justify-between select-none relative font-sans text-slate-800 animate-fade-in space-y-3">
+    <div className="w-full flex flex-col select-none relative font-sans text-slate-800 animate-fade-in space-y-3 pb-2">
       
-      {/* 1. Sub-Header Workspace Breadcrumb & Live Telemetry Pills */}
-      <div className="flex items-center justify-between border-b border-slate-200/80 pb-2.5 pt-0.5 text-xs">
+      {/* 1. Operational Command Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 pb-2.5 pt-0.5 text-xs">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-slate-500">Workspace</span>
+          <span className="font-semibold text-slate-500 font-mono">WORKSPACE</span>
           <span className="text-slate-300">/</span>
-          <span className="font-bold text-slate-900 tracking-tight flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            Live Surveillance Station
+          <div className="flex items-center gap-1.5 font-bold text-slate-900 tracking-tight font-sans">
+            <Radio className="w-3.5 h-3.5 text-indigo-600 animate-pulse" />
+            <span>COMMAND CENTER CONSOLE</span>
+          </div>
+          <span className="hidden sm:inline-block px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-slate-100 border border-slate-200 text-slate-600">
+            STATION 01
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 border border-slate-200/80 text-[11px] font-mono text-slate-600">
-            <Activity className="w-3 h-3 text-indigo-500" />
-            <span>60 FPS</span>
+        <div className="flex items-center gap-2 self-end sm:self-center">
+          {/* Status Indicator Pill */}
+          {activeAlertCount > 0 ? (
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-rose-50 border border-rose-200 text-rose-800 text-[10px] font-mono font-bold">
+              <AlertTriangle className="w-3 h-3 text-rose-600" />
+              <span>{activeAlertCount} ATTENTION REQUIRED</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-mono font-bold">
+              <ShieldCheck className="w-3 h-3 text-emerald-600" />
+              <span>SYSTEM FULLY OPERATIONAL</span>
+            </div>
+          )}
+
+          {/* Clock */}
+          <div className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[10px] font-mono text-slate-600 hidden md:block">
+            {currentTimeStr}
           </div>
 
+          {/* Refresh Button */}
           <button
             type="button"
-            onClick={() => {
-              if (!isAuthenticated) {
-                setShowAuthModal(true);
-                return;
-              }
-              setActiveFeedTab('cctv');
-              setStage('HOME');
-            }}
-            className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-md shadow-2xs hover:border-slate-300 hover:text-slate-950 transition-all cursor-pointer"
+            onClick={() => loadData(false)}
+            disabled={isRefreshing}
+            className="p-1 rounded bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 transition-all cursor-pointer shadow-2xs"
+            title="Refresh Command Center Telemetry"
           >
-            <Camera className="w-3 h-3 text-indigo-600" />
-            <span>4 Cameras Live</span>
-            <ChevronDown className="w-3 h-3 text-slate-400" />
+            <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin text-indigo-600' : ''}`} />
           </button>
         </div>
       </div>
 
-      {/* 2. Enterprise Metric Tiles */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-        {/* Metric 1: Active Cameras */}
-        <div 
-          onClick={() => {
-            if (!isAuthenticated) {
-              setShowAuthModal(true);
-              return;
-            }
-            setActiveFeedTab('cctv');
-          }}
-          className="p-2.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-slate-300 transition-all cursor-pointer group"
-        >
-          <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium mb-1">
-            <div className="flex items-center gap-1.5">
-              <Camera className="w-3.5 h-3.5 text-indigo-600" />
-              <span>CCTV Streams</span>
-            </div>
-            <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-              SYNC
-            </span>
-          </div>
-          <div className="text-base font-bold text-slate-900 tracking-tight font-sans">
-            4 / 4 Active
-          </div>
-          <div className="text-[10px] text-slate-400 font-medium truncate mt-0.5 font-mono">
-            Overhead & Perimeter
-          </div>
-        </div>
-
-        {/* Metric 2: AI Vision Engine */}
-        <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
-          <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium mb-1">
-            <div className="flex items-center gap-1.5">
-              <Cpu className="w-3.5 h-3.5 text-blue-600" />
-              <span>AI Engine</span>
-            </div>
-            <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200">
-              YOLOv8
-            </span>
-          </div>
-          <div className="text-base font-bold text-slate-900 tracking-tight font-sans truncate">
-            ByteTrack AI
-          </div>
-          <div className="text-[10px] text-slate-400 font-medium truncate mt-0.5 font-mono">
-            80-Class Spatial Tracking
-          </div>
-        </div>
-
-        {/* Metric 3: Database Integrity */}
-        <div 
-          onClick={() => setShowOracleModal(true)}
-          title="Inspect Oracle 21c Database"
-          className="p-2.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-slate-300 transition-all cursor-pointer group"
-        >
-          <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium mb-1">
-            <div className="flex items-center gap-1.5">
-              <Database className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Oracle 21c</span>
-            </div>
-            <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              ONLINE
-            </span>
-          </div>
-          <div className="text-base font-bold text-slate-900 tracking-tight font-mono">
-            SHA-256
-          </div>
-          <div className="text-[10px] text-slate-400 font-medium truncate mt-0.5 font-mono">
-            Immutable Audit Ledger
-          </div>
-        </div>
-
-        {/* Metric 4: Operator Access */}
-        <div 
-          onClick={() => {
-            if (!isAuthenticated) {
-              setShowAuthModal(true);
-            } else {
-              setActiveFeedTab('settings');
-            }
-          }}
-          className="p-2.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-slate-300 transition-all cursor-pointer"
-        >
-          <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium mb-1">
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-slate-700" />
-              <span>Operator</span>
-            </div>
-            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded ${
-              isAuthenticated 
-                ? 'bg-slate-100 text-slate-800 border border-slate-200' 
-                : 'bg-amber-50 text-amber-800 border border-amber-200'
-            }`}>
-              {isAuthenticated ? (currentUser?.role || 'AUTH') : 'GUEST'}
-            </span>
-          </div>
-          <div className="text-base font-bold text-slate-900 tracking-tight truncate font-sans">
-            {isAuthenticated && currentUser ? (currentUser.username || 'nikhil') : 'Sign In Required'}
-          </div>
-          <div className="text-[10px] text-slate-400 font-medium truncate mt-0.5 font-mono">
-            {isAuthenticated ? 'RBAC Session Active' : 'Public Telemetry'}
-          </div>
-        </div>
-      </div>
-
-      {/* 3. Central Search & Command Center */}
-      <div className="flex flex-col items-center justify-center py-2 space-y-3">
-        {/* Brand Heading */}
-        <div className="text-center">
-          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight flex items-baseline justify-center gap-1 font-sans">
-            <span>CONTROL</span>
-            <span className="text-indigo-600 font-bold ml-0.5">F</span>
-          </h1>
-          <p className="text-xs text-slate-500 font-medium mt-0.5 font-mono">
-            Physical-World Spatial Object Search & Surveillance Telemetry
-          </p>
-        </div>
-
-        {/* Object Search Bar */}
-        <form onSubmit={handleSearchSubmit} className="w-full max-w-lg relative flex items-center">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search target object (e.g. Bottle, Backpack, Laptop, Person)..."
-            className="w-full pl-4 pr-28 py-2.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs text-xs placeholder:text-slate-400 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-300 transition-all"
-          />
-          <div className="absolute right-1.5 flex items-center gap-1.5">
-            <button
-              type="submit"
-              title="Execute Spatial Object Search"
-              className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs flex items-center gap-1.5 rounded-lg shadow-xs transition-colors cursor-pointer active:scale-95"
-            >
-              <Search className="w-3 h-3" />
-              <span>Scan Feeds</span>
-            </button>
-          </div>
-        </form>
-
-        {/* Quick Target Suggestion Chips */}
-        <div className="flex items-center justify-center gap-1.5 flex-wrap max-w-lg">
-          <span className="text-[11px] text-slate-400 font-medium mr-1 font-mono">Quick Target:</span>
-          {QUICK_TARGETS.map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              onClick={() => handleQuickTargetClick(item.label)}
-              className="px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-200/80 hover:border-slate-300 text-[11px] font-medium text-slate-700 shadow-2xs rounded-lg transition-all cursor-pointer flex items-center gap-1"
-            >
-              <span>{item.emoji}</span>
-              <span>{item.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Authentication Notice if not signed in */}
-        {!isAuthenticated && (
-          <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs shadow-2xs animate-fade-in w-full max-w-lg">
-            <Lock className="w-4 h-4 text-slate-600 shrink-0" />
-            <div className="flex-1 min-w-0">
-              <span className="font-bold">Operator Session Required: </span>
-              <span className="text-slate-600 text-[11px]">Sign in to launch spatial scans and command CCTV cameras.</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowAuthModal(true)}
-              className="px-3 py-1 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-[11px] rounded-md transition-colors cursor-pointer shrink-0"
-            >
-              Sign In
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* 4. Primary Action Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {/* Action 1: Upload Video Archive */}
-        <button
-          type="button"
-          onClick={() => {
-            if (!isAuthenticated) {
-              setShowAuthModal(true);
-              return;
-            }
-            setActiveFeedTab('upload');
-            setStage('HOME');
-          }}
-          className="p-3.5 rounded-xl bg-white hover:bg-slate-50/80 border border-slate-200/80 hover:border-slate-300 shadow-2xs text-left transition-all group cursor-pointer flex items-center justify-between"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-slate-100 group-hover:bg-slate-200/70 border border-slate-200/70 flex items-center justify-center text-slate-700 transition-colors shrink-0">
-              <Upload className="w-4.5 h-4.5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold text-slate-900 text-xs sm:text-sm">Upload Video Footage</span>
-                <span className="text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded bg-slate-100 border border-slate-200 text-slate-600">
-                  Ingest
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500 font-medium line-clamp-1 mt-0.5">
-                Process recordings for object search & trajectory tracking
-              </p>
-            </div>
-          </div>
-          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
-        </button>
-
-        {/* Action 2: Connect to Live CC Cam */}
-        <button
-          id="connect-live-cctv-btn"
-          type="button"
-          onClick={handleConnect}
-          className="p-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white shadow-xs text-left transition-all group cursor-pointer flex items-center justify-between"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-white shrink-0">
-              <Camera className="w-4.5 h-4.5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold text-white text-xs sm:text-sm">Connect to Live CCTV</span>
-                <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  Live
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-300 font-medium line-clamp-1 mt-0.5">
-                Real-time overhead camera feeds with YOLOv8 inference
-              </p>
-            </div>
-          </div>
-          <ArrowRight className="w-4 h-4 text-white group-hover:translate-x-0.5 transition-transform shrink-0 ml-2" />
-        </button>
-      </div>
-
-      {/* 5. Telemetry & Surveillance System Status Footer */}
-      <div className="space-y-2 pt-2 border-t border-slate-200/80">
-        <div className="flex items-center justify-between text-xs font-bold text-slate-800">
+      {/* Error state banner if any */}
+      {errorMessage && (
+        <div className="p-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between font-mono animate-fade-in">
           <div className="flex items-center gap-1.5">
-            <Radio className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Surveillance Feeds & Audit Trail</span>
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <span>{errorMessage}</span>
           </div>
           <button
             type="button"
-            onClick={() => {
-              if (!isAuthenticated) {
-                setShowAuthModal(true);
-                return;
-              }
-              setActiveFeedTab('cctv');
-            }}
-            className="px-2 py-0.5 text-[11px] font-semibold text-slate-700 hover:text-slate-950 flex items-center gap-1 cursor-pointer"
+            onClick={() => loadData(true)}
+            className="underline font-bold text-amber-950 hover:text-amber-800 text-[11px] cursor-pointer"
           >
-            <span>View All Feeds</span>
-            <ArrowRight className="w-3 h-3" />
+            Retry
           </button>
         </div>
+      )}
 
-        <div className="grid grid-cols-12 gap-2.5 items-center text-xs text-slate-700">
-          {/* Stream 01 Status Tile */}
-          <div
-            onClick={() => {
-              if (!isAuthenticated) {
-                setShowAuthModal(true);
-                return;
-              }
-              setActiveFeedTab('cctv');
-            }}
-            className="col-span-12 sm:col-span-6 flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-slate-300 cursor-pointer transition-all"
-          >
+      {/* 2. PRIMARY ACTION: FIND AN OBJECT & SECONDARY ACTIONS STRIP */}
+      <div className="p-3.5 sm:p-4 rounded-xl bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 text-white shadow-md relative overflow-hidden">
+        {/* Fine Architectural Grid Texture */}
+        <div 
+          className="absolute inset-0 pointer-events-none opacity-10"
+          style={{
+            backgroundImage: 'radial-gradient(circle at 1px 1px, #ffffff 1px, transparent 0)',
+            backgroundSize: '24px 24px',
+          }}
+        />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          {/* Primary Action Input Area */}
+          <div className="flex-1 max-w-xl space-y-2">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <div>
-                <span className="font-bold text-slate-800 text-[11px] block">CCTV Stream 01 (Overhead)</span>
-                <span className="text-[10px] text-slate-400 font-mono">1080p @ 30fps • 4.2 Mbps</span>
-              </div>
+              <span className="px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[9px] font-mono font-bold uppercase tracking-wider">
+                PRIMARY OPERATIONAL ACTION
+              </span>
+              <span className="text-xs text-slate-300 font-mono">
+                Optical CCTV Sweep
+              </span>
             </div>
-            <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
-              ONLINE
-            </span>
+
+            <form onSubmit={handleSearchSubmit} className="relative flex items-center">
+              <div className="absolute left-3 text-slate-400 pointer-events-none">
+                <Search className="w-4 h-4" />
+              </div>
+              <input
+                id="command-center-search-input"
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="FIND AN OBJECT (e.g. Bottle, Backpack, Laptop, Person)..."
+                className="w-full pl-9 pr-32 py-2 rounded-lg bg-slate-800/90 border border-slate-700/80 text-xs text-white placeholder:text-slate-400 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400/40 focus:border-indigo-400 transition-all font-sans"
+              />
+              <button
+                type="submit"
+                id="command-center-scan-btn"
+                className="absolute right-1 px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-md shadow-xs transition-all cursor-pointer flex items-center gap-1 active:scale-95"
+              >
+                <span>SCAN FEEDS</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            </form>
+
+            {/* Quick Target Chips */}
+            <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+              <span className="text-[10px] font-mono text-slate-400">Quick Target:</span>
+              {QUICK_TARGETS.map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => handleQuickTargetClick(item.label)}
+                  className="px-2 py-0.5 rounded bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700/70 text-[10px] font-mono transition-colors cursor-pointer flex items-center gap-1"
+                >
+                  <span>{item.emoji}</span>
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Audit Logs Quick Link */}
-          <div
-            onClick={() => {
-              if (!isAuthenticated) {
-                setShowAuthModal(true);
-                return;
-              }
-              setActiveFeedTab('history');
-            }}
-            className="col-span-12 sm:col-span-6 flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-slate-300 cursor-pointer transition-all"
-          >
-            <div className="flex items-center gap-2">
-              <Database className="w-3.5 h-3.5 text-slate-700" />
-              <div>
-                <span className="font-bold text-slate-800 text-[11px] block">Oracle Audit Trail</span>
-                <span className="text-[10px] text-slate-400 font-mono">Immutable Log Ledger</span>
-              </div>
-            </div>
-            <span className="px-2 py-0.5 text-[11px] font-semibold text-slate-700 hover:text-slate-950 flex items-center gap-0.5">
-              <span>Detection History</span>
-              <ArrowRight className="w-3 h-3" />
-            </span>
+          {/* Secondary Operational Actions Strip */}
+          <div className="flex md:flex-col gap-2 justify-end shrink-0 pt-2 md:pt-0 border-t md:border-t-0 md:border-l border-slate-800/80 md:pl-4">
+            <button
+              type="button"
+              id="action-live-cameras"
+              onClick={handleLiveCameras}
+              className="flex-1 md:flex-none px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-100 flex items-center justify-center md:justify-start gap-2 transition-colors cursor-pointer shadow-xs group"
+            >
+              <Camera className="w-3.5 h-3.5 text-emerald-400 group-hover:scale-105 transition-transform" />
+              <span>LIVE CAMERAS</span>
+            </button>
+
+            <button
+              type="button"
+              id="action-investigations"
+              onClick={handleInvestigations}
+              className="flex-1 md:flex-none px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-100 flex items-center justify-center md:justify-start gap-2 transition-colors cursor-pointer shadow-xs group"
+            >
+              <FolderSearch className="w-3.5 h-3.5 text-indigo-400 group-hover:scale-105 transition-transform" />
+              <span>INVESTIGATIONS</span>
+            </button>
+
+            <button
+              type="button"
+              id="action-detection-history"
+              onClick={handleDetectionHistory}
+              className="flex-1 md:flex-none px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-100 flex items-center justify-center md:justify-start gap-2 transition-colors cursor-pointer shadow-xs group"
+            >
+              <History className="w-3.5 h-3.5 text-blue-400 group-hover:scale-105 transition-transform" />
+              <span>DETECTION HISTORY</span>
+            </button>
           </div>
+        </div>
+      </div>
+
+      {/* Auth Gate Notification for Unauthenticated Viewers */}
+      {!isAuthenticated && (
+        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 text-xs animate-fade-in shadow-2xs">
+          <div className="flex items-center gap-2">
+            <Lock className="w-4 h-4 text-slate-600 shrink-0" />
+            <div>
+              <span className="font-bold">Operator Authentication Recommended: </span>
+              <span className="text-slate-600 text-[11px]">Sign in for continuous real-time PTZ control and evidence hashing.</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowAuthModal(true)}
+            className="px-3 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-xs font-semibold cursor-pointer shadow-2xs transition-colors shrink-0"
+          >
+            Sign In
+          </button>
+        </div>
+      )}
+
+      {/* 3. SYSTEM STATUS GRID (6 Key Operational Metrics) */}
+      <div>
+        <div className="flex items-center justify-between pb-1.5 text-xs">
+          <div className="flex items-center gap-1.5 font-bold text-slate-800 uppercase font-sans">
+            <Sliders className="w-3.5 h-3.5 text-indigo-600" />
+            <span>System Status & Diagnostic Telemetry</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowOracleModal(true)}
+            className="text-[11px] font-mono text-indigo-600 hover:text-indigo-800 cursor-pointer font-medium"
+          >
+            Oracle 21c Database Inspector →
+          </button>
+        </div>
+        <SystemStatusGrid 
+          status={data.systemStatus} 
+          isLoading={isLoading}
+          onCameraClick={handleLiveCameras}
+          onStorageClick={() => setShowOracleModal(true)}
+          onDetectionClick={handleDetectionHistory}
+        />
+      </div>
+
+      {/* 4. OPERATIONAL TWO-COLUMN COMMAND PANELS */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 pt-1">
+        {/* Left Column (5 cols on lg): Alerts & Active Investigations */}
+        <div className="lg:col-span-6 flex flex-col gap-3">
+          {/* Section: Alerts */}
+          <SecurityAlertsPanel 
+            alerts={data.alerts} 
+            isLoading={isLoading}
+            onAlertAction={handleAlertAction}
+            onDismissAlert={handleDismissAlert}
+          />
+
+          {/* Section: Active Investigations */}
+          <ActiveInvestigations 
+            investigations={data.investigations} 
+            isLoading={isLoading}
+            onSelectCase={handleSelectCase}
+            onViewAllClick={handleInvestigations}
+            onStartSearchClick={() => {
+              const input = document.getElementById('command-center-search-input');
+              if (input) input.focus();
+            }}
+          />
+        </div>
+
+        {/* Right Column (6 cols on lg): Recent Detections Feed */}
+        <div className="lg:col-span-6 flex flex-col">
+          <RecentDetectionsFeed 
+            detections={data.recentDetections} 
+            isLoading={isLoading}
+            onDetectionClick={handleSelectDetection}
+            onViewAllClick={handleDetectionHistory}
+          />
         </div>
       </div>
 
