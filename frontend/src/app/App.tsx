@@ -13,6 +13,7 @@ import { DemoPlayerHUD } from '../components/dashboard/DemoPlayerHUD';
 import { useAdminRouter } from '../hooks/useAdminRouter';
 import { AdminConsole } from '../components/admin/AdminConsole';
 import { AdminAccessDenied } from '../components/admin/AdminAccessDenied';
+import { StartupExperience } from '../components/startup/StartupExperience';
 
 export default function App() {
   const { 
@@ -33,6 +34,15 @@ export default function App() {
   const { navigate, isAdminRoute } = useAdminRouter();
   const [isPlayingDemo, setIsPlayingDemo] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
+  const [showStartup, setShowStartup] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    if (window.location.pathname.startsWith('/admin')) return false;
+    try {
+      return !sessionStorage.getItem('ctrlf_startup_seen');
+    } catch {
+      return false;
+    }
+  });
 
   // Check auth session on startup
   useEffect(() => {
@@ -221,6 +231,11 @@ export default function App() {
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-black select-none font-sans">
       
+      {/* Startup Cinematic Experience (Phase 2) */}
+      {showStartup && !isAdminRoute && (
+        <StartupExperience onComplete={() => setShowStartup(false)} />
+      )}
+
       {/* Scene 1: Light Cinematic Environment & Floating Glass Dashboard */}
       {isLightScene && (
         <div

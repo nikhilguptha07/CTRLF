@@ -212,83 +212,53 @@ code, kbd, samp, pre, .font-mono {
 }
 
 /* =========================================================================
-   BUBBLE FEATURE: TACTILE GLASS BUBBLES & MICROINTERACTIONS
+   ENTERPRISE SECURITY DESIGN TOKENS & RESTRAINED INTERACTIONS
    ========================================================================= */
 
-.bubble-btn {
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, background-color 0.2s ease;
-  user-select: none;
+.enterprise-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.bubble-btn:hover {
-  transform: translateY(-1.5px) scale(1.015);
-  box-shadow: 0 8px 24px -4px rgba(67, 97, 238, 0.28), inset 0 1px 1px 0 rgba(255, 255, 255, 0.6);
+.enterprise-card:hover {
+  border-color: rgba(203, 213, 225, 0.9);
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
 }
 
-.bubble-btn:active {
-  transform: scale(0.96) translateY(0);
+.telemetry-chip {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  background-color: rgba(248, 250, 252, 0.9);
+  color: #334155;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
 }
 
-/* Glossy top specular reflection on bubbly buttons */
-.bubble-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 45%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 100%);
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 1;
+/* Nav Item Microinteractions */
+.nav-item-active {
+  background-color: #0f172a;
+  color: #ffffff !important;
+  font-weight: 600;
+  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.15);
 }
 
-/* Fluid Bubble Ripple Container */
-.bubble-overflow-contained {
-  overflow: hidden !important;
-  position: relative;
+.nav-item-inactive {
+  color: #475569;
+  font-weight: 500;
 }
 
-/* Database & UI Pill Bubbles */
-.bubble-pill {
-  position: relative;
-  border-radius: 9999px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 2px 10px -2px rgba(15, 23, 42, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.7);
-  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.bubble-pill:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 18px -3px rgba(16, 185, 129, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.9);
-}
-
-.bubble-pill:active {
-  transform: scale(0.95);
-}
-
-/* Pulsing bubble badge */
-@keyframes bubblePulseBeacon {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5);
-  }
-  50% {
-    transform: scale(1.18);
-    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
-  }
-}
-
-.bubble-beacon {
-  animation: bubblePulseBeacon 2.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-}
-
-/* Interactive Floating Bubble Particles */
-.interactive-floating-bubble {
-  pointer-events: none;
-  will-change: transform, opacity;
+.nav-item-inactive:hover {
+  background-color: rgba(241, 245, 249, 0.8);
+  color: #0f172a;
 }
 

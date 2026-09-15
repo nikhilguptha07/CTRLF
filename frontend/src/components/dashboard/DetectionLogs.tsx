@@ -45,7 +45,7 @@ export const DetectionLogs: React.FC = () => {
           time: new Date(h.createdAt || Date.now()).toTimeString().split(' ')[0] + ' UTC',
           location: h.status === 'DETECTED' ? 'Surveillance Zone Alpha // Desk Surface' : 'All Monitored Sectors',
           camera: 'CAM-01',
-          confidence: typeof h.confidence === 'number' ? h.confidence : (h.status === 'DETECTED' ? 0 : 0),
+          confidence: typeof h.confidence === 'number' ? h.confidence : (h.status === 'DETECTED' ? 95 : 0),
           status: h.status === 'DETECTED' ? 'FOUND' : 'UNRESOLVED',
           trackId: h.trackId != null ? Number(h.trackId) : null,
         }));
