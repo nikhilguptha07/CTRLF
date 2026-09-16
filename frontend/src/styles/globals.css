@@ -3,6 +3,24 @@
 @tailwind utilities;
 
 :root {
+  --background: #090d14;
+  --surface: #0f1520;
+  --surface-elevated: #161e2e;
+  --surface-hover: #1c263a;
+  --border: #1a2536;
+  --border-subtle: #141c2b;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent: #00c4df;
+  --accent-muted: rgba(0, 196, 223, 0.12);
+  --success: #10b981;
+  --success-muted: rgba(16, 185, 129, 0.12);
+  --warning: #f59e0b;
+  --warning-muted: rgba(245, 158, 11, 0.12);
+  --danger: #f43f5e;
+  --danger-muted: rgba(244, 63, 94, 0.12);
+
   --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-display: 'Plus Jakarta Sans', 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -18,7 +36,8 @@ html, body, #root {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background-color: #02050e;
+  background-color: var(--background);
+  color: var(--text-primary);
   font-family: var(--font-sans);
   user-select: none;
   -webkit-font-smoothing: antialiased;
@@ -27,15 +46,16 @@ html, body, #root {
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
-/* Global typography refinements */
+/* Global typography refinements: clean, serious, readable */
 body, input, button, select, textarea {
   font-family: var(--font-sans);
   letter-spacing: -0.012em;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  letter-spacing: -0.025em;
+  letter-spacing: -0.022em;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  font-weight: 700;
 }
 
 code, kbd, samp, pre, .font-mono {
@@ -43,52 +63,52 @@ code, kbd, samp, pre, .font-mono {
   letter-spacing: -0.015em;
 }
 
-/* Security Operations Center (SOC) Dark Mission-Control Design System */
+/* ControlF Surface Primitives (Clean, restrained, non-gimmicky) */
+.ctrlf-panel {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.ctrlf-panel-elevated {
+  background-color: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.ctrlf-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.ctrlf-card:hover {
+  background-color: var(--surface-elevated);
+  border-color: rgba(0, 196, 223, 0.3);
+}
+
+/* Retained compatibility aliases */
 .soc-panel {
-  background: #0d121d;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
 }
 
 .soc-panel-elevated {
-  background: #111726;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 14px 40px -10px rgba(0, 0, 0, 0.65);
-}
-
-.soc-panel-glass {
-  background: rgba(13, 18, 29, 0.78);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: var(--surface-elevated);
+  border: 1px solid var(--border);
 }
 
 .soc-border {
-  border-color: rgba(255, 255, 255, 0.08);
+  border-color: var(--border);
 }
 
 .soc-border-cyan {
-  border-color: rgba(6, 182, 212, 0.4);
+  border-color: rgba(0, 196, 223, 0.4);
 }
 
 .soc-glow-cyan {
-  box-shadow: 0 0 25px -4px rgba(6, 182, 212, 0.3);
-}
-
-.soc-glow-teal {
-  box-shadow: 0 0 25px -4px rgba(20, 184, 166, 0.3);
-}
-
-.soc-glow-amber {
-  box-shadow: 0 0 25px -4px rgba(245, 158, 11, 0.3);
-}
-
-.soc-glow-emerald {
-  box-shadow: 0 0 25px -4px rgba(16, 185, 129, 0.3);
-}
-
-.soc-glow-red {
-  box-shadow: 0 0 25px -4px rgba(244, 63, 94, 0.3);
+  box-shadow: 0 0 16px -4px rgba(0, 196, 223, 0.25);
 }
 
 /* Subtle Technical Grid Floor Pattern */

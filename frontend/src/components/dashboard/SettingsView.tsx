@@ -176,33 +176,33 @@ export const SettingsView: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto space-y-6 my-auto py-2 animate-fade-in text-slate-900 font-sans">
+    <div className="w-full max-w-3xl mx-auto space-y-6 my-auto py-2 animate-fade-in text-slate-100 font-sans">
       
       {/* Title */}
-      <div className="space-y-1 pb-2 border-b border-slate-200">
+      <div className="space-y-1 pb-2 border-b border-[#1a2536]">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-xl font-bold text-white tracking-tight">
             Enterprise System Configuration
           </h1>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-xs font-mono">
-            <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
-            <span className="text-slate-600 font-semibold">Active Role:</span>
-            <span className="font-bold text-slate-900">{currentUserRole}</span>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#161e2e] border border-[#1a2536] text-xs font-mono">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#00c4df]" />
+            <span className="text-slate-400 font-semibold">Active Role:</span>
+            <span className="font-bold text-white">{currentUserRole}</span>
           </div>
         </div>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-400">
           Operational preferences, automated video retention schedules, and data privacy anonymization filters.
         </p>
       </div>
 
       {/* Permission error alert banner */}
       {permissionError && (
-        <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-center justify-between gap-2 shadow-xs animate-shake">
+        <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center justify-between gap-2 shadow-xs animate-shake">
           <div className="flex items-center gap-2">
-            <Lock className="w-4 h-4 text-rose-600 shrink-0" />
+            <Lock className="w-4 h-4 text-rose-400 shrink-0" />
             <span className="font-bold">{permissionError}</span>
           </div>
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-rose-200 text-rose-800 font-bold">
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold">
             HTTP 403 FORBIDDEN
           </span>
         </div>
@@ -210,8 +210,8 @@ export const SettingsView: React.FC = () => {
 
       {/* Success notification banner */}
       {purgeMessage && (
-        <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center gap-2 shadow-xs animate-fade-in">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+        <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs flex items-center gap-2 shadow-xs animate-fade-in">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           <span className="font-semibold">{purgeMessage}</span>
         </div>
       )}
@@ -219,22 +219,22 @@ export const SettingsView: React.FC = () => {
       <div className="space-y-5">
         
         {/* SECTION 1: VIDEO RETENTION POLICY (Phase 6 Requirement #6) */}
-        <div className="p-4 rounded-2xl bg-white border border-slate-200/90 space-y-4 shadow-xs">
+        <div className="p-4 rounded-2xl bg-[#0f1520] border border-[#1a2536] space-y-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-slate-900 text-white shadow-xs">
-                <Clock className="w-4 h-4 text-indigo-400" />
+              <div className="p-2 rounded-xl bg-[#161e2e] border border-[#1a2536] text-[#00c4df]">
+                <Clock className="w-4 h-4 text-[#00c4df]" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xs sm:text-sm font-bold text-slate-900">
+                  <h2 className="text-xs sm:text-sm font-bold text-white">
                     Video Retention & Storage Lifecycle
                   </h2>
-                  <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-[#00c4df]/10 text-[#00c4df] border border-[#00c4df]/20">
                     ACTIVE AUTO-PURGE
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-500 font-sans">
+                <p className="text-[11px] text-slate-400 font-sans">
                   Automated physical deletion of surveillance footage older than specified window.
                 </p>
               </div>
@@ -242,14 +242,14 @@ export const SettingsView: React.FC = () => {
 
             {/* Auto Delete Toggle */}
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-slate-600">Auto Deletion:</span>
+              <span className="text-xs font-semibold text-slate-400">Auto Deletion:</span>
               <button
                 type="button"
                 onClick={handleToggleAutoDelete}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-all cursor-pointer active:scale-95 ${
                   autoDeleteEnabled
-                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                    : 'bg-slate-200 text-slate-600'
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-[#161e2e] text-slate-400 border border-[#1a2536]'
                 }`}
                 title={isSuperAdmin ? 'Toggle automatic disk deletion daemon' : 'Requires SUPER ADMIN'}
               >
@@ -260,7 +260,7 @@ export const SettingsView: React.FC = () => {
 
           {/* Retention Options: 7 days, 30 days, 90 days, Custom */}
           <div className="space-y-2 pt-1">
-            <label className="text-xs font-bold text-slate-700 block">
+            <label className="text-xs font-bold text-slate-300 block">
               Retention Window Threshold
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -274,8 +274,8 @@ export const SettingsView: React.FC = () => {
                     onClick={() => handleUpdateRetentionPreset(preset)}
                     className={`py-2 px-3 rounded-xl border text-xs font-bold font-mono flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-[#00c4df] text-slate-950 border-[#00c4df] shadow-xs'
+                        : 'bg-[#161e2e] text-slate-300 border-[#1a2536] hover:bg-[#1a2536]'
                     }`}
                   >
                     <span>{label}</span>
@@ -286,8 +286,8 @@ export const SettingsView: React.FC = () => {
 
             {/* Custom Days Input */}
             {retentionPreset === 'custom' && (
-              <div className="pt-2 flex items-center gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                <span className="text-xs font-medium text-slate-700">Custom Retention Window:</span>
+              <div className="pt-2 flex items-center gap-3 bg-[#161e2e] p-2.5 rounded-xl border border-[#1a2536]">
+                <span className="text-xs font-medium text-slate-300">Custom Retention Window:</span>
                 <div className="flex items-center gap-1.5">
                   <input
                     type="number"
@@ -295,14 +295,14 @@ export const SettingsView: React.FC = () => {
                     max="365"
                     value={customDays}
                     onChange={(e) => setCustomDays(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                    className="w-20 px-2 py-1 text-xs font-mono font-bold bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-slate-900"
+                    className="w-20 px-2 py-1 text-xs font-mono font-bold bg-[#0f1520] border border-[#1a2536] rounded-md text-white focus:outline-none focus:border-[#00c4df]"
                   />
-                  <span className="text-xs font-mono text-slate-500">Days</span>
+                  <span className="text-xs font-mono text-slate-400">Days</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleUpdateRetentionPreset('custom')}
-                  className="px-2.5 py-1 rounded bg-slate-900 text-white text-xs font-semibold cursor-pointer hover:bg-slate-800"
+                  className="px-2.5 py-1 rounded bg-[#00c4df] text-slate-950 text-xs font-bold cursor-pointer hover:bg-[#00d8f6]"
                 >
                   Save Window
                 </button>
@@ -311,15 +311,15 @@ export const SettingsView: React.FC = () => {
           </div>
 
           {/* Retention Stats & Purge Trigger */}
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="p-3 rounded-xl bg-[#161e2e] border border-[#1a2536] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
             <div className="space-y-1 font-mono">
-              <div className="flex items-center gap-2 text-slate-700">
+              <div className="flex items-center gap-2 text-slate-300">
                 <span className="font-bold">Total Stored:</span>
                 <span>{retentionStats.totalVideosCount} videos ({formatBytes(retentionStats.totalStorageBytes)})</span>
               </div>
-              <div className="flex items-center gap-2 text-slate-600">
+              <div className="flex items-center gap-2 text-slate-400">
                 <span className="font-bold">Eligible for Purge:</span>
-                <span className="text-amber-700 font-bold">
+                <span className="text-amber-400 font-bold">
                   {retentionStats.eligiblePurgeCount} videos ({formatBytes(retentionStats.eligiblePurgeBytes)})
                 </span>
               </div>
@@ -337,27 +337,27 @@ export const SettingsView: React.FC = () => {
             </button>
           </div>
 
-          <p className="text-[10px] text-slate-400 font-mono italic">
+          <p className="text-[10px] text-slate-500 font-mono italic">
             * Automatic deletion physically unlinks video files and removes tracking database indexes.
           </p>
         </div>
 
         {/* SECTION 2: PRIVACY CONTROLS (Phase 6 Requirement #7) */}
-        <div className="p-4 rounded-2xl bg-white border border-slate-200/90 space-y-4 shadow-xs">
+        <div className="p-4 rounded-2xl bg-[#0f1520] border border-[#1a2536] space-y-4 shadow-sm">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-indigo-600 text-white shadow-xs">
+            <div className="p-2 rounded-xl bg-[#161e2e] border border-[#1a2536] text-[#00c4df]">
               <Shield className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-xs sm:text-sm font-bold text-slate-900">
+                <h2 className="text-xs sm:text-sm font-bold text-white">
                   Data Privacy & Anonymization
                 </h2>
-                <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-[#00c4df]/10 text-[#00c4df] border border-[#00c4df]/20">
                   DATA MINIMIZATION
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 font-sans">
+              <p className="text-[11px] text-slate-400 font-sans">
                 Operational visual filters and access transparency for CCTV surveillance feeds.
               </p>
             </div>
@@ -365,13 +365,13 @@ export const SettingsView: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Face Anonymization */}
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+            <div className="p-3 rounded-xl bg-[#161e2e] border border-[#1a2536] flex items-center justify-between">
               <div className="space-y-0.5">
-                <div className="flex items-center gap-1.5 font-bold text-xs text-slate-900">
-                  <UserX className="w-3.5 h-3.5 text-indigo-600" />
+                <div className="flex items-center gap-1.5 font-bold text-xs text-white">
+                  <UserX className="w-3.5 h-3.5 text-[#00c4df]" />
                   <span>Face Anonymization</span>
                 </div>
-                <p className="text-[11px] text-slate-500 font-sans">
+                <p className="text-[11px] text-slate-400 font-sans">
                   Apply gaussian blur over detected faces in evidence previews.
                 </p>
               </div>
@@ -380,8 +380,8 @@ export const SettingsView: React.FC = () => {
                 onClick={() => setFaceAnonymization(!faceAnonymization)}
                 className={`px-2.5 py-1 rounded-lg text-xs font-bold font-mono transition-all cursor-pointer ${
                   faceAnonymization
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'bg-slate-200 text-slate-600'
+                    ? 'bg-[#00c4df] text-slate-950 shadow-xs'
+                    : 'bg-[#0f1520] text-slate-400 border border-[#1a2536]'
                 }`}
               >
                 {faceAnonymization ? 'ACTIVE' : 'OFF'}
@@ -389,13 +389,13 @@ export const SettingsView: React.FC = () => {
             </div>
 
             {/* Person / Bystander Anonymization */}
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+            <div className="p-3 rounded-xl bg-[#161e2e] border border-[#1a2536] flex items-center justify-between">
               <div className="space-y-0.5">
-                <div className="flex items-center gap-1.5 font-bold text-xs text-slate-900">
-                  <Shield className="w-3.5 h-3.5 text-indigo-600" />
+                <div className="flex items-center gap-1.5 font-bold text-xs text-white">
+                  <Shield className="w-3.5 h-3.5 text-[#00c4df]" />
                   <span>Person Anonymization</span>
                 </div>
-                <p className="text-[11px] text-slate-500 font-sans">
+                <p className="text-[11px] text-slate-400 font-sans">
                   Mask non-target human subjects in multi-camera exports.
                 </p>
               </div>
@@ -404,8 +404,8 @@ export const SettingsView: React.FC = () => {
                 onClick={() => setPersonAnonymization(!personAnonymization)}
                 className={`px-2.5 py-1 rounded-lg text-xs font-bold font-mono transition-all cursor-pointer ${
                   personAnonymization
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'bg-slate-200 text-slate-600'
+                    ? 'bg-[#00c4df] text-slate-950 shadow-xs'
+                    : 'bg-[#0f1520] text-slate-400 border border-[#1a2536]'
                 }`}
               >
                 {personAnonymization ? 'ACTIVE' : 'OFF'}
@@ -414,12 +414,12 @@ export const SettingsView: React.FC = () => {
           </div>
 
           {/* Access Logging Link */}
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+          <div className="p-3 rounded-xl bg-[#161e2e] border border-[#1a2536] flex items-center justify-between text-xs">
             <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-slate-500" />
+              <FileText className="w-4 h-4 text-[#00c4df]" />
               <div>
-                <span className="font-bold text-slate-900 block">Surveillance Access Logging</span>
-                <span className="text-[11px] text-slate-500 block">
+                <span className="font-bold text-white block">Surveillance Access Logging</span>
+                <span className="text-[11px] text-slate-400 block">
                   Immutable cryptographic SHA-256 audit record of every evidence view, search, and export.
                 </span>
               </div>
@@ -427,44 +427,44 @@ export const SettingsView: React.FC = () => {
             <button
               type="button"
               onClick={() => { setActiveFeedTab('logs'); setStage('HOME'); }}
-              className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+              className="px-2.5 py-1.5 rounded-lg bg-[#0f1520] hover:bg-[#1a2536] border border-[#1a2536] text-slate-200 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
             >
               <span>View Audit Trail</span>
               <ExternalLink className="w-3 h-3 text-slate-400" />
             </button>
           </div>
 
-          {/* Truthful Legal Disclaimer (Required by Phase 6: Do not claim legal compliance without actual compliance work) */}
-          <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200 text-amber-950 text-[11px] space-y-1 font-sans">
+          {/* Truthful Legal Disclaimer */}
+          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px] space-y-1 font-sans">
             <div className="flex items-center gap-1.5 font-bold">
-              <Info className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+              <Info className="w-3.5 h-3.5 text-amber-400 shrink-0" />
               <span>Operational Privacy Transparency Notice</span>
             </div>
-            <p className="text-amber-900/90 leading-relaxed">
+            <p className="text-amber-300/80 leading-relaxed">
               Face/person anonymization and video retention policies provide operational data minimization. These features support organizational compliance workflows but do not constitute standalone legal compliance certification (e.g. GDPR, HIPAA, or CCPA) without formal policy alignment and legal review.
             </p>
           </div>
         </div>
 
         {/* SECTION 3: SYSTEM PREFERENCES & AUDIO */}
-        <div className="p-4 rounded-2xl bg-white border border-slate-200/90 space-y-4 shadow-xs">
+        <div className="p-4 rounded-2xl bg-[#0f1520] border border-[#1a2536] space-y-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-slate-900 text-white">
-                {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              <div className="p-2 rounded-lg bg-[#161e2e] border border-[#1a2536] text-[#00c4df]">
+                {soundEnabled ? <Volume2 className="w-4 h-4 text-[#00c4df]" /> : <VolumeX className="w-4 h-4 text-slate-500" />}
               </div>
               <div>
-                <h3 className="text-xs font-bold text-slate-900">Surveillance Audio Engine</h3>
-                <p className="text-[11px] text-slate-500">Web Audio API motor servos, alerts, and ambient radar pings.</p>
+                <h3 className="text-xs font-bold text-white">Surveillance Audio Engine</h3>
+                <p className="text-[11px] text-slate-400">Web Audio API motor servos, alerts, and ambient radar pings.</p>
               </div>
             </div>
             <button
               type="button"
               onClick={toggleSound}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer active:scale-95 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-all cursor-pointer active:scale-95 ${
                 soundEnabled
-                  ? 'bg-emerald-100 text-emerald-700 border border-emerald-300'
-                  : 'bg-slate-200 text-slate-600'
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  : 'bg-[#161e2e] text-slate-400 border border-[#1a2536]'
               }`}
             >
               {soundEnabled ? 'ENABLED' : 'MUTED'}
@@ -473,9 +473,9 @@ export const SettingsView: React.FC = () => {
 
           {/* Master Volume Slider */}
           <div className="space-y-1.5 pt-1">
-            <div className="flex justify-between text-xs text-slate-600 font-medium">
+            <div className="flex justify-between text-xs text-slate-400 font-medium">
               <span>Master Sound Volume</span>
-              <span className="font-mono font-semibold text-slate-900">{Math.round(volume * 100)}%</span>
+              <span className="font-mono font-semibold text-[#00c4df]">{Math.round(volume * 100)}%</span>
             </div>
             <input
               type="range"
@@ -484,7 +484,7 @@ export const SettingsView: React.FC = () => {
               step="0.05"
               value={volume}
               onChange={(e) => setVolume(parseFloat(e.target.value))}
-              className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-900"
+              className="w-full h-1.5 bg-[#161e2e] rounded-lg appearance-none cursor-pointer accent-[#00c4df]"
             />
           </div>
         </div>

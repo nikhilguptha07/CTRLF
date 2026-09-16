@@ -8,41 +8,19 @@ interface StartupExperienceProps {
   onComplete: () => void;
 }
 
-type IntroPhase = 
-  | 'void'             // Scene 1: Absolute darkness with faint technical signal
-  | 'telemetry'        // Scene 2: System Initialization telemetry
-  | 'spatial_network'  // Scene 3: 3D Camera Network boots in space
-  | 'search_pulse'     // Scene 4: Fast search signal activating CAM nodes
-  | 'brand_reveal'     // Scene 5: # CONTROLF — FIND WHAT MATTERS.
-  | 'zoom_transition'; // Scene 6: Seamless camera zoom into focal node -> Dashboard
-
-interface BootTelemetryItem {
-  module: string;
-  status: string;
-  active: boolean;
-}
-
-const BOOT_ITEMS: BootTelemetryItem[] = [
-  { module: 'NETWORK', status: 'CONNECTING', active: false },
-  { module: 'CAMERA FABRIC', status: 'ONLINE', active: false },
-  { module: 'VISION ENGINE', status: 'INITIALIZING', active: false },
-  { module: 'OBJECT INDEX', status: 'READY', active: false },
-  { module: 'SECURITY CORE', status: 'ACTIVE', active: false },
-];
-
-const PULSE_NODES = [
-  { id: 'CAM-01', location: 'North Main Lobby', status: 'ONLINE' },
-  { id: 'CAM-07', location: 'Overhead Sector A', status: 'ONLINE' },
-  { id: 'CAM-12', location: 'High Mast Junction', status: 'ONLINE' },
-  { id: 'CAM-18', location: 'Transit Concourse', status: 'ONLINE' },
-];
+type StartupPhase =
+  | 'darkness'         // Scene 1: Subtle stillness in dark spatial environment
+  | 'activating_nodes' // Scene 2: Camera nodes activate one by one, connections link
+  | 'network_active'   // Scene 3: Scanning pulse travels through surveillance fabric
+  | 'brand_reveal'     // Scene 4: CONTROLF — FIND WHAT MATTERS.
+  | 'dolly_zoom';      // Scene 5: Seamless zoom into focal camera node -> Live Dashboard
 
 export const StartupExperience: React.FC<StartupExperienceProps> = ({ onComplete }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const brandRef = useRef<HTMLDivElement>(null);
-  const [phase, setPhase] = useState<IntroPhase>('void');
-  const [activeTelemetryIndex, setActiveTelemetryIndex] = useState(0);
-  const [pulseNodeIndex, setPulseNodeIndex] = useState(0);
+  const [phase, setPhase] = useState<StartupPhase>('darkness');
+  const [activeNodeIds, setActiveNodeIds] = useState<string[]>([]);
+  const [lastActivatedNode, setLastActivatedNode] = useState<string | null>(null);
   const completedRef = useRef(false);
 
   const finishSequence = useCallback(() => {
@@ -52,15 +30,15 @@ export const StartupExperience: React.FC<StartupExperienceProps> = ({ onComplete
     try {
       sessionStorage.setItem('ctrlf_startup_seen', 'true');
     } catch {
-      // Ignore if sessionStorage is unavailable
+      // Ignore if unavailable
     }
 
     if (containerRef.current) {
       gsap.to(containerRef.current, {
         opacity: 0,
-        scale: 1.04,
-        duration: 0.6,
-        ease: 'power3.inOut',
+        scale: 1.03,
+        duration: 0.55,
+        ease: 'power2.inOut',
         onComplete: () => {
           onComplete();
         },
@@ -70,14 +48,14 @@ export const StartupExperience: React.FC<StartupExperienceProps> = ({ onComplete
     }
   }, [onComplete]);
 
-  // Reduced motion check
+  // Reduced motion support
   useEffect(() => {
     if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       finishSequence();
     }
   }, [finishSequence]);
 
-  // Escape key skip
+  // ESC or Space key skip
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' || e.key === ' ') {
@@ -88,71 +66,75 @@ export const StartupExperience: React.FC<StartupExperienceProps> = ({ onComplete
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [finishSequence]);
 
-  // Master Orchestrated Cinematic Timeline (~7.5s)
+  // Orchestrated Cinematic Timeline (~6.5s)
   useEffect(() => {
     if (completedRef.current) return;
 
-    // Scene 1: Void (0.0s -> 1.0s)
-    const tScene1 = setTimeout(() => {
-      setPhase('telemetry');
+    // 0.8s: First Camera Node Activates
+    const tNode1 = setTimeout(() => {
+      setPhase('activating_nodes');
+      setActiveNodeIds(['CAM-01']);
+      setLastActivatedNode('CAM-01 • North Lobby');
       soundService.playScanPulse();
-    }, 1000);
+    }, 800);
 
-    // Scene 2: Boot telemetry sequence (1.0s -> 2.6s)
-    const tTel1 = setTimeout(() => setActiveTelemetryIndex(1), 1300);
-    const tTel2 = setTimeout(() => setActiveTelemetryIndex(2), 1600);
-    const tTel3 = setTimeout(() => setActiveTelemetryIndex(3), 1900);
-    const tTel4 = setTimeout(() => setActiveTelemetryIndex(4), 2200);
+    // 1.5s: Second Camera Node Activates & Link Forms
+    const tNode2 = setTimeout(() => {
+      setActiveNodeIds(['CAM-01', 'CAM-02']);
+      setLastActivatedNode('CAM-02 • Transit Axis');
+      soundService.playScanPulse();
+    }, 1500);
 
-    // Scene 3: 3D Camera Network reveals in space (2.6s -> 4.4s)
-    const tScene3 = setTimeout(() => {
-      setPhase('spatial_network');
+    // 2.2s: Third & Fourth Camera Nodes Activate
+    const tNode3 = setTimeout(() => {
+      setActiveNodeIds(['CAM-01', 'CAM-02', 'CAM-07', 'CAM-12']);
+      setLastActivatedNode('CAM-12 • North Corridor');
       soundService.playCameraPower();
-    }, 2600);
+    }, 2200);
 
-    // Scene 4: Search Pulse sweeping through cameras (4.4s -> 5.8s)
-    const tScene4 = setTimeout(() => {
-      setPhase('search_pulse');
-    }, 4400);
-    const tPulse1 = setTimeout(() => setPulseNodeIndex(1), 4700);
-    const tPulse2 = setTimeout(() => setPulseNodeIndex(2), 5050);
-    const tPulse3 = setTimeout(() => setPulseNodeIndex(3), 5400);
+    // 3.0s: Entire Camera Fabric Active
+    const tNode4 = setTimeout(() => {
+      setActiveNodeIds(['CAM-01', 'CAM-02', 'CAM-03', 'CAM-04', 'CAM-07', 'CAM-12', 'CAM-18', 'CAM-21']);
+      setLastActivatedNode('All 8 Nodes Online');
+    }, 3000);
 
-    // Scene 5: ControlF Brand Reveal (5.8s -> 7.0s)
-    const tScene5 = setTimeout(() => {
+    // 3.5s: Signal Scan Wave sweeps across fabric
+    const tScan = setTimeout(() => {
+      setPhase('network_active');
+      soundService.playScanPulse();
+    }, 3500);
+
+    // 4.6s: Brand Reveal — CONTROLF // FIND WHAT MATTERS.
+    const tBrand = setTimeout(() => {
       setPhase('brand_reveal');
       soundService.playDetected();
       if (brandRef.current) {
         gsap.fromTo(
           brandRef.current,
-          { opacity: 0, y: 16, letterSpacing: '0.15em' },
-          { opacity: 1, y: 0, letterSpacing: '0.04em', duration: 0.8, ease: 'power3.out' }
+          { opacity: 0, y: 12, letterSpacing: '0.12em' },
+          { opacity: 1, y: 0, letterSpacing: '0.04em', duration: 0.7, ease: 'power2.out' }
         );
       }
-    }, 5800);
+    }, 4600);
 
-    // Scene 6: Continuous camera dolly zoom -> enter app (7.0s -> 7.8s)
-    const tScene6 = setTimeout(() => {
-      setPhase('zoom_transition');
-    }, 7000);
+    // 5.9s: Seamless continuous zoom into active camera node (CAM-12)
+    const tZoom = setTimeout(() => {
+      setPhase('dolly_zoom');
+    }, 5900);
 
+    // 6.7s: Transition smoothly into Command Center
     const tEnd = setTimeout(() => {
       finishSequence();
-    }, 7700);
+    }, 6700);
 
     return () => {
-      clearTimeout(tScene1);
-      clearTimeout(tTel1);
-      clearTimeout(tTel2);
-      clearTimeout(tTel3);
-      clearTimeout(tTel4);
-      clearTimeout(tScene3);
-      clearTimeout(tScene4);
-      clearTimeout(tPulse1);
-      clearTimeout(tPulse2);
-      clearTimeout(tPulse3);
-      clearTimeout(tScene5);
-      clearTimeout(tScene6);
+      clearTimeout(tNode1);
+      clearTimeout(tNode2);
+      clearTimeout(tNode3);
+      clearTimeout(tNode4);
+      clearTimeout(tScan);
+      clearTimeout(tBrand);
+      clearTimeout(tZoom);
       clearTimeout(tEnd);
     };
   }, [finishSequence]);
@@ -160,126 +142,69 @@ export const StartupExperience: React.FC<StartupExperienceProps> = ({ onComplete
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-50 w-screen h-screen bg-[#080b11] text-slate-100 flex flex-col items-center justify-center select-none overflow-hidden"
+      className="fixed inset-0 z-50 w-screen h-screen bg-[#090d14] text-slate-100 flex flex-col items-center justify-center select-none overflow-hidden"
     >
-      {/* Background Subtle Radar Vignette */}
-      <div className="absolute inset-0 bg-radial-vignette pointer-events-none z-10" />
-
       {/* Skip Button */}
       <button
         type="button"
         onClick={finishSequence}
-        className="absolute top-6 right-8 z-30 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-mono font-semibold tracking-wider text-slate-400 hover:text-white uppercase transition-colors cursor-pointer flex items-center gap-1.5"
+        className="absolute top-6 right-8 z-30 px-3 py-1.5 rounded-lg bg-[#111722]/80 hover:bg-[#161e2e] border border-[#1f2b3e] text-[11px] font-mono font-medium tracking-wider text-slate-400 hover:text-white transition-colors cursor-pointer flex items-center gap-1.5"
       >
-        <span>Skip Sequence</span>
-        <span className="text-[9px] px-1 py-0.5 rounded bg-white/10 text-slate-300">ESC</span>
+        <span>Skip</span>
+        <span className="text-[9px] px-1 py-0.5 rounded bg-[#1f2b3e] text-slate-300">ESC</span>
       </button>
 
-      {/* 3D Camera Fabric Viewport (Active in Scenes 3, 4, 5, 6) */}
-      {(phase === 'spatial_network' || phase === 'search_pulse' || phase === 'brand_reveal' || phase === 'zoom_transition') && (
-        <div className={`absolute inset-0 z-0 transition-opacity duration-700 ${
-          phase === 'zoom_transition' ? 'scale-125 opacity-40 transition-transform duration-700 ease-in' : 'opacity-100'
-        }`}>
-          <Canvas
-            camera={{ position: [0, 4.2, 7.8], fov: 42 }}
-            dpr={[1, 1.5]}
-            gl={{ antialias: true, alpha: true }}
-          >
-            <ambientLight intensity={0.4} />
-            <directionalLight position={[6, 12, 8]} intensity={0.9} />
-            <CameraNetwork3D mode={phase === 'search_pulse' ? 'search' : 'intro'} />
-          </Canvas>
+      {/* 3D Camera Network Viewport — Always active from stillness to activation */}
+      <div className={`absolute inset-0 z-0 transition-all duration-700 ${
+        phase === 'dolly_zoom' 
+          ? 'scale-150 opacity-25 blur-xs transition-all duration-700 ease-in' 
+          : phase === 'darkness' 
+          ? 'opacity-40' 
+          : 'opacity-100'
+      }`}>
+        <Canvas
+          camera={{ 
+            position: phase === 'dolly_zoom' ? [2.2, 0.9, 2.2] : [0, 4.4, 7.5], 
+            fov: 40 
+          }}
+          dpr={[1, 1.5]}
+          gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+        >
+          <ambientLight intensity={0.45} />
+          <directionalLight position={[6, 12, 8]} intensity={0.75} />
+          <CameraNetwork3D 
+            mode={phase === 'network_active' ? 'search' : 'intro'} 
+            activeNodeIds={activeNodeIds.length > 0 ? activeNodeIds : undefined}
+          />
+        </Canvas>
+      </div>
+
+      {/* Subtle telemetry pill when nodes activate */}
+      {(phase === 'activating_nodes' || phase === 'network_active') && lastActivatedNode && (
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 px-3.5 py-1.5 rounded-full bg-[#0f1520]/90 border border-[#1a2536] text-[11px] font-mono text-slate-300 flex items-center gap-2 shadow-lg backdrop-blur-md animate-fade-in">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#00c4df] animate-pulse" />
+          <span className="text-slate-400">CAMERA FABRIC:</span>
+          <span className="text-white font-semibold">{lastActivatedNode}</span>
         </div>
       )}
 
-      {/* Scene 1 & 2: System Boot Telemetry */}
-      {(phase === 'void' || phase === 'telemetry') && (
-        <div className="relative z-20 max-w-md w-full px-6 flex flex-col items-start space-y-3 font-mono">
-          <div className="flex items-center gap-2.5 text-xs font-bold tracking-widest text-[#00e5ff] uppercase">
-            <span className="inline-block w-2 h-2 rounded-full bg-[#00e5ff] animate-ping" />
-            <span>SYSTEM INITIALIZATION</span>
-          </div>
-
-          <div className="w-full space-y-1.5 pt-2 text-[12px] text-slate-400 border-l-2 border-[#00e5ff]/40 pl-3">
-            {BOOT_ITEMS.map((item, idx) => {
-              const isPassed = activeTelemetryIndex >= idx;
-              return (
-                <div
-                  key={item.module}
-                  className={`flex items-center justify-between transition-opacity duration-200 ${
-                    isPassed ? 'opacity-100 text-slate-200' : 'opacity-25 text-slate-600'
-                  }`}
-                >
-                  <span className="tracking-wider">{item.module}</span>
-                  <span className="font-bold tracking-widest text-slate-500">
-                    ................{' '}
-                    <span className={isPassed ? 'text-[#00e5ff]' : 'text-slate-600'}>
-                      {isPassed ? item.status : 'PENDING'}
-                    </span>
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="text-[10px] tracking-wider text-slate-500 uppercase pt-2">
-            PHYSICAL SURVEILLANCE MATRIX // SECURE OPERATIONAL CORE
-          </div>
-        </div>
-      )}
-
-      {/* Scene 4: Fast Search Pulse Nodes Overlay */}
-      {phase === 'search_pulse' && (
-        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-xl bg-[#0d121d]/90 border border-[#00e5ff]/30 shadow-2xl backdrop-blur-md flex items-center gap-4 text-xs font-mono">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#00e5ff] animate-pulse" />
-            <span className="text-slate-400 text-[11px] uppercase">SIGNAL TRANSIT:</span>
-          </div>
-          <div className="flex items-center gap-3">
-            {PULSE_NODES.map((node, i) => {
-              const isLit = pulseNodeIndex >= i;
-              return (
-                <div
-                  key={node.id}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${
-                    isLit
-                      ? 'bg-[#00e5ff]/15 text-[#00e5ff] border border-[#00e5ff]/40'
-                      : 'text-slate-600 bg-white/5'
-                  }`}
-                >
-                  <span>{node.id}</span>
-                  <span className="text-[9px] opacity-75">{node.status}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Scene 5: ControlF Brand Reveal */}
-      {(phase === 'brand_reveal' || phase === 'zoom_transition') && (
+      {/* Brand Reveal: CONTROLF — FIND WHAT MATTERS. */}
+      {(phase === 'brand_reveal' || phase === 'dolly_zoom') && (
         <div
           ref={brandRef}
-          className="relative z-20 flex flex-col items-center justify-center text-center space-y-3 px-6 select-none"
+          className="relative z-20 flex flex-col items-center justify-center text-center space-y-2.5 px-6 select-none"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00e5ff]/10 border border-[#00e5ff]/30 text-[10px] font-mono tracking-widest text-[#00e5ff] uppercase">
-            <span>SOC STATION 01</span>
-            <span>•</span>
-            <span>AUTONOMOUS SURVEILLANCE INTELLIGENCE</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00c4df]/10 border border-[#00c4df]/25 text-[10px] font-mono tracking-widest text-[#00c4df] uppercase">
+            <span>SURVEILLANCE INTELLIGENCE</span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white font-sans uppercase">
-            CONTROL·F
+          <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white font-sans">
+            CONTROL<span className="text-[#00c4df]">F</span>
           </h1>
 
           <p className="text-xs sm:text-sm font-mono tracking-widest text-slate-400 font-semibold uppercase">
             FIND WHAT MATTERS.
           </p>
-
-          <div className="pt-4 flex items-center gap-1.5 text-[11px] font-mono text-[#00e5ff]/80">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#00e5ff] animate-ping" />
-            <span>CONNECTING TO MISSION COMMAND CENTER...</span>
-          </div>
         </div>
       )}
     </div>

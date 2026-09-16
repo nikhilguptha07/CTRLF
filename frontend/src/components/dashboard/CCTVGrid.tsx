@@ -328,19 +328,19 @@ export const CCTVGrid: React.FC = () => {
   return (
     <div className="space-y-4 animate-fade-in w-full h-full flex flex-col font-sans">
       {/* Top Stream & Orchestrator Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/70 backdrop-blur-md p-4 rounded-2xl border border-slate-200 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#0f1520] backdrop-blur-md p-4 rounded-2xl border border-[#1a2536] shadow-xs">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
-              <Camera className="w-5 h-5 text-indigo-600" />
+            <h2 className="text-lg font-extrabold text-slate-100 flex items-center gap-2">
+              <Camera className="w-5 h-5 text-[#00c4df]" />
               <span>Universal CCTV Camera Hub</span>
             </h2>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1">
-              <Radio className="w-3 h-3 text-indigo-500 animate-pulse" />
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#00c4df]/10 text-[#00c4df] border border-[#00c4df]/30 flex items-center gap-1 font-mono">
+              <Radio className="w-3 h-3 text-[#00c4df] animate-pulse" />
               <span>REAL HARDWARE / RTSP / ONVIF / USB</span>
             </span>
           </div>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-400 mt-0.5">
             Vendor-agnostic camera adapters · DirectShow / RTSP / WHEP / ONVIF PTZ · Real YOLOv8 + ByteTrack inference
           </p>
         </div>
@@ -349,7 +349,7 @@ export const CCTVGrid: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-all shadow-sm active:scale-95 cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#161e2e] hover:bg-[#1a2536] border border-[#1a2536] text-white font-semibold text-xs transition-all shadow-sm active:scale-95 cursor-pointer"
           >
             <Plus className="w-4 h-4 text-emerald-400" />
             <span>Add Physical Camera</span>
@@ -368,9 +368,9 @@ export const CCTVGrid: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowLaunchModal(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-semibold text-xs transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#00c4df] hover:bg-[#00b2cb] text-slate-950 font-bold text-xs transition-all shadow-md active:scale-95 cursor-pointer"
             >
-              <Zap className="w-4 h-4 text-amber-300" />
+              <Zap className="w-4 h-4 text-slate-950" />
               <span>Launch Multi-Camera Search</span>
             </button>
           )}
@@ -822,9 +822,9 @@ export const CCTVGrid: React.FC = () => {
       </div>
 
       {/* Bottom status strip */}
-      <div className="px-4 py-2.5 rounded-xl bg-white/70 border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-600 gap-2">
+      <div className="px-4 py-2.5 rounded-xl bg-[#0f1520] border border-[#1a2536] flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-400 gap-2">
         <div className="flex items-center gap-2">
-          <Shield className="w-4 h-4 text-indigo-600 shrink-0" />
+          <Shield className="w-4 h-4 text-[#00c4df] shrink-0" />
           <span>
             Universal Surveillance Engine · Ingests real RTSP / ONVIF / USB hardware camera frames into YOLOv8 & ByteTrack with multi-camera preemption.
           </span>
@@ -832,7 +832,7 @@ export const CCTVGrid: React.FC = () => {
         <button
           type="button"
           onClick={() => setShowLaunchModal(true)}
-          className="text-indigo-600 hover:text-indigo-700 font-bold hover:underline cursor-pointer flex items-center gap-1 self-end sm:self-auto"
+          className="text-[#00c4df] hover:text-[#00e5ff] font-bold hover:underline cursor-pointer flex items-center gap-1 self-end sm:self-auto"
         >
           <span>Launch Fanout Search</span>
           <span>&rarr;</span>
@@ -841,26 +841,26 @@ export const CCTVGrid: React.FC = () => {
 
       {/* Launch Search Modal */}
       {showLaunchModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[#0f1520] rounded-2xl p-6 max-w-md w-full shadow-2xl border border-[#1a2536] space-y-4">
             <div>
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Zap className="w-4 h-4 text-amber-500" />
+              <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+                <Zap className="w-4 h-4 text-amber-400" />
                 <span>Launch Multi-Camera Live Search</span>
               </h3>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-400 mt-1">
                 Fanned-out YOLOv8 detection & ByteTrack tracking across all active CCTV feeds.
               </p>
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-700">Target Object</label>
+              <label className="text-xs font-semibold text-slate-300">Target Object</label>
               <input
                 type="text"
                 value={orchInput}
                 onChange={(e) => setOrchInput(e.target.value)}
                 placeholder="e.g. Bottle, Backpack, Laptop, Person, TV..."
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#1a2536] bg-[#161e2e] text-sm font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00c4df]/20 focus:border-[#00c4df]"
               />
             </div>
 
@@ -868,14 +868,14 @@ export const CCTVGrid: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowLaunchModal(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-all cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-[#161e2e] transition-all cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={() => handleLaunchOrchestratedSearch()}
-                className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-all shadow-md active:scale-95 cursor-pointer"
+                className="px-5 py-2 rounded-xl bg-[#00c4df] hover:bg-[#00b2cb] text-slate-950 font-bold text-xs transition-all shadow-md active:scale-95 cursor-pointer"
               >
                 Start Live Search
               </button>
@@ -886,30 +886,30 @@ export const CCTVGrid: React.FC = () => {
 
       {/* Register Universal Physical Camera Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-slate-100 space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[#0f1520] rounded-2xl p-6 max-w-lg w-full shadow-2xl border border-[#1a2536] space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[#1a2536] pb-3">
               <div>
-                <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-                  <Camera className="w-5 h-5 text-indigo-600" />
+                <h3 className="text-base font-extrabold text-slate-100 flex items-center gap-2">
+                  <Camera className="w-5 h-5 text-[#00c4df]" />
                   <span>Register Physical Camera Feed</span>
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-slate-400 mt-0.5">
                   Universal adapter abstraction for RTSP, ONVIF, PTZ, USB webcams & WebRTC
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 cursor-pointer"
+                className="p-1 rounded-lg text-slate-400 hover:text-white cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {registerError && (
-              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
-                <AlertOctagon className="w-4 h-4 shrink-0" />
+              <div className="p-3 rounded-xl bg-rose-950/50 border border-rose-800/50 text-xs text-rose-300 flex items-center gap-2">
+                <AlertOctagon className="w-4 h-4 shrink-0 text-rose-400" />
                 <span>{registerError}</span>
               </div>
             )}
@@ -917,36 +917,36 @@ export const CCTVGrid: React.FC = () => {
             <form onSubmit={handleRegisterCamera} className="space-y-3.5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-700">Camera Name</label>
+                  <label className="text-xs font-semibold text-slate-300">Camera Name</label>
                   <input
                     type="text"
                     required
                     value={newCamName}
                     onChange={(e) => setNewCamName(e.target.value)}
                     placeholder="e.g. Front Gate Dome"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-sans text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-xl border border-[#1a2536] bg-[#161e2e] text-xs font-sans text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00c4df]/20 focus:border-[#00c4df]"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-700">Location / Sector</label>
+                  <label className="text-xs font-semibold text-slate-300">Location / Sector</label>
                   <input
                     type="text"
                     value={newCamLocation}
                     onChange={(e) => setNewCamLocation(e.target.value)}
                     placeholder="e.g. Zone 1 - Main Entrance"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-sans text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-xl border border-[#1a2536] bg-[#161e2e] text-xs font-sans text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00c4df]/20 focus:border-[#00c4df]"
                   />
                 </div>
               </div>
 
               {/* Protocol Dropdown */}
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700">Universal Protocol Adapter</label>
+                <label className="text-xs font-semibold text-slate-300">Universal Protocol Adapter</label>
                 <select
                   value={newCamProtocol}
                   onChange={(e) => setNewCamProtocol(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white"
+                  className="w-full px-3 py-2 rounded-xl border border-[#1a2536] bg-[#161e2e] text-xs font-mono text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#00c4df]/20 focus:border-[#00c4df]"
                 >
                   <option value="RTSP">RTSP IP Camera (Generic / Axis / Dahua / Hikvision / Hanwha)</option>
                   <option value="ONVIF">ONVIF IP Camera (Profile S / G / T)</option>
@@ -961,25 +961,25 @@ export const CCTVGrid: React.FC = () => {
               {/* Protocol Dynamic Fields */}
               {newCamProtocol === 'USB_WEBCAM' ? (
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-700">DirectShow / UVC Device Index</label>
+                  <label className="text-xs font-semibold text-slate-300">DirectShow / UVC Device Index</label>
                   <select
                     value={newCamDeviceIndex}
                     onChange={(e) => setNewCamDeviceIndex(Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white"
+                    className="w-full px-3 py-2 rounded-xl border border-[#1a2536] bg-[#161e2e] text-xs font-mono text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#00c4df]/20 focus:border-[#00c4df]"
                   >
                     <option value={0}>Camera 0 (Default Integrated Webcam)</option>
                     <option value={1}>Camera 1 (External USB Camera)</option>
                     <option value={2}>Camera 2 (Secondary USB Video Device)</option>
                     <option value={3}>Camera 3</option>
                   </select>
-                  <span className="text-[10px] text-slate-500 block">
+                  <span className="text-[10px] text-slate-400 block">
                     Mapped to hardware index via OpenCV DirectShow backend on Windows.
                   </span>
                 </div>
               ) : (
                 <>
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-700">Stream URI / Network Address</label>
+                    <label className="text-xs font-semibold text-slate-300">Stream URI / Network Address</label>
                     <input
                       type="text"
                       value={newCamUri}
@@ -993,29 +993,29 @@ export const CCTVGrid: React.FC = () => {
                           ? 'http://127.0.0.1:8889/cam/whep'
                           : 'http://192.168.1.150:8080/video'
                       }
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                      className="w-full px-3 py-2 rounded-xl border border-[#1a2536] bg-[#161e2e] text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00c4df]/20 focus:border-[#00c4df]"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-700">Username (Optional)</label>
+                      <label className="text-xs font-semibold text-slate-300">Username (Optional)</label>
                       <input
                         type="text"
                         value={newCamUsername}
                         onChange={(e) => setNewCamUsername(e.target.value)}
                         placeholder="admin"
-                        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-sans text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        className="w-full px-3 py-2 rounded-xl border border-[#1a2536] bg-[#161e2e] text-xs font-sans text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00c4df]/20 focus:border-[#00c4df]"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-700">Password (Optional)</label>
+                      <label className="text-xs font-semibold text-slate-300">Password (Optional)</label>
                       <input
                         type="password"
                         value={newCamPassword}
                         onChange={(e) => setNewCamPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-sans text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        className="w-full px-3 py-2 rounded-xl border border-[#1a2536] bg-[#161e2e] text-xs font-sans text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00c4df]/20 focus:border-[#00c4df]"
                       />
                     </div>
                   </div>
@@ -1027,16 +1027,16 @@ export const CCTVGrid: React.FC = () => {
                 <div
                   className={`p-3 rounded-xl border text-xs font-mono animate-fade-in ${
                     probeResult.reachable
-                      ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
-                      : 'bg-amber-50 border-amber-300 text-amber-900'
+                      ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-300'
+                      : 'bg-amber-950/60 border-amber-500/50 text-amber-300'
                   }`}
                 >
                   <div className="flex items-center justify-between font-bold">
                     <span className="flex items-center gap-1.5">
                       {probeResult.reachable ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                       ) : (
-                        <AlertOctagon className="w-4 h-4 text-amber-600" />
+                        <AlertOctagon className="w-4 h-4 text-amber-400" />
                       )}
                       <span>{probeResult.reachable ? 'CAMERA REACHABLE' : 'CAMERA UNREACHABLE'}</span>
                     </span>
@@ -1044,7 +1044,7 @@ export const CCTVGrid: React.FC = () => {
                   </div>
 
                   {probeResult.capabilities && (
-                    <div className="mt-2 text-[10px] space-y-0.5 border-t border-emerald-200 pt-1.5 opacity-90">
+                    <div className="mt-2 text-[10px] space-y-0.5 border-t border-emerald-800/60 pt-1.5 opacity-90">
                       <div>
                         Capabilities: PTZ ({probeResult.capabilities.ptz ? 'YES' : 'NO'}), Presets (
                         {probeResult.capabilities.presets ? 'YES' : 'NO'}), Snapshot (
@@ -1054,20 +1054,20 @@ export const CCTVGrid: React.FC = () => {
                   )}
 
                   {probeResult.error && (
-                    <div className="mt-1 text-[10px] text-rose-700 font-sans">{probeResult.error}</div>
+                    <div className="mt-1 text-[10px] text-rose-400 font-sans">{probeResult.error}</div>
                   )}
                 </div>
               )}
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-between pt-3 border-t border-[#1a2536]">
                 <button
                   type="button"
                   disabled={probeLoading}
                   onClick={handleProbeCamera}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#161e2e] hover:bg-[#1a2536] border border-[#1a2536] text-slate-200 font-semibold text-xs transition-all cursor-pointer"
                 >
-                  <Activity className={`w-3.5 h-3.5 text-indigo-600 ${probeLoading ? 'animate-spin' : ''}`} />
+                  <Activity className={`w-3.5 h-3.5 text-[#00c4df] ${probeLoading ? 'animate-spin' : ''}`} />
                   <span>{probeLoading ? 'Probing Device...' : 'Test Connection / Probe'}</span>
                 </button>
 
@@ -1075,14 +1075,14 @@ export const CCTVGrid: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-all cursor-pointer"
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-[#161e2e] transition-all cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={registerLoading}
-                    className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-all shadow-md active:scale-95 cursor-pointer"
+                    className="px-5 py-2 rounded-xl bg-[#00c4df] hover:bg-[#00b2cb] text-slate-950 font-bold text-xs transition-all shadow-md active:scale-95 cursor-pointer"
                   >
                     {registerLoading ? 'Registering...' : 'Register Camera'}
                   </button>

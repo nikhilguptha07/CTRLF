@@ -316,38 +316,38 @@ export const VideoUploadView: React.FC = () => {
     <div className="w-full max-w-2xl mx-auto space-y-3.5 my-auto py-1 animate-fade-in text-center font-sans">
       {/* 1. Header */}
       <div className="space-y-0.5">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+        <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
           Upload Surveillance Footage
         </h2>
-        <p className="text-xs text-slate-500 font-sans">
+        <p className="text-xs text-slate-400 font-sans">
           Ingest MP4, MOV, or AVI surveillance archives for YOLOv8 neural detection & ByteTrack temporal tracking.
         </p>
       </div>
 
       {/* Sign Up Gate Banner */}
       {!isAuthenticated && (
-        <div className="p-3.5 rounded-2xl bg-indigo-50/90 border border-indigo-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3 text-left animate-fade-in">
+        <div className="p-3.5 rounded-2xl bg-[#161e2e] border border-[#1a2536] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3 text-left animate-fade-in">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <div className="w-9 h-9 rounded-xl bg-[#00c4df]/10 border border-[#00c4df]/20 text-[#00c4df] flex items-center justify-center shrink-0">
               <Shield className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-slate-900">Operator Sign In Required</p>
-              <p className="text-[11px] text-slate-500">Sign in with an authorized operator or administrator profile to ingest surveillance footage.</p>
+              <p className="text-xs font-bold text-white">Operator Sign In Required</p>
+              <p className="text-[11px] text-slate-400">Sign in with an authorized operator or administrator profile to ingest surveillance footage.</p>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={() => openAuthModal('register')}
-              className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs cursor-pointer transition-all active:scale-95"
+              className="px-3 py-1.5 rounded-xl bg-[#00c4df] hover:bg-[#00d8f6] text-slate-950 text-xs font-bold shadow-xs cursor-pointer transition-all active:scale-95"
             >
               Sign Up
             </button>
             <button
               type="button"
               onClick={() => openAuthModal('login')}
-              className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold shadow-2xs cursor-pointer transition-all active:scale-95"
+              className="px-3 py-1.5 rounded-xl bg-[#0f1520] hover:bg-[#161e2e] border border-[#1a2536] text-slate-200 text-xs font-semibold cursor-pointer transition-all active:scale-95"
             >
               Sign In
             </button>
@@ -356,34 +356,34 @@ export const VideoUploadView: React.FC = () => {
       )}
 
       {/* 2. Pipeline Stage Tracker */}
-      <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-slate-100/90 border border-slate-200/80 text-[11px] font-mono text-slate-500">
-        <div className={`flex items-center gap-1 ${uploadStage === 'IDLE' ? 'text-indigo-600 font-bold' : 'text-emerald-700 font-bold'}`}>
+      <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-[#0f1520] border border-[#1a2536] text-[11px] font-mono text-slate-500">
+        <div className={`flex items-center gap-1 ${uploadStage === 'IDLE' ? 'text-[#00c4df] font-bold' : 'text-emerald-400 font-bold'}`}>
           <span>1. Upload</span>
         </div>
         <span>&rarr;</span>
-        <div className={`flex items-center gap-1 ${uploadStage === 'UPLOADING' ? 'text-indigo-600 font-bold animate-pulse' : uploadStage === 'PROCESSING' || uploadStage === 'ANALYZING' || uploadStage === 'COMPLETE' ? 'text-emerald-700 font-bold' : ''}`}>
+        <div className={`flex items-center gap-1 ${uploadStage === 'UPLOADING' ? 'text-[#00c4df] font-bold animate-pulse' : uploadStage === 'PROCESSING' || uploadStage === 'ANALYZING' || uploadStage === 'COMPLETE' ? 'text-emerald-400 font-bold' : ''}`}>
           <span>2. Uploading</span>
         </div>
         <span>&rarr;</span>
-        <div className={`flex items-center gap-1 ${uploadStage === 'PROCESSING' ? 'text-indigo-600 font-bold animate-pulse' : uploadStage === 'ANALYZING' || uploadStage === 'COMPLETE' ? 'text-emerald-700 font-bold' : ''}`}>
+        <div className={`flex items-center gap-1 ${uploadStage === 'PROCESSING' ? 'text-[#00c4df] font-bold animate-pulse' : uploadStage === 'ANALYZING' || uploadStage === 'COMPLETE' ? 'text-emerald-400 font-bold' : ''}`}>
           <span>3. Processing</span>
         </div>
         <span>&rarr;</span>
-        <div className={`flex items-center gap-1 ${uploadStage === 'ANALYZING' ? 'text-indigo-600 font-bold animate-pulse' : uploadStage === 'COMPLETE' ? 'text-emerald-700 font-bold' : ''}`}>
+        <div className={`flex items-center gap-1 ${uploadStage === 'ANALYZING' ? 'text-[#00c4df] font-bold animate-pulse' : uploadStage === 'COMPLETE' ? 'text-emerald-400 font-bold' : ''}`}>
           <span>4. Analyzing</span>
         </div>
         <span>&rarr;</span>
-        <div className={`flex items-center gap-1 ${uploadStage === 'COMPLETE' ? 'text-emerald-700 font-bold' : uploadStage === 'FAILED' ? 'text-rose-600 font-bold' : ''}`}>
+        <div className={`flex items-center gap-1 ${uploadStage === 'COMPLETE' ? 'text-emerald-400 font-bold' : uploadStage === 'FAILED' ? 'text-rose-400 font-bold' : ''}`}>
           <span>5. {uploadStage === 'FAILED' ? 'Failed' : 'Complete'}</span>
         </div>
       </div>
 
       {/* 3. Target Object Input */}
-      <div className="bg-white/90 backdrop-blur-sm p-3.5 rounded-2xl border border-slate-200/80 shadow-xs text-left space-y-2">
-        <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+      <div className="bg-[#0f1520] p-3.5 rounded-2xl border border-[#1a2536] shadow-sm text-left space-y-2">
+        <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
           <span>Target Object to Locate in Footage:</span>
           {isTargetInvalid && (
-            <span className="text-[11px] font-medium text-rose-600 flex items-center gap-1">
+            <span className="text-[11px] font-medium text-rose-400 flex items-center gap-1">
               <AlertCircle className="w-3.5 h-3.5" />
               Target outside standard COCO-80 model taxonomy.
             </span>
@@ -399,17 +399,17 @@ export const VideoUploadView: React.FC = () => {
             onChange={(e) => setTargetQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="e.g. bottle, person, laptop, backpack, tv, chair..."
-            className={`w-full px-3 py-2 rounded-xl bg-slate-50 border text-xs font-mono text-slate-900 transition-all focus:outline-hidden ${
+            className={`w-full px-3 py-2 rounded-xl bg-[#161e2e] border text-xs font-mono text-white transition-all focus:outline-hidden ${
               isTargetInvalid 
-                ? 'border-rose-400 bg-rose-50/50 focus:border-rose-500' 
-                : 'border-slate-200 focus:border-blue-500 focus:bg-white'
+                ? 'border-rose-500/50 bg-rose-500/10 focus:border-rose-400' 
+                : 'border-[#1a2536] focus:border-[#00c4df]'
             } disabled:opacity-60 disabled:cursor-not-allowed`}
           />
         </div>
 
         {/* Suggestion Chips */}
         <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-          <span className="text-[10px] text-slate-400 uppercase tracking-wider font-mono mr-1">Suggestions:</span>
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider font-mono mr-1">Suggestions:</span>
           {['bottle', 'person', 'laptop', 'backpack', 'tv', 'chair'].map((preset) => (
             <button
               key={preset}
@@ -418,8 +418,8 @@ export const VideoUploadView: React.FC = () => {
               onClick={() => setTargetQuery(preset)}
               className={`px-2.5 py-0.5 rounded-lg border text-xs font-mono transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                 targetQuery.toLowerCase() === preset
-                  ? 'bg-blue-600 text-white border-blue-600 font-bold shadow-xs'
-                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                  ? 'bg-[#00c4df] text-slate-950 border-[#00c4df] font-bold shadow-xs'
+                  : 'bg-[#161e2e] hover:bg-[#1a2536] text-slate-300 border-[#1a2536]'
               }`}
             >
               {preset}
@@ -439,15 +439,15 @@ export const VideoUploadView: React.FC = () => {
           onDrop={handleDrop}
           className={`p-6 border-2 border-dashed rounded-2xl transition-all flex flex-col items-center justify-center gap-2.5 ${
             dragActive
-              ? 'border-blue-500 bg-blue-50/60 scale-[1.01]'
-              : 'border-slate-300/80 bg-white/70 hover:bg-white'
+              ? 'border-[#00c4df] bg-[#00c4df]/10 scale-[1.01]'
+              : 'border-[#1a2536] bg-[#0f1520] hover:bg-[#161e2e]/50'
           }`}
         >
-          <div className="w-11 h-11 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-md">
+          <div className="w-11 h-11 rounded-2xl bg-[#161e2e] border border-[#1a2536] text-[#00c4df] flex items-center justify-center shadow-md">
             <Upload className="w-5 h-5" />
           </div>
           <div className="space-y-1">
-            <p className="text-xs font-bold text-slate-800">
+            <p className="text-xs font-bold text-slate-200">
               Drag & drop surveillance video here, or{' '}
               <label 
                 onClick={(e) => {
@@ -456,7 +456,7 @@ export const VideoUploadView: React.FC = () => {
                     openAuthModal('register');
                   }
                 }}
-                className="text-blue-600 hover:underline cursor-pointer font-bold"
+                className="text-[#00c4df] hover:underline cursor-pointer font-bold"
               >
                 browse
                 <input
@@ -476,7 +476,7 @@ export const VideoUploadView: React.FC = () => {
                 />
               </label>
             </p>
-            <p className="text-[11px] text-slate-400 font-mono">
+            <p className="text-[11px] text-slate-500 font-mono">
               Supported formats: MP4, MOV, MKV, AVI (Max 500MB • H.264 / HEVC)
             </p>
           </div>
@@ -485,31 +485,31 @@ export const VideoUploadView: React.FC = () => {
 
       {/* 4B. UPLOADING STAGE */}
       {uploadStage === 'UPLOADING' && activeFileMeta && (
-        <div className="p-4 bg-white/95 rounded-2xl border border-blue-200 shadow-sm text-left space-y-3 animate-fade-in">
+        <div className="p-4 bg-[#0f1520] rounded-2xl border border-[#00c4df]/30 shadow-sm text-left space-y-3 animate-fade-in">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+              <div className="w-9 h-9 rounded-xl bg-[#00c4df]/10 text-[#00c4df] flex items-center justify-center shrink-0 border border-[#00c4df]/20">
                 <Upload className="w-4 h-4 animate-bounce" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-900 truncate">{activeFileMeta.name}</p>
-                <div className="flex items-center gap-2 text-[11px] font-mono text-slate-500 mt-0.5">
-                  <span>File Size: <strong className="text-slate-800">{formatBytes(activeFileMeta.sizeBytes)}</strong></span>
+                <p className="text-xs font-bold text-white truncate">{activeFileMeta.name}</p>
+                <div className="flex items-center gap-2 text-[11px] font-mono text-slate-400 mt-0.5">
+                  <span>File Size: <strong className="text-slate-200">{formatBytes(activeFileMeta.sizeBytes)}</strong></span>
                   <span>•</span>
-                  <span className="text-blue-600 font-bold">Uploading ({uploadProgress}%)</span>
+                  <span className="text-[#00c4df] font-bold">Uploading ({uploadProgress}%)</span>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="space-y-1">
-            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+            <div className="w-full bg-[#161e2e] h-2 rounded-full overflow-hidden border border-[#1a2536]">
               <div 
-                className="bg-blue-600 h-full transition-all duration-150 ease-out rounded-full"
+                className="bg-[#00c4df] h-full transition-all duration-150 ease-out rounded-full"
                 style={{ width: `${uploadProgress}%` }}
               />
             </div>
-            <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+            <div className="flex items-center justify-between text-[10px] font-mono text-slate-500">
               <span>Transferring stream chunks to ingest gateway</span>
               <span>{Math.round((uploadProgress / 100) * (activeFileMeta.sizeBytes / (1024 * 1024)) * 10) / 10} MB / {(activeFileMeta.sizeBytes / (1024 * 1024)).toFixed(1)} MB</span>
             </div>
@@ -519,31 +519,31 @@ export const VideoUploadView: React.FC = () => {
 
       {/* 4C. PROCESSING STAGE */}
       {uploadStage === 'PROCESSING' && activeFileMeta && (
-        <div className="p-4 bg-white/95 rounded-2xl border border-amber-200 shadow-sm text-left space-y-3 animate-fade-in">
+        <div className="p-4 bg-[#0f1520] rounded-2xl border border-amber-500/30 shadow-sm text-left space-y-3 animate-fade-in">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 border border-amber-200">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
                 <Cpu className="w-4 h-4 animate-pulse" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-900 truncate">{activeFileMeta.name}</p>
-                <div className="flex items-center gap-2 text-[11px] font-mono text-slate-500 mt-0.5">
+                <p className="text-xs font-bold text-white truncate">{activeFileMeta.name}</p>
+                <div className="flex items-center gap-2 text-[11px] font-mono text-slate-400 mt-0.5">
                   <span>File Size: {formatBytes(activeFileMeta.sizeBytes)}</span>
                   <span>•</span>
-                  <span className="text-amber-700 font-bold">Demuxing & Keyframe Indexing ({processingProgress}%)</span>
+                  <span className="text-amber-400 font-bold">Demuxing & Keyframe Indexing ({processingProgress}%)</span>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="space-y-1">
-            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+            <div className="w-full bg-[#161e2e] h-2 rounded-full overflow-hidden border border-[#1a2536]">
               <div 
                 className="bg-amber-500 h-full transition-all duration-150 ease-out rounded-full"
                 style={{ width: `${processingProgress}%` }}
               />
             </div>
-            <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+            <div className="flex items-center justify-between text-[10px] font-mono text-slate-500">
               <span>Validating MP4 container & H.264 GOP keyframe structure</span>
               <span>1920×1080 @ 30.0 fps</span>
             </div>
@@ -553,38 +553,38 @@ export const VideoUploadView: React.FC = () => {
 
       {/* 4D. ANALYZING STAGE */}
       {uploadStage === 'ANALYZING' && activeFileMeta && (
-        <div className="p-4 bg-white/95 rounded-2xl border border-indigo-200 shadow-sm text-left space-y-3 animate-fade-in">
+        <div className="p-4 bg-[#0f1520] rounded-2xl border border-[#00c4df]/30 shadow-sm text-left space-y-3 animate-fade-in">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0 border border-indigo-200">
+              <div className="w-9 h-9 rounded-xl bg-[#00c4df]/10 text-[#00c4df] flex items-center justify-center shrink-0 border border-[#00c4df]/20">
                 <Layers className="w-4 h-4 animate-spin" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-900 truncate">{activeFileMeta.name}</p>
-                <div className="flex items-center gap-2 text-[11px] font-mono text-slate-500 mt-0.5">
+                <p className="text-xs font-bold text-white truncate">{activeFileMeta.name}</p>
+                <div className="flex items-center gap-2 text-[11px] font-mono text-slate-400 mt-0.5">
                   <span>Size: {formatBytes(activeFileMeta.sizeBytes)}</span>
                   <span>•</span>
-                  <span className="text-indigo-700 font-bold">Extracting Neural Feature Map</span>
+                  <span className="text-[#00c4df] font-bold">Extracting Neural Feature Map</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Telemetry Metrics Grid */}
-          <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 text-xs font-mono">
+          <div className="grid grid-cols-2 gap-2 bg-[#161e2e] p-2.5 rounded-xl border border-[#1a2536] text-xs font-mono">
             <div className="flex items-center justify-between">
-              <span className="text-slate-500 text-[11px]">Frames Analyzed:</span>
-              <span className="font-bold text-slate-900">{framesAnalyzed} / {totalFrames}</span>
+              <span className="text-slate-400 text-[11px]">Frames Analyzed:</span>
+              <span className="font-bold text-white">{framesAnalyzed} / {totalFrames}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-slate-500 text-[11px]">Objects Detected:</span>
-              <span className="font-bold text-emerald-700">{objectsDetected} candidates</span>
+              <span className="text-slate-400 text-[11px]">Objects Detected:</span>
+              <span className="font-bold text-emerald-400">{objectsDetected} candidates</span>
             </div>
           </div>
 
-          <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+          <div className="w-full bg-[#161e2e] h-2 rounded-full overflow-hidden border border-[#1a2536]">
             <div 
-              className="bg-indigo-600 h-full transition-all duration-100 ease-out rounded-full"
+              className="bg-[#00c4df] h-full transition-all duration-100 ease-out rounded-full"
               style={{ width: `${Math.round((framesAnalyzed / Math.max(1, totalFrames)) * 100)}%` }}
             />
           </div>
@@ -593,24 +593,24 @@ export const VideoUploadView: React.FC = () => {
 
       {/* 4E. COMPLETE STAGE (READY FOR SEARCH) */}
       {uploadStage === 'COMPLETE' && uploadedVideo && (
-        <div className="p-4 bg-white/98 backdrop-blur-md rounded-2xl border border-emerald-200 shadow-xs text-left space-y-3 animate-fade-in">
+        <div className="p-4 bg-[#0f1520] rounded-2xl border border-emerald-500/30 shadow-xs text-left space-y-3 animate-fade-in">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200 shadow-2xs">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
                 <CheckCircle2 className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-900 truncate" title={uploadedVideo.originalFilename}>
+                <p className="text-xs font-bold text-white truncate" title={uploadedVideo.originalFilename}>
                   {uploadedVideo.originalFilename}
                 </p>
-                <div className="flex items-center gap-2 text-[11px] text-slate-500 font-mono pt-0.5">
-                  <span className="font-semibold text-slate-700">{formatBytes(uploadedVideo.fileSizeBytes || activeFileMeta?.sizeBytes)}</span>
+                <div className="flex items-center gap-2 text-[11px] text-slate-400 font-mono pt-0.5">
+                  <span className="font-semibold text-slate-200">{formatBytes(uploadedVideo.fileSizeBytes || activeFileMeta?.sizeBytes)}</span>
                   <span>•</span>
                   <span>{uploadedVideo.resolution || '1920×1080'}</span>
                   <span>•</span>
                   <span>{uploadedVideo.frameRate ? `${uploadedVideo.frameRate} fps` : '30 fps'}</span>
                   <span>•</span>
-                  <span className="text-emerald-700 font-bold">Ready</span>
+                  <span className="text-emerald-400 font-bold">Ready</span>
                 </div>
               </div>
             </div>
@@ -619,14 +619,14 @@ export const VideoUploadView: React.FC = () => {
               <button
                 type="button"
                 onClick={handleReplaceVideo}
-                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition-all cursor-pointer"
+                className="px-2.5 py-1 rounded-lg bg-[#161e2e] hover:bg-[#1a2536] text-slate-300 border border-[#1a2536] text-xs font-semibold transition-all cursor-pointer"
               >
                 Replace
               </button>
               <button
                 type="button"
                 onClick={handleRemoveVideo}
-                className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
+                className="p-1 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer"
                 title="Remove video"
               >
                 <X className="w-4 h-4" />
@@ -635,14 +635,14 @@ export const VideoUploadView: React.FC = () => {
           </div>
 
           {/* Analysis Telemetry Pill Bar */}
-          <div className="grid grid-cols-2 gap-2 bg-emerald-50/50 p-2.5 rounded-xl border border-emerald-200/80 text-xs font-mono">
+          <div className="grid grid-cols-2 gap-2 bg-[#161e2e] p-2.5 rounded-xl border border-[#1a2536] text-xs font-mono">
             <div className="flex items-center justify-between">
-              <span className="text-slate-600 text-[11px]">Frames Indexed:</span>
-              <span className="font-bold text-slate-900">{framesAnalyzed || totalFrames} Frames</span>
+              <span className="text-slate-400 text-[11px]">Frames Indexed:</span>
+              <span className="font-bold text-white">{framesAnalyzed || totalFrames} Frames</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-slate-600 text-[11px]">Objects Isolated:</span>
-              <span className="font-bold text-emerald-700">{objectsDetected || 14} Candidates</span>
+              <span className="text-slate-400 text-[11px]">Objects Isolated:</span>
+              <span className="font-bold text-emerald-400">{objectsDetected || 14} Candidates</span>
             </div>
           </div>
         </div>
@@ -650,29 +650,29 @@ export const VideoUploadView: React.FC = () => {
 
       {/* 4F. FAILED STAGE */}
       {uploadStage === 'FAILED' && (
-        <div className="p-4 bg-rose-50/90 rounded-2xl border border-rose-200 text-left space-y-3 animate-shake">
+        <div className="p-4 bg-[#0f1520] rounded-2xl border border-rose-500/30 text-left space-y-3 animate-shake">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/20">
                 <AlertCircle className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-rose-950 truncate">{activeFileMeta?.name || 'Uploaded Video'}</p>
-                <p className="text-[11px] text-rose-700 font-mono">Ingestion Failed</p>
+                <p className="text-xs font-bold text-white truncate">{activeFileMeta?.name || 'Uploaded Video'}</p>
+                <p className="text-[11px] text-rose-400 font-mono">Ingestion Failed</p>
               </div>
             </div>
 
             <button
               type="button"
               onClick={handleRemoveVideo}
-              className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Try Again</span>
             </button>
           </div>
 
-          <p className="text-xs text-rose-800 font-sans">
+          <p className="text-xs text-rose-300 font-sans">
             {errorMessage || 'Video container damaged or codec unsupported. Please verify H.264/MP4 stream encoding.'}
           </p>
         </div>
@@ -702,30 +702,30 @@ export const VideoUploadView: React.FC = () => {
           type="button"
           disabled={!isSearchButtonEnabled}
           onClick={handleStartSearch}
-          className={`w-full py-3.5 px-6 rounded-2xl font-bold text-sm tracking-wide shadow-lg flex items-center justify-center gap-2.5 transition-all ${
+          className={`w-full py-3 px-6 rounded-xl font-bold text-sm tracking-wide shadow-lg flex items-center justify-center gap-2.5 transition-all ${
             isSearchButtonEnabled
-              ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/25 active:scale-[0.99] cursor-pointer'
-              : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+              ? 'bg-[#00c4df] hover:bg-[#00d8f6] text-slate-950 active:scale-[0.99] cursor-pointer'
+              : 'bg-[#161e2e] text-slate-500 border border-[#1a2536] cursor-not-allowed shadow-none'
           }`}
         >
           {isStartingSearch ? (
             <>
-              <Activity className="w-4 h-4 animate-spin text-white" />
+              <Activity className="w-4 h-4 animate-spin text-slate-950" />
               <span>Starting Search...</span>
             </>
           ) : isSearching ? (
             <>
-              <Activity className="w-4 h-4 animate-pulse text-white" />
+              <Activity className="w-4 h-4 animate-pulse text-slate-950" />
               <span>Searching Video...</span>
             </>
           ) : uploadStage === 'UPLOADING' || uploadStage === 'PROCESSING' || uploadStage === 'ANALYZING' ? (
             <>
-              <Layers className="w-4 h-4 animate-spin text-slate-400" />
+              <Layers className="w-4 h-4 animate-spin text-slate-500" />
               <span>Ingesting Video Stream...</span>
             </>
           ) : (
             <>
-              <Search className="w-4 h-4 text-white" />
+              <Search className="w-4 h-4 text-slate-950" />
               <span>Search This Video</span>
             </>
           )}
@@ -733,7 +733,7 @@ export const VideoUploadView: React.FC = () => {
 
         {/* Informative Helper Below Button */}
         {uploadStage === 'IDLE' && (
-          <p className="text-[11px] text-slate-400 font-mono mt-1">
+          <p className="text-[11px] text-slate-500 font-mono mt-1">
             Please upload or select a surveillance clip above to enable search.
           </p>
         )}
@@ -741,7 +741,7 @@ export const VideoUploadView: React.FC = () => {
 
       {/* 6. Pre-indexed facility clips */}
       {!isSearching && uploadStage === 'IDLE' && (
-        <div className="space-y-1.5 text-left pt-1.5 border-t border-slate-200/60">
+        <div className="space-y-1.5 text-left pt-1.5 border-t border-[#1a2536]">
           <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider font-mono">
             Or select a pre-indexed facility clip:
           </span>
@@ -769,12 +769,12 @@ export const VideoUploadView: React.FC = () => {
               <div
                 key={clip.title}
                 onClick={() => handleSelectPresetClip(clip)}
-                className="p-2 rounded-xl border transition-all cursor-pointer flex items-center gap-2 bg-white/70 hover:bg-white border-slate-200/80 shadow-2xs hover:border-blue-300"
+                className="p-2.5 rounded-xl border transition-all cursor-pointer flex items-center gap-2 bg-[#0f1520] hover:bg-[#161e2e] border-[#1a2536] hover:border-slate-700 shadow-sm"
               >
-                <Film className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+                <Film className="w-3.5 h-3.5 shrink-0 text-[#00c4df]" />
                 <div className="overflow-hidden min-w-0">
-                  <p className="text-[11px] font-semibold text-slate-800 truncate">{clip.title}</p>
-                  <p className="text-[9px] text-slate-400 truncate">{clip.size} · Target: {clip.defaultTarget}</p>
+                  <p className="text-[11px] font-mono font-semibold text-slate-200 truncate">{clip.title}</p>
+                  <p className="text-[9px] text-slate-500 truncate">{clip.size} · Target: {clip.defaultTarget}</p>
                 </div>
               </div>
             ))}

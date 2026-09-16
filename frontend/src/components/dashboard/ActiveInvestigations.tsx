@@ -28,34 +28,34 @@ export const ActiveInvestigations: React.FC<ActiveInvestigationsProps> = ({
     switch (status) {
       case 'SEARCHING':
         return (
-          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1 shrink-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-950/60 text-amber-300 border border-amber-800/60 flex items-center gap-1 shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
             SEARCHING
           </span>
         );
       case 'ANALYZING':
         return (
-          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1 shrink-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#00c4df]/15 text-[#00c4df] border border-[#00c4df]/40 flex items-center gap-1 shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00c4df]" />
             ANALYZING
           </span>
         );
       case 'IN_PROGRESS':
         return (
-          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1 shrink-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-950/60 text-blue-300 border border-blue-800/60 flex items-center gap-1 shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
             IN PROGRESS
           </span>
         );
       case 'RESOLVED':
         return (
-          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 shrink-0">
             RESOLVED
           </span>
         );
       default:
         return (
-          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200 shrink-0">
+          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#161e2e] text-slate-300 border border-[#1a2536] shrink-0">
             {status}
           </span>
         );
@@ -63,15 +63,15 @@ export const ActiveInvestigations: React.FC<ActiveInvestigationsProps> = ({
   };
 
   return (
-    <div className="rounded-xl bg-white border border-slate-200/80 shadow-2xs overflow-hidden flex flex-col h-full">
+    <div className="rounded-xl bg-[#0f1520] border border-[#1a2536] shadow-2xs overflow-hidden flex flex-col h-full">
       {/* Header */}
-      <div className="px-3.5 py-2.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+      <div className="px-3.5 py-2.5 border-b border-[#1a2536] flex items-center justify-between bg-[#161e2e]/50">
         <div className="flex items-center gap-2">
-          <FolderSearch className="w-4 h-4 text-indigo-600" />
-          <h2 className="text-xs font-bold text-slate-900 tracking-tight font-sans uppercase">
+          <FolderSearch className="w-4 h-4 text-[#00c4df]" />
+          <h2 className="text-xs font-bold text-slate-100 tracking-tight font-sans uppercase">
             Active Investigations
           </h2>
-          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-slate-100 border border-slate-200 text-slate-600">
+          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-[#161e2e] border border-[#1a2536] text-slate-400">
             {investigations.length} CASES
           </span>
         </div>
@@ -79,7 +79,7 @@ export const ActiveInvestigations: React.FC<ActiveInvestigationsProps> = ({
           <button
             type="button"
             onClick={onViewAllClick}
-            className="text-[11px] font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-0.5 transition-colors cursor-pointer"
+            className="text-[11px] font-semibold text-slate-400 hover:text-white flex items-center gap-0.5 transition-colors cursor-pointer"
           >
             <span>Audit Trail</span>
             <ArrowRight className="w-3 h-3" />
@@ -92,13 +92,13 @@ export const ActiveInvestigations: React.FC<ActiveInvestigationsProps> = ({
         {isLoading ? (
           <div className="space-y-2 py-2">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="p-2 rounded-lg bg-slate-100/70 animate-pulse h-14 flex items-center justify-between" />
+              <div key={i} className="p-2 rounded-lg bg-[#161e2e] border border-[#1a2536] animate-pulse h-14 flex items-center justify-between" />
             ))}
           </div>
         ) : investigations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-6 text-center text-slate-400 space-y-2 my-auto">
-            <ShieldAlert className="w-7 h-7 text-slate-300" />
-            <div className="text-xs font-medium text-slate-600 font-sans">
+          <div className="flex flex-col items-center justify-center py-6 text-center text-slate-500 space-y-2 my-auto">
+            <ShieldAlert className="w-7 h-7 text-slate-600" />
+            <div className="text-xs font-medium text-slate-300 font-sans">
               No Active Investigations
             </div>
             <p className="text-[11px] text-slate-400 font-mono max-w-xs">
@@ -108,9 +108,9 @@ export const ActiveInvestigations: React.FC<ActiveInvestigationsProps> = ({
               <button
                 type="button"
                 onClick={onStartSearchClick}
-                className="mt-1 px-3 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                className="mt-1 px-3 py-1.5 bg-[#00c4df] hover:bg-[#00b2cb] text-slate-950 font-bold rounded-lg text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs"
               >
-                <Search className="w-3 h-3" />
+                <Search className="w-3 h-3 text-slate-950" />
                 <span>Launch Case</span>
               </button>
             )}
@@ -121,24 +121,24 @@ export const ActiveInvestigations: React.FC<ActiveInvestigationsProps> = ({
               <div
                 key={item.caseId}
                 onClick={() => onSelectCase && onSelectCase(item)}
-                className="p-2.5 rounded-lg border border-slate-200/80 bg-slate-50/40 hover:bg-slate-50 hover:border-slate-300 transition-all cursor-pointer group flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                className="p-2.5 rounded-lg border border-[#1a2536] bg-[#161e2e]/60 hover:bg-[#161e2e] hover:border-[#00c4df]/50 transition-all cursor-pointer group flex flex-col sm:flex-row sm:items-center justify-between gap-2"
               >
                 <div className="flex items-start gap-2.5 min-w-0">
-                  <span className="px-1.5 py-0.5 rounded bg-slate-100 text-[10px] font-mono font-bold text-slate-700 border border-slate-200/80 shrink-0">
+                  <span className="px-1.5 py-0.5 rounded bg-[#090d14] text-[10px] font-mono font-bold text-[#00c4df] border border-[#1a2536] shrink-0">
                     {item.caseId}
                   </span>
                   <div className="min-w-0">
-                    <div className="font-bold text-xs text-slate-900 truncate font-sans group-hover:text-indigo-600 transition-colors">
+                    <div className="font-bold text-xs text-slate-100 truncate font-sans group-hover:text-[#00c4df] transition-colors">
                       {item.object}
                     </div>
-                    <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono mt-0.5 truncate">
+                    <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono mt-0.5 truncate">
                       <span className="flex items-center gap-1">
-                        <Camera className="w-3 h-3 text-slate-400" />
+                        <Camera className="w-3 h-3 text-slate-500" />
                         <span className="truncate">{item.camera}</span>
                       </span>
                       <span>•</span>
                       <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-slate-400" />
+                        <Clock className="w-3 h-3 text-slate-500" />
                         <span>{item.lastDetectedTime}</span>
                       </span>
                     </div>
@@ -147,10 +147,10 @@ export const ActiveInvestigations: React.FC<ActiveInvestigationsProps> = ({
 
                 <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
                   <div className="text-right">
-                    <div className="text-[10px] font-mono font-bold text-emerald-700">
+                    <div className="text-[10px] font-mono font-bold text-emerald-400">
                       {item.confidence}% Match
                     </div>
-                    <div className="w-16 bg-slate-200 rounded-full h-1 overflow-hidden mt-0.5">
+                    <div className="w-16 bg-slate-800 rounded-full h-1 overflow-hidden mt-0.5">
                       <div 
                         className="bg-emerald-500 h-full rounded-full" 
                         style={{ width: `${item.confidence}%` }}

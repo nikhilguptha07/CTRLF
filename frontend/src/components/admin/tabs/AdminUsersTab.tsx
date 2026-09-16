@@ -120,9 +120,9 @@ export const AdminUsersTab: React.FC = () => {
   };
 
   return (
-    <div className="space-y-5 animate-fade-in font-sans">
+    <div className="space-y-5 animate-fade-in font-sans text-slate-100">
       {/* Search & Actions Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 rounded-2xl bg-[#0f1520] border border-[#1a2536] shadow-xs">
         <form onSubmit={handleSearchSubmit} className="flex-1 relative flex items-center max-w-md">
           <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3.5" />
           <input
@@ -130,7 +130,7 @@ export const AdminUsersTab: React.FC = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search users by username, email, name..."
-            className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#161e2e] border border-[#1a2536] text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-[#00c4df]"
           />
         </form>
 
@@ -139,7 +139,7 @@ export const AdminUsersTab: React.FC = () => {
           <select
             value={roleFilter}
             onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
-            className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 font-medium focus:outline-none"
+            className="px-3 py-2 rounded-xl bg-[#161e2e] border border-[#1a2536] text-xs text-slate-300 font-medium focus:outline-none focus:ring-1 focus:ring-[#00c4df]"
           >
             <option value="">All Roles</option>
             <option value="ADMIN">ADMIN</option>
@@ -151,7 +151,7 @@ export const AdminUsersTab: React.FC = () => {
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 font-medium focus:outline-none"
+            className="px-3 py-2 rounded-xl bg-[#161e2e] border border-[#1a2536] text-xs text-slate-300 font-medium focus:outline-none focus:ring-1 focus:ring-[#00c4df]"
           >
             <option value="">All Statuses</option>
             <option value="ACTIVE">ACTIVE</option>
@@ -162,15 +162,15 @@ export const AdminUsersTab: React.FC = () => {
             type="button"
             onClick={fetchUsers}
             title="Refresh Users"
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
+            className="p-2 rounded-xl bg-[#161e2e] hover:bg-[#1e2a3f] border border-[#1a2536] text-slate-300 hover:text-white transition-colors cursor-pointer"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-[#00c4df]' : ''}`} />
           </button>
 
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 rounded-xl bg-[#4361ee] hover:bg-[#3a56d4] text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
+            className="px-4 py-2 rounded-xl bg-[#00c4df] hover:bg-[#00b2cb] text-slate-950 text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
           >
             <UserPlus className="w-3.5 h-3.5" />
             <span>Add User</span>
@@ -179,28 +179,28 @@ export const AdminUsersTab: React.FC = () => {
       </div>
 
       {/* Users Data Table */}
-      <div className="rounded-2xl bg-white border border-slate-200/80 shadow-xs overflow-hidden">
+      <div className="rounded-2xl bg-[#0f1520] border border-[#1a2536] shadow-xs overflow-hidden">
         {loading ? (
           <div className="p-12 text-center text-slate-400 space-y-2">
-            <RefreshCw className="w-5 h-5 animate-spin mx-auto text-indigo-600" />
-            <p className="text-xs uppercase font-semibold">Loading user accounts...</p>
+            <RefreshCw className="w-5 h-5 animate-spin mx-auto text-[#00c4df]" />
+            <p className="text-xs uppercase font-mono font-semibold">Loading user accounts...</p>
           </div>
         ) : error ? (
-          <div className="p-8 text-center text-red-600 space-y-2">
+          <div className="p-8 text-center text-rose-400 space-y-2">
             <AlertTriangle className="w-6 h-6 mx-auto" />
-            <p className="text-xs font-bold">{error}</p>
+            <p className="text-xs font-bold font-mono">{error}</p>
           </div>
         ) : users.length === 0 ? (
           <div className="p-12 text-center text-slate-400 space-y-1">
-            <Users className="w-8 h-8 mx-auto text-slate-300" />
-            <p className="text-xs font-semibold text-slate-600">No user accounts found.</p>
-            <p className="text-[11px] text-slate-400">Try adjusting search query or role filters.</p>
+            <Users className="w-8 h-8 mx-auto text-slate-600" />
+            <p className="text-xs font-semibold text-slate-300">No user accounts found.</p>
+            <p className="text-[11px] text-slate-500">Try adjusting search query or role filters.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/60 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                <tr className="border-b border-[#1a2536] bg-[#161e2e]/80 text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider">
                   <th className="py-3 px-4">Username</th>
                   <th className="py-3 px-4">Email</th>
                   <th className="py-3 px-4">Role</th>
@@ -210,61 +210,61 @@ export const AdminUsersTab: React.FC = () => {
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[#141c2b]">
                 {users.map((u) => (
                   <tr 
                     key={u.id}
-                    className="hover:bg-slate-50/80 transition-colors"
+                    className="hover:bg-[#161e2e]/50 transition-colors"
                   >
-                    <td className="py-3 px-4 font-bold text-slate-900">
+                    <td className="py-3 px-4 font-bold text-white">
                       {u.username}
                       <span className="block text-[10px] font-normal text-slate-400">{u.fullName}</span>
                     </td>
-                    <td className="py-3 px-4 font-mono text-slate-600">
+                    <td className="py-3 px-4 font-mono text-slate-300">
                       {u.email}
                     </td>
                     <td className="py-3 px-4">
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                        u.role === 'ADMIN'
-                          ? 'bg-purple-50 text-purple-700 border-purple-200'
-                          : u.role === 'OPERATOR'
-                          ? 'bg-blue-50 text-blue-700 border-blue-200'
-                          : 'bg-slate-100 text-slate-700 border-slate-200'
+                        u.role === 'ADMIN' || u.role === 'SUPER ADMIN'
+                          ? 'bg-purple-500/15 text-purple-300 border-purple-500/30'
+                          : u.role === 'OPERATOR' || u.role === 'SECURITY MANAGER'
+                          ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'
+                          : 'bg-slate-500/15 text-slate-300 border-slate-500/30'
                       }`}>
                         {u.role}
                       </span>
                     </td>
                     <td className="py-3 px-4">
-                      <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                      <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
                         u.isActive
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : 'bg-red-50 text-red-700'
+                          ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                          : 'bg-rose-500/15 text-rose-300 border-rose-500/30'
                       }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${u.isActive ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                        <span className={`w-1.5 h-1.5 rounded-full ${u.isActive ? 'bg-emerald-400' : 'bg-rose-400'}`} />
                         {u.status}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-slate-500 text-[11px] font-mono">
+                    <td className="py-3 px-4 text-slate-400 text-[11px] font-mono">
                       {new Date(u.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="py-3 px-4 text-slate-500 text-[11px] font-mono">
+                    <td className="py-3 px-4 text-slate-400 text-[11px] font-mono">
                       {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : 'Never'}
                     </td>
                     <td className="py-3 px-4 text-right space-x-2">
                       <button
                         type="button"
                         onClick={() => setEditingUser(u)}
-                        className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-colors cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg bg-[#161e2e] hover:bg-[#1e2a3f] border border-[#1a2536] text-slate-200 text-[11px] font-semibold transition-colors cursor-pointer"
                       >
                         Edit Role
                       </button>
                       <button
                         type="button"
                         onClick={() => handleToggleStatus(u)}
-                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer ${
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer border ${
                           u.isActive
-                            ? 'bg-red-50 hover:bg-red-100 text-red-700'
-                            : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700'
+                            ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border-rose-500/30'
+                            : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
                         }`}
                       >
                         {u.isActive ? 'Disable' : 'Enable'}
@@ -278,14 +278,14 @@ export const AdminUsersTab: React.FC = () => {
         )}
 
         {/* Pagination bar */}
-        <div className="p-3.5 px-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <span>Total: <strong>{total}</strong> users</span>
+        <div className="p-3.5 px-4 bg-[#161e2e]/50 border-t border-[#1a2536] flex items-center justify-between text-xs text-slate-400">
+          <span>Total: <strong className="text-white">{total}</strong> users</span>
           <div className="flex items-center gap-2">
             <button
               type="button"
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="p-1 rounded-lg bg-white border border-slate-200 disabled:opacity-40 cursor-pointer"
+              className="p-1 rounded-lg bg-[#0f1520] border border-[#1a2536] text-slate-300 disabled:opacity-40 cursor-pointer"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
@@ -296,7 +296,7 @@ export const AdminUsersTab: React.FC = () => {
               type="button"
               disabled={page >= totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="p-1 rounded-lg bg-white border border-slate-200 disabled:opacity-40 cursor-pointer"
+              className="p-1 rounded-lg bg-[#0f1520] border border-[#1a2536] text-slate-300 disabled:opacity-40 cursor-pointer"
             >
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
@@ -306,14 +306,14 @@ export const AdminUsersTab: React.FC = () => {
 
       {/* Create User Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-bold text-slate-900">Create System User</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-fade-in">
+          <div className="w-full max-w-md bg-[#0f1520] border border-[#1a2536] rounded-3xl shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-[#1a2536] pb-3">
+              <h3 className="text-base font-bold text-white">Create System User</h3>
               <button
                 type="button"
                 onClick={() => setShowCreateModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"
+                className="p-1 rounded-lg text-slate-400 hover:text-white cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -321,58 +321,58 @@ export const AdminUsersTab: React.FC = () => {
 
             <form onSubmit={handleCreateUser} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-500 font-medium mb-1">Full Name</label>
+                <label className="block text-slate-400 font-medium mb-1">Full Name</label>
                 <input
                   type="text"
                   required
                   value={createForm.fullName}
                   onChange={(e) => setCreateForm({ ...createForm, fullName: e.target.value })}
                   placeholder="Officer Jane Doe"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-[#161e2e] border border-[#1a2536] text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-[#00c4df]"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-500 font-medium mb-1">Email Address</label>
+                <label className="block text-slate-400 font-medium mb-1">Email Address</label>
                 <input
                   type="email"
                   required
                   value={createForm.email}
                   onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
                   placeholder="officer@ctrlf.local"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-[#161e2e] border border-[#1a2536] text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-[#00c4df]"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-500 font-medium mb-1">Username (Optional)</label>
+                <label className="block text-slate-400 font-medium mb-1">Username (Optional)</label>
                 <input
                   type="text"
                   value={createForm.username}
                   onChange={(e) => setCreateForm({ ...createForm, username: e.target.value })}
                   placeholder="jane_doe"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-[#161e2e] border border-[#1a2536] text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-[#00c4df]"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-500 font-medium mb-1">Password</label>
+                <label className="block text-slate-400 font-medium mb-1">Password</label>
                 <input
                   type="password"
                   required
                   value={createForm.password}
                   onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
                   placeholder="••••••••"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-[#161e2e] border border-[#1a2536] text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-[#00c4df]"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-500 font-medium mb-1">Role</label>
+                <label className="block text-slate-400 font-medium mb-1">Role</label>
                 <select
                   value={createForm.role}
                   onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-[#161e2e] border border-[#1a2536] text-slate-100 focus:outline-none focus:ring-1 focus:ring-[#00c4df]"
                 >
                   <option value="SUPER ADMIN">SUPER ADMIN (Full Console & Retention Administration)</option>
                   <option value="SECURITY MANAGER">SECURITY MANAGER (Investigations, Cameras, Alerts)</option>
@@ -384,14 +384,14 @@ export const AdminUsersTab: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 font-bold cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-[#161e2e] text-slate-300 hover:text-white border border-[#1a2536] font-bold cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2 rounded-xl bg-[#4361ee] hover:bg-[#3a56d4] text-white font-bold transition-all shadow-xs cursor-pointer"
+                  className="px-5 py-2 rounded-xl bg-[#00c4df] hover:bg-[#00b2cb] text-slate-950 font-bold transition-all shadow-xs cursor-pointer"
                 >
                   {isSubmitting ? 'Creating...' : 'Create Account'}
                 </button>
@@ -403,24 +403,24 @@ export const AdminUsersTab: React.FC = () => {
 
       {/* Edit Role Modal */}
       {editingUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="w-full max-w-sm bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-bold text-slate-900">Edit User Role</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-fade-in">
+          <div className="w-full max-w-sm bg-[#0f1520] border border-[#1a2536] rounded-3xl shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-[#1a2536] pb-3">
+              <h3 className="text-base font-bold text-white">Edit User Role</h3>
               <button
                 type="button"
                 onClick={() => setEditingUser(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"
+                className="p-1 rounded-lg text-slate-400 hover:text-white cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="text-xs space-y-1">
-              <p className="text-slate-600">
-                Update access role for <strong className="text-slate-900">{editingUser.email}</strong>:
+              <p className="text-slate-300">
+                Update access role for <strong className="text-white">{editingUser.email}</strong>:
               </p>
-              <p className="text-[11px] text-slate-400">Current Role: {editingUser.role}</p>
+              <p className="text-[11px] text-slate-400 font-mono">Current Role: {editingUser.role}</p>
             </div>
 
             <div className="space-y-2 pt-1">
@@ -432,13 +432,13 @@ export const AdminUsersTab: React.FC = () => {
                   disabled={isSubmitting || r === editingUser.role}
                   className={`w-full p-2.5 rounded-xl text-left text-xs font-bold border transition-all cursor-pointer ${
                     r === editingUser.role
-                      ? 'bg-indigo-50 text-indigo-700 border-indigo-300'
-                      : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-800'
+                      ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/50 shadow-xs'
+                      : 'bg-[#161e2e] hover:bg-[#1e2a3f] border-[#1a2536] text-slate-300'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <span>{r}</span>
-                    {r === editingUser.role && <CheckCircle2 className="w-4 h-4 text-indigo-600" />}
+                    {r === editingUser.role && <CheckCircle2 className="w-4 h-4 text-[#00c4df]" />}
                   </div>
                 </button>
               ))}
@@ -448,7 +448,7 @@ export const AdminUsersTab: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setEditingUser(null)}
-                className="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-[#161e2e] text-slate-300 hover:text-white border border-[#1a2536] text-xs font-bold cursor-pointer"
               >
                 Close
               </button>

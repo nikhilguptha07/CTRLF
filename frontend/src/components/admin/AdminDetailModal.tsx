@@ -52,29 +52,26 @@ export const AdminDetailModal: React.FC<AdminDetailModalProps> = ({
   const hasEvidence = Boolean(data.evidence && (data.evidence.hasImage || data.evidence.detectionId || data.evidence.sessionId));
 
   const badgeColorClass = {
-    green: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    blue: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-    amber: 'bg-amber-50 text-amber-700 border-amber-200',
-    red: 'bg-red-50 text-red-700 border-red-200',
-    purple: 'bg-purple-50 text-purple-700 border-purple-200',
+    green: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+    blue: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
+    amber: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+    red: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+    purple: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
   }[data.badge?.color || 'blue'];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-md p-4 select-none font-sans animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 select-none font-sans animate-fade-in text-slate-100">
       <div 
-        className="relative w-full max-w-xl bg-white/95 backdrop-blur-2xl border border-slate-200/80 rounded-3xl shadow-2xl overflow-hidden text-slate-800 flex flex-col max-h-[85vh] animate-scale-in"
-        style={{
-          boxShadow: '0 25px 50px -12px rgba(15, 23, 42, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.8) inset',
-        }}
+        className="relative w-full max-w-xl bg-[#0f1520] border border-[#1a2536] rounded-3xl shadow-2xl overflow-hidden text-slate-100 flex flex-col max-h-[85vh] animate-scale-in"
       >
         {/* Accent Strip */}
-        <div className="h-1.5 w-full bg-gradient-to-r from-indigo-500 via-[#4361ee] to-blue-500 shrink-0" />
+        <div className="h-1 w-full bg-gradient-to-r from-cyan-500 via-[#00c4df] to-blue-500 shrink-0" />
 
         {/* Header */}
-        <div className="p-6 pb-4 flex items-start justify-between border-b border-slate-200/80 shrink-0">
+        <div className="p-6 pb-4 flex items-start justify-between border-b border-[#1a2536] shrink-0">
           <div>
             <div className="flex items-center gap-2.5 mb-1">
-              <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">
+              <h2 className="text-lg font-extrabold text-white tracking-tight">
                 {data.title}
               </h2>
               {data.badge && (
@@ -84,7 +81,7 @@ export const AdminDetailModal: React.FC<AdminDetailModalProps> = ({
               )}
             </div>
             {data.subtitle && (
-              <p className="text-xs text-slate-500 font-mono">
+              <p className="text-xs text-slate-400 font-mono">
                 {data.subtitle}
               </p>
             )}
@@ -93,7 +90,7 @@ export const AdminDetailModal: React.FC<AdminDetailModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-[#161e2e] transition-colors cursor-pointer"
             title="Close dialog"
           >
             <X className="w-5 h-5" />
@@ -107,12 +104,12 @@ export const AdminDetailModal: React.FC<AdminDetailModalProps> = ({
             {data.fields.map((field, idx) => (
               <div 
                 key={idx}
-                className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1"
+                className="p-3 rounded-2xl bg-[#161e2e]/50 border border-[#1a2536] space-y-1"
               >
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block font-mono">
                   {field.label}
                 </span>
-                <div className="text-xs font-semibold text-slate-800 break-words">
+                <div className="text-xs font-semibold text-slate-200 break-words">
                   {field.value ?? 'N/A'}
                 </div>
               </div>
@@ -121,11 +118,11 @@ export const AdminDetailModal: React.FC<AdminDetailModalProps> = ({
 
           {/* Evidence Frame Inspection Section */}
           {data.evidence && (
-            <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 space-y-3">
+            <div className="p-4 rounded-2xl bg-[#161e2e]/60 border border-[#1a2536] space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <ImageIcon className="w-4 h-4 text-indigo-600" />
-                  <span className="text-xs font-bold text-slate-900">
+                  <ImageIcon className="w-4 h-4 text-[#00c4df]" />
+                  <span className="text-xs font-bold text-white">
                     Forensic Optical Evidence Frame
                   </span>
                 </div>
@@ -137,13 +134,13 @@ export const AdminDetailModal: React.FC<AdminDetailModalProps> = ({
                       setImageError(false);
                       setShowEvidenceViewer((prev) => !prev);
                     }}
-                    className="px-3 py-1 rounded-xl bg-[#4361ee] hover:bg-[#3a56d4] text-white text-[11px] font-bold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
+                    className="px-3 py-1 rounded-xl bg-[#00c4df] hover:bg-[#00b2cb] text-slate-950 text-[11px] font-bold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     <span>{showEvidenceViewer ? 'Hide Frame' : 'View Evidence'}</span>
                   </button>
                 ) : (
-                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                  <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider font-mono">
                     EVIDENCE UNAVAILABLE
                   </span>
                 )}
@@ -151,7 +148,7 @@ export const AdminDetailModal: React.FC<AdminDetailModalProps> = ({
 
               {/* Evidence Frame Viewer */}
               {showEvidenceViewer && evidenceUrl && (
-                <div className="mt-3 rounded-2xl overflow-hidden border border-slate-200 bg-black flex flex-col items-center justify-center min-h-[200px] relative">
+                <div className="mt-3 rounded-2xl overflow-hidden border border-[#1a2536] bg-[#070a10] flex flex-col items-center justify-center min-h-[200px] relative">
                   {!imageError ? (
                     <img
                       src={evidenceUrl}
@@ -161,8 +158,8 @@ export const AdminDetailModal: React.FC<AdminDetailModalProps> = ({
                     />
                   ) : (
                     <div className="p-6 text-center space-y-2 text-slate-400">
-                      <AlertCircle className="w-8 h-8 mx-auto text-amber-500" />
-                      <p className="text-xs font-semibold uppercase tracking-wider">EVIDENCE UNAVAILABLE</p>
+                      <AlertCircle className="w-8 h-8 mx-auto text-amber-400" />
+                      <p className="text-xs font-semibold uppercase tracking-wider font-mono">EVIDENCE UNAVAILABLE</p>
                       <p className="text-[11px] text-slate-500 max-w-xs">
                         The video frame raw artifact is no longer stored on the server or could not be streamed from the Oracle BLOB store.
                       </p>
@@ -175,11 +172,11 @@ export const AdminDetailModal: React.FC<AdminDetailModalProps> = ({
 
           {/* Raw JSON inspection toggle if provided */}
           {data.rawJson && (
-            <details className="text-xs text-slate-600 pt-1">
-              <summary className="cursor-pointer font-semibold hover:text-indigo-600 transition-colors">
+            <details className="text-xs text-slate-400 pt-1 font-mono">
+              <summary className="cursor-pointer font-semibold hover:text-[#00c4df] transition-colors">
                 View Raw Database Telemetry
               </summary>
-              <pre className="mt-2 p-3 rounded-xl bg-slate-900 text-slate-100 text-[11px] font-mono overflow-x-auto border border-slate-800 max-h-48">
+              <pre className="mt-2 p-3 rounded-xl bg-[#090d14] text-slate-200 text-[11px] font-mono overflow-x-auto border border-[#1a2536] max-h-48">
                 {JSON.stringify(data.rawJson, null, 2)}
               </pre>
             </details>
@@ -187,11 +184,11 @@ export const AdminDetailModal: React.FC<AdminDetailModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 px-6 bg-slate-50 border-t border-slate-200/80 flex justify-end shrink-0">
+        <div className="p-4 px-6 bg-[#161e2e]/40 border-t border-[#1a2536] flex justify-end shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold transition-all cursor-pointer active:scale-95"
+            className="px-4 py-2 rounded-xl bg-[#161e2e] hover:bg-[#1e2a3f] text-slate-200 border border-[#1a2536] text-xs font-bold transition-all cursor-pointer active:scale-95"
           >
             Close
           </button>

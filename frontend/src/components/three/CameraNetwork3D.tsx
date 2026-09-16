@@ -30,6 +30,7 @@ interface CameraNetwork3DProps {
   onSelectCamera?: (cameraId: string) => void;
   activePath?: string[]; // e.g. ['CAM-07', 'CAM-12', 'CAM-18', 'CAM-21']
   searchProgressPercent?: number;
+  activeNodeIds?: string[]; // For sequential startup activation
 }
 
 export const CameraNetwork3D: React.FC<CameraNetwork3DProps> = ({
@@ -38,22 +39,33 @@ export const CameraNetwork3D: React.FC<CameraNetwork3DProps> = ({
   onSelectCamera,
   activePath = ['CAM-07', 'CAM-12', 'CAM-18'],
   searchProgressPercent = 100,
+  activeNodeIds,
 }) => {
   const rootGroupRef = useRef<THREE.Group>(null);
   const pulseRingRef = useRef<THREE.Mesh>(null);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
 
+  // Filter nodes if sequential activation is enabled
+  const visibleNodes = useMemo(() => {
+    if (!activeNodeIds) return DEFAULT_CAMERA_NODES;
+    return DEFAULT_CAMERA_NODES.filter((n) => activeNodeIds.includes(n.id));
+  }, [activeNodeIds]);
+
   // Connections topology between camera nodes
-  const connections = useMemo(() => [
-    ['CAM-01', 'CAM-02'],
-    ['CAM-02', 'CAM-07'],
-    ['CAM-03', 'CAM-07'],
-    ['CAM-07', 'CAM-12'],
-    ['CAM-12', 'CAM-18'],
-    ['CAM-18', 'CAM-04'],
-    ['CAM-02', 'CAM-21'],
-    ['CAM-21', 'CAM-12'],
-  ], []);
+  const connections = useMemo(() => {
+    const raw = [
+      ['CAM-01', 'CAM-02'],
+      ['CAM-02', 'CAM-07'],
+      ['CAM-03', 'CAM-07'],
+      ['CAM-07', 'CAM-12'],
+      ['CAM-12', 'CAM-18'],
+      ['CAM-18', 'CAM-04'],
+      ['CAM-02', 'CAM-21'],
+      ['CAM-21', 'CAM-12'],
+    ];
+    if (!activeNodeIds) return raw;
+    return raw.filter(([src, tgt]) => activeNodeIds.includes(src) && activeNodeIds.includes(tgt));
+  }, [activeNodeIds]);
 
   // Spatial node map for fast lookup
   const nodeMap = useMemo(() => {
@@ -147,7 +159,7 @@ export const CameraNetwork3D: React.FC<CameraNetwork3DProps> = ({
       })}
 
       {/* 3. 3D Camera Nodes */}
-      {DEFAULT_CAMERA_NODES.map((node) => {
+      {visibleNodes.map((node) => {
         const isSelected = selectedCameraId === node.id;
         const isHovered = hoveredNode === node.id;
         const isConfirmed = node.status === 'CONFIRMED' || (activePath.includes(node.id) && searchProgressPercent >= 90);

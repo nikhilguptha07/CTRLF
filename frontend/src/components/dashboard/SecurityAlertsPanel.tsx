@@ -41,30 +41,30 @@ export const SecurityAlertsPanel: React.FC<SecurityAlertsPanelProps> = ({
   const getAlertStyle = (severity: SecurityAlert['severity']) => {
     switch (severity) {
       case 'critical':
-        return 'bg-rose-50/50 border-rose-200/90 text-rose-900';
+        return 'bg-rose-950/40 border-rose-500/40 text-rose-200';
       case 'warning':
-        return 'bg-amber-50/50 border-amber-200/90 text-amber-900';
+        return 'bg-amber-950/40 border-amber-500/40 text-amber-200';
       case 'info':
       default:
-        return 'bg-blue-50/40 border-blue-200/80 text-blue-950';
+        return 'bg-[#00c4df]/10 border-[#00c4df]/30 text-cyan-200';
     }
   };
 
   return (
-    <div className="rounded-xl bg-white border border-slate-200/80 shadow-2xs overflow-hidden flex flex-col">
+    <div className="rounded-xl bg-[#0f1520] border border-[#1a2536] shadow-2xs overflow-hidden flex flex-col">
       {/* Header */}
-      <div className="px-3.5 py-2.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+      <div className="px-3.5 py-2.5 border-b border-[#1a2536] flex items-center justify-between bg-[#161e2e]/50">
         <div className="flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-rose-600" />
-          <h2 className="text-xs font-bold text-slate-900 tracking-tight font-sans uppercase">
+          <AlertTriangle className="w-4 h-4 text-rose-400" />
+          <h2 className="text-xs font-bold text-slate-100 tracking-tight font-sans uppercase">
             Operational Alerts
           </h2>
           {activeAlerts.length > 0 ? (
-            <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-rose-100 text-rose-800 border border-rose-200">
+            <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-rose-950/80 text-rose-300 border border-rose-800/60">
               {activeAlerts.length} ATTENTION
             </span>
           ) : (
-            <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+            <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-800/60">
               NOMINAL
             </span>
           )}
@@ -79,23 +79,23 @@ export const SecurityAlertsPanel: React.FC<SecurityAlertsPanelProps> = ({
         {isLoading ? (
           <div className="space-y-2 py-1">
             {Array.from({ length: 2 }).map((_, i) => (
-              <div key={i} className="p-2.5 rounded-lg bg-slate-100/70 animate-pulse h-16" />
+              <div key={i} className="p-2.5 rounded-lg bg-[#161e2e] animate-pulse h-16 border border-[#1a2536]" />
             ))}
           </div>
         ) : activeAlerts.length === 0 ? (
-          <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-50/50 border border-emerald-200/80 text-emerald-900">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-200">
             <div className="flex items-center gap-2.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
               <div>
-                <span className="font-bold text-xs block font-sans">
+                <span className="font-bold text-xs block font-sans text-emerald-200">
                   All Systems Fully Nominal
                 </span>
-                <span className="text-[11px] text-emerald-700 font-mono block">
+                <span className="text-[11px] text-emerald-300/80 font-mono block">
                   Zero active alarms. All surveillance streams & inference engines healthy.
                 </span>
               </div>
             </div>
-            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
+            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-900/40 text-emerald-300 border border-emerald-700/50">
               HEALTHY
             </span>
           </div>
@@ -113,11 +113,11 @@ export const SecurityAlertsPanel: React.FC<SecurityAlertsPanelProps> = ({
                       <span className="font-bold text-xs truncate font-sans">
                         {alert.title}
                       </span>
-                      <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-white/70 border border-current/20 font-bold shrink-0">
+                      <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-[#161e2e] text-slate-300 border border-[#1a2536] font-bold shrink-0">
                         {alert.timestamp}
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-600 font-mono mt-0.5 leading-snug line-clamp-2">
+                    <p className="text-[11px] text-slate-400 font-mono mt-0.5 leading-snug line-clamp-2">
                       {alert.description}
                     </p>
                   </div>
@@ -128,17 +128,17 @@ export const SecurityAlertsPanel: React.FC<SecurityAlertsPanelProps> = ({
                     <button
                       type="button"
                       onClick={() => onAlertAction(alert)}
-                      className="px-2 py-1 rounded bg-white hover:bg-slate-50 border border-slate-300/80 text-[11px] font-semibold text-slate-800 shadow-2xs transition-colors flex items-center gap-1 cursor-pointer"
+                      className="px-2 py-1 rounded bg-[#161e2e] hover:bg-[#1a2536] border border-[#1a2536] text-[11px] font-semibold text-slate-200 shadow-2xs transition-colors flex items-center gap-1 cursor-pointer"
                     >
                       <span>{alert.actionLabel}</span>
-                      <ExternalLink className="w-2.5 h-2.5 text-slate-500" />
+                      <ExternalLink className="w-2.5 h-2.5 text-slate-400" />
                     </button>
                   )}
                   {onDismissAlert && (
                     <button
                       type="button"
                       onClick={() => onDismissAlert(alert.id)}
-                      className="p-1 text-slate-400 hover:text-slate-600 rounded transition-colors cursor-pointer"
+                      className="p-1 text-slate-400 hover:text-white rounded transition-colors cursor-pointer"
                       title="Acknowledge alert"
                     >
                       <XCircle className="w-3.5 h-3.5" />

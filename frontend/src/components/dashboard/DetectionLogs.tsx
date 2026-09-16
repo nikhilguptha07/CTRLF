@@ -104,11 +104,11 @@ export const DetectionLogs: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <Clock className="w-5 h-5 text-indigo-600" />
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <Clock className="w-5 h-5 text-[#00c4df]" />
             <span>Detection & Spatial Audit Logs</span>
           </h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-400">
             Historical ledger of optical embedding matches and real-time CCTV events
           </p>
         </div>
@@ -118,7 +118,7 @@ export const DetectionLogs: React.FC = () => {
               type="button"
               onClick={handleClearDatabase}
               disabled={isClearing}
-              className="px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95 disabled:opacity-50"
+              className="px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs font-semibold text-rose-400 hover:bg-rose-500/20 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95 disabled:opacity-50"
               title="Clear operational data from database (Admin Only)"
             >
               <Trash2 className={`w-3.5 h-3.5 ${isClearing ? 'animate-spin' : ''}`} />
@@ -129,17 +129,17 @@ export const DetectionLogs: React.FC = () => {
             type="button"
             onClick={fetchHistory}
             disabled={isLoading}
-            className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95 disabled:opacity-50"
+            className="px-3 py-1.5 rounded-xl bg-[#161e2e] border border-[#1a2536] text-xs font-semibold text-slate-200 hover:bg-[#1a2536] transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95 disabled:opacity-50"
             title="Refresh database records"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-indigo-600' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-[#00c4df]' : ''}`} />
             <span>Refresh</span>
           </button>
           <button
             type="button"
             onClick={handleExportCsv}
             disabled={logs.length === 0}
-            className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95 disabled:opacity-50"
+            className="px-3 py-1.5 rounded-xl bg-[#161e2e] border border-[#1a2536] text-xs font-semibold text-slate-200 hover:bg-[#1a2536] transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95 disabled:opacity-50"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export Audit</span>
@@ -149,26 +149,26 @@ export const DetectionLogs: React.FC = () => {
 
       {/* RBAC Visibility Banner */}
       {isAdmin ? (
-        <div className="p-2.5 px-3.5 rounded-xl bg-indigo-50/80 border border-indigo-100/90 flex items-center justify-between text-xs text-slate-800">
+        <div className="p-2.5 px-3.5 rounded-xl bg-[#161e2e] border border-[#1a2536] flex items-center justify-between text-xs text-slate-200">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-[#4361ee] shrink-0" />
-            <span className="font-semibold text-indigo-950">
+            <ShieldCheck className="w-4 h-4 text-[#00c4df] shrink-0" />
+            <span className="font-semibold text-white">
               Administrator View: Viewing Global Activity Across All Operators & Cameras
             </span>
           </div>
-          <span className="px-2 py-0.5 rounded-md bg-[#4361ee] text-white text-[10px] font-bold shadow-2xs">
+          <span className="px-2 py-0.5 rounded-md bg-[#00c4df]/10 border border-[#00c4df]/30 text-[#00c4df] text-[10px] font-mono font-bold shadow-2xs">
             FULL SYSTEM ACCESS
           </span>
         </div>
       ) : (
-        <div className="p-2.5 px-3.5 rounded-xl bg-slate-100/90 border border-slate-200/80 flex items-center justify-between text-xs text-slate-700">
+        <div className="p-2.5 px-3.5 rounded-xl bg-[#161e2e] border border-[#1a2536] flex items-center justify-between text-xs text-slate-300">
           <div className="flex items-center gap-2">
-            <Lock className="w-4 h-4 text-slate-500 shrink-0" />
-            <span className="font-medium text-slate-800">
+            <Lock className="w-4 h-4 text-slate-400 shrink-0" />
+            <span className="font-medium text-slate-300">
               Operator View ({currentUser?.fullName || currentUser?.username || 'Operator'}): Viewing Your Own Search Sessions. Global data is restricted to Administrators.
             </span>
           </div>
-          <span className="px-2 py-0.5 rounded-md bg-slate-200 text-slate-700 text-[10px] font-bold">
+          <span className="px-2 py-0.5 rounded-md bg-[#0f1520] border border-[#1a2536] text-slate-400 text-[10px] font-mono font-bold">
             USER ACCESS ONLY
           </span>
         </div>
@@ -176,17 +176,17 @@ export const DetectionLogs: React.FC = () => {
 
       {/* Clear Success Feedback */}
       {clearSuccessMsg && (
-        <div className="p-2.5 px-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2 animate-fade-in font-medium">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+        <div className="p-2.5 px-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center gap-2 animate-fade-in font-medium">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>{clearSuccessMsg}</span>
         </div>
       )}
 
       {/* Table of logs */}
-      <div className="flex-1 rounded-2xl bg-white/80 border border-slate-200/80 overflow-hidden flex flex-col shadow-xs">
+      <div className="flex-1 rounded-2xl bg-[#0f1520] border border-[#1a2536] overflow-hidden flex flex-col shadow-sm">
         <div className="overflow-y-auto flex-1">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-100/80 text-slate-600 font-semibold border-b border-slate-200 sticky top-0 backdrop-blur-md">
+            <thead className="bg-[#161e2e] text-slate-400 font-mono font-semibold border-b border-[#1a2536] sticky top-0 backdrop-blur-md">
               <tr>
                 <th className="py-2.5 px-4">Event ID</th>
                 <th className="py-2.5 px-4">Target Object</th>
@@ -197,7 +197,7 @@ export const DetectionLogs: React.FC = () => {
                 <th className="py-2.5 px-4 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[#1a2536]">
               {isLoading ? (
                 <tr>
                   <td colSpan={7} className="py-12">
@@ -221,39 +221,39 @@ export const DetectionLogs: React.FC = () => {
                 </tr>
               ) : (
                 logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-indigo-50/40 transition-colors">
-                    <td className="py-3 px-4 font-mono font-bold text-slate-700">{log.id}</td>
-                    <td className="py-3 px-4 font-semibold text-slate-900">
+                  <tr key={log.id} className="hover:bg-[#161e2e]/50 transition-colors">
+                    <td className="py-3 px-4 font-mono font-bold text-slate-400">{log.id}</td>
+                    <td className="py-3 px-4 font-semibold text-white">
                       {log.object}
                       {log.trackId != null && (
-                        <span className="ml-2 px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800 text-[10px] font-mono font-bold">
+                        <span className="ml-2 px-1.5 py-0.5 rounded bg-[#00c4df]/10 border border-[#00c4df]/20 text-[#00c4df] text-[10px] font-mono font-bold">
                           #{log.trackId}
                         </span>
                       )}
                     </td>
-                    <td className="py-3 px-4 font-mono text-slate-500">{log.time}</td>
-                    <td className="py-3 px-4 text-slate-600">
-                      <span className="font-mono font-semibold text-[#4361ee] mr-1.5">{log.camera}</span>
+                    <td className="py-3 px-4 font-mono text-slate-400">{log.time}</td>
+                    <td className="py-3 px-4 text-slate-300">
+                      <span className="font-mono font-semibold text-[#00c4df] mr-1.5">{log.camera}</span>
                       {log.location}
                     </td>
                     <td className="py-3 px-4 font-mono font-bold">
-                      <span className={log.confidence > 90 ? 'text-emerald-600' : 'text-slate-500'}>
+                      <span className={log.confidence > 90 ? 'text-emerald-400' : 'text-slate-400'}>
                         {log.confidence.toFixed(1)}%
                       </span>
                     </td>
                     <td className="py-3 px-4">
                       {log.status === 'FOUND' ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                           Found
                         </span>
                       ) : log.status === 'UNRESOLVED' ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold">
-                          <AlertTriangle className="w-3 h-3 text-rose-600" />
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-bold">
+                          <AlertTriangle className="w-3 h-3 text-rose-400" />
                           Miss
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-semibold">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#161e2e] text-slate-400 border border-[#1a2536] text-[10px] font-semibold">
                           Archived
                         </span>
                       )}
@@ -262,7 +262,7 @@ export const DetectionLogs: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => startSearchFlow(log.object)}
-                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#4361ee] hover:text-[#364fc7] transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#00c4df] hover:text-[#00d8f6] transition-colors cursor-pointer"
                       >
                         <span>Re-scan</span>
                         <ArrowRight className="w-3 h-3" />

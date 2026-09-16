@@ -207,7 +207,7 @@ export default function App() {
   if (isAdminRoute) {
     const isAuthorizedAdmin = isAuthenticated && currentUser?.role === 'ADMIN';
     return (
-      <div className="relative w-screen h-screen overflow-hidden bg-slate-100 font-sans select-none">
+      <div className="relative w-screen h-screen overflow-hidden bg-[#090d14] text-slate-100 font-sans select-none">
         {isAuthorizedAdmin ? (
           <AdminConsole onReturnToDashboard={() => navigate('/')} />
         ) : (

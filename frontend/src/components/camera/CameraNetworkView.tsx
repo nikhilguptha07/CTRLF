@@ -243,26 +243,26 @@ export const CameraNetworkView: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col space-y-4 overflow-y-auto pr-1 animate-fade-in text-slate-900">
+    <div className="w-full h-full flex flex-col space-y-4 overflow-y-auto pr-1 animate-fade-in text-slate-100">
       
       {/* 1. Header & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#1a2536]">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-slate-900 text-white shadow-xs">
-              <Camera className="w-4 h-4 text-indigo-400" />
+            <div className="p-2 rounded-xl bg-[#161e2e] border border-[#1a2536] text-[#00c4df]">
+              <Camera className="w-4 h-4 text-[#00c4df]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight font-sans">
+                <h1 className="text-base sm:text-lg font-bold text-white tracking-tight font-sans">
                   Camera Network Management
                 </h1>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1 shadow-2xs">
-                  <Info className="w-2.5 h-2.5 text-amber-700" />
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1 shadow-2xs">
+                  <Info className="w-2.5 h-2.5 text-amber-400" />
                   DEMO DATA
                 </span>
               </div>
-              <p className="text-xs text-slate-500 font-sans">
+              <p className="text-xs text-slate-400 font-sans">
                 Real-time RTSP/ONVIF surveillance nodes, optical FPS telemetry, and heartbeat monitoring.
               </p>
             </div>
@@ -274,20 +274,20 @@ export const CameraNetworkView: React.FC = () => {
             type="button"
             onClick={handleTestPing}
             disabled={isPinging}
-            className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+            className="px-3 py-1.5 rounded-lg bg-[#161e2e] border border-[#1a2536] hover:bg-[#1a2536] text-slate-200 text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer active:scale-95 disabled:opacity-50"
             title="Probe RTSP hardware heartbeat on all online nodes"
           >
-            <RefreshCw className={`w-3 h-3 text-slate-500 ${isPinging ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3 h-3 text-[#00c4df] ${isPinging ? 'animate-spin' : ''}`} />
             <span>{isPinging ? 'Pinging Nodes...' : 'Probe Network'}</span>
           </button>
 
           <button
             type="button"
             onClick={() => { setActiveFeedTab('cctv'); setStage('HOME'); }}
-            className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
+            className="px-3 py-1.5 rounded-lg bg-[#00c4df] hover:bg-[#00d8f6] text-slate-950 text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95"
           >
             <span>Live CCTV Grid</span>
-            <ChevronRight className="w-3 h-3 text-slate-400" />
+            <ChevronRight className="w-3 h-3 text-slate-950" />
           </button>
         </div>
       </div>
@@ -297,23 +297,21 @@ export const CameraNetworkView: React.FC = () => {
         {/* Total Cameras */}
         <div 
           onClick={() => setStatusFilter('ALL')}
-          className={`p-3 rounded-xl border transition-all cursor-pointer shadow-2xs ${
+          className={`p-3 rounded-xl border transition-all cursor-pointer shadow-sm ${
             statusFilter === 'ALL'
-              ? 'bg-slate-900 text-white border-slate-800 shadow-xs'
-              : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
+              ? 'bg-[#161e2e] text-white border-[#00c4df]'
+              : 'bg-[#0f1520] border-[#1a2536] hover:border-slate-700 text-slate-200'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className={`text-[11px] font-bold uppercase tracking-wider font-mono ${
-              statusFilter === 'ALL' ? 'text-slate-300' : 'text-slate-500'
-            }`}>
+            <span className="text-[11px] font-bold uppercase tracking-wider font-mono text-slate-400">
               Total Cameras
             </span>
-            <Camera className={`w-4 h-4 ${statusFilter === 'ALL' ? 'text-indigo-400' : 'text-slate-400'}`} />
+            <Camera className="w-4 h-4 text-[#00c4df]" />
           </div>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-black font-mono tracking-tight">{totalCameras}</span>
-            <span className={`text-[10px] font-mono ${statusFilter === 'ALL' ? 'text-slate-400' : 'text-slate-500'}`}>
+            <span className="text-2xl font-black font-mono tracking-tight text-white">{totalCameras}</span>
+            <span className="text-[10px] font-mono text-slate-500">
               Registered
             </span>
           </div>
@@ -322,23 +320,21 @@ export const CameraNetworkView: React.FC = () => {
         {/* Online */}
         <div 
           onClick={() => setStatusFilter('ONLINE')}
-          className={`p-3 rounded-xl border transition-all cursor-pointer shadow-2xs ${
+          className={`p-3 rounded-xl border transition-all cursor-pointer shadow-sm ${
             statusFilter === 'ONLINE'
-              ? 'bg-emerald-700 text-white border-emerald-800 shadow-xs'
-              : 'bg-emerald-50/70 border-emerald-200/80 hover:border-emerald-300 text-emerald-950'
+              ? 'bg-[#161e2e] text-emerald-400 border-emerald-400'
+              : 'bg-[#0f1520] border-emerald-500/20 hover:border-emerald-500/40 text-emerald-400'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className={`text-[11px] font-bold uppercase tracking-wider font-mono ${
-              statusFilter === 'ONLINE' ? 'text-emerald-100' : 'text-emerald-700'
-            }`}>
+            <span className="text-[11px] font-bold uppercase tracking-wider font-mono text-emerald-400">
               Online
             </span>
-            <CheckCircle2 className={`w-4 h-4 ${statusFilter === 'ONLINE' ? 'text-white' : 'text-emerald-600'}`} />
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-black font-mono tracking-tight">{onlineCount}</span>
-            <span className={`text-[10px] font-mono ${statusFilter === 'ONLINE' ? 'text-emerald-200' : 'text-emerald-600'}`}>
+            <span className="text-2xl font-black font-mono tracking-tight text-white">{onlineCount}</span>
+            <span className="text-[10px] font-mono text-emerald-400/80">
               {Math.round((onlineCount / totalCameras) * 100)}% active
             </span>
           </div>
@@ -347,23 +343,21 @@ export const CameraNetworkView: React.FC = () => {
         {/* Warning */}
         <div 
           onClick={() => setStatusFilter('WARNING')}
-          className={`p-3 rounded-xl border transition-all cursor-pointer shadow-2xs ${
+          className={`p-3 rounded-xl border transition-all cursor-pointer shadow-sm ${
             statusFilter === 'WARNING'
-              ? 'bg-amber-600 text-white border-amber-700 shadow-xs'
-              : 'bg-amber-50/70 border-amber-200/80 hover:border-amber-300 text-amber-950'
+              ? 'bg-[#161e2e] text-amber-400 border-amber-400'
+              : 'bg-[#0f1520] border-amber-500/20 hover:border-amber-500/40 text-amber-400'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className={`text-[11px] font-bold uppercase tracking-wider font-mono ${
-              statusFilter === 'WARNING' ? 'text-amber-100' : 'text-amber-700'
-            }`}>
+            <span className="text-[11px] font-bold uppercase tracking-wider font-mono text-amber-400">
               Warning
             </span>
-            <AlertTriangle className={`w-4 h-4 ${statusFilter === 'WARNING' ? 'text-white' : 'text-amber-600'}`} />
+            <AlertTriangle className="w-4 h-4 text-amber-400" />
           </div>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-black font-mono tracking-tight">{warningCount}</span>
-            <span className={`text-[10px] font-mono ${statusFilter === 'WARNING' ? 'text-amber-200' : 'text-amber-700'}`}>
+            <span className="text-2xl font-black font-mono tracking-tight text-white">{warningCount}</span>
+            <span className="text-[10px] font-mono text-amber-400/80">
               High jitter
             </span>
           </div>
@@ -372,23 +366,21 @@ export const CameraNetworkView: React.FC = () => {
         {/* Offline */}
         <div 
           onClick={() => setStatusFilter('OFFLINE')}
-          className={`p-3 rounded-xl border transition-all cursor-pointer shadow-2xs ${
+          className={`p-3 rounded-xl border transition-all cursor-pointer shadow-sm ${
             statusFilter === 'OFFLINE'
-              ? 'bg-rose-700 text-white border-rose-800 shadow-xs'
-              : 'bg-rose-50/70 border-rose-200/80 hover:border-rose-300 text-rose-950'
+              ? 'bg-[#161e2e] text-rose-400 border-rose-400'
+              : 'bg-[#0f1520] border-rose-500/20 hover:border-rose-500/40 text-rose-400'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className={`text-[11px] font-bold uppercase tracking-wider font-mono ${
-              statusFilter === 'OFFLINE' ? 'text-rose-100' : 'text-rose-700'
-            }`}>
+            <span className="text-[11px] font-bold uppercase tracking-wider font-mono text-rose-400">
               Offline
             </span>
-            <WifiOff className={`w-4 h-4 ${statusFilter === 'OFFLINE' ? 'text-white' : 'text-rose-600'}`} />
+            <WifiOff className="w-4 h-4 text-rose-400" />
           </div>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-black font-mono tracking-tight">{offlineCount}</span>
-            <span className={`text-[10px] font-mono ${statusFilter === 'OFFLINE' ? 'text-rose-200' : 'text-rose-600'}`}>
+            <span className="text-2xl font-black font-mono tracking-tight text-white">{offlineCount}</span>
+            <span className="text-[10px] font-mono text-rose-400/80">
               Disconnected
             </span>
           </div>
@@ -396,15 +388,15 @@ export const CameraNetworkView: React.FC = () => {
       </div>
 
       {/* 3. Search & Quick Filters */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 bg-[#0f1520] p-2.5 rounded-xl border border-[#1a2536]">
         <div className="relative w-full sm:w-80">
-          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by Camera ID or Location..."
-            className="w-full pl-8.5 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-900"
+            className="w-full pl-8.5 pr-3 py-1.5 text-xs bg-[#161e2e] border border-[#1a2536] rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:border-[#00c4df]"
           />
         </div>
 
@@ -416,8 +408,8 @@ export const CameraNetworkView: React.FC = () => {
               onClick={() => setStatusFilter(filter)}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold transition-all cursor-pointer ${
                 statusFilter === filter
-                  ? 'bg-slate-900 text-white shadow-2xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  ? 'bg-[#00c4df] text-slate-950 shadow-xs'
+                  : 'bg-[#161e2e] text-slate-300 hover:bg-[#1a2536] border border-[#1a2536]'
               }`}
             >
               {filter}
@@ -426,11 +418,11 @@ export const CameraNetworkView: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. Camera Telemetry Table (Detailed Fields Required: ID, Location, Status, Resolution, FPS, Latency, Last Heartbeat) */}
-      <div className="rounded-xl bg-white border border-slate-200/90 shadow-2xs overflow-hidden">
+      {/* 4. Camera Telemetry Table */}
+      <div className="rounded-xl bg-[#0f1520] border border-[#1a2536] shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50/90 border-b border-slate-200 text-slate-500 font-mono text-[10px] uppercase tracking-wider">
+            <thead className="bg-[#161e2e] border-b border-[#1a2536] text-slate-400 font-mono text-[10px] uppercase tracking-wider">
               <tr>
                 <th className="py-2.5 px-3">Camera ID & Name</th>
                 <th className="py-2.5 px-3">Location</th>
@@ -442,21 +434,21 @@ export const CameraNetworkView: React.FC = () => {
                 <th className="py-2.5 px-3 text-center">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[#1a2536]">
               {filteredCameras.map((cam) => {
                 const isOnline = cam.status === 'ONLINE';
                 const isWarning = cam.status === 'WARNING';
 
                 return (
-                  <tr key={cam.id} className="hover:bg-slate-50/80 transition-colors group">
+                  <tr key={cam.id} className="hover:bg-[#161e2e]/50 transition-colors group">
                     {/* Camera ID & Name */}
                     <td className="py-2.5 px-3 font-medium">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 text-[11px]">
+                        <span className="font-mono font-bold text-[#00c4df] bg-[#161e2e] px-1.5 py-0.5 rounded border border-[#1a2536] text-[11px]">
                           {cam.id}
                         </span>
                         <div className="min-w-0">
-                          <span className="font-semibold text-slate-900 truncate block">
+                          <span className="font-semibold text-white truncate block">
                             {cam.name}
                           </span>
                           <span className="text-[10px] text-slate-400 font-mono">
@@ -467,7 +459,7 @@ export const CameraNetworkView: React.FC = () => {
                     </td>
 
                     {/* Location */}
-                    <td className="py-2.5 px-3 text-slate-600 font-sans">
+                    <td className="py-2.5 px-3 text-slate-300 font-sans">
                       {cam.location}
                     </td>
 
@@ -475,26 +467,26 @@ export const CameraNetworkView: React.FC = () => {
                     <td className="py-2.5 px-3">
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
                         isOnline
-                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                           : isWarning
-                          ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                          : 'bg-rose-100 text-rose-800 border border-rose-200'
+                          ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                          : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                       }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${
-                          isOnline ? 'bg-emerald-500 animate-pulse' : isWarning ? 'bg-amber-500' : 'bg-rose-500'
+                          isOnline ? 'bg-emerald-400 animate-pulse' : isWarning ? 'bg-amber-400' : 'bg-rose-400'
                         }`} />
                         {cam.status}
                       </span>
                     </td>
 
                     {/* Resolution */}
-                    <td className="py-2.5 px-3 font-mono text-[11px] text-slate-700">
+                    <td className="py-2.5 px-3 font-mono text-[11px] text-slate-300">
                       {cam.resolution}
                     </td>
 
                     {/* FPS */}
                     <td className="py-2.5 px-3 text-right font-mono text-[11px] font-bold">
-                      <span className={isOnline ? 'text-emerald-700' : isWarning ? 'text-amber-700' : 'text-slate-400'}>
+                      <span className={isOnline ? 'text-emerald-400' : isWarning ? 'text-amber-400' : 'text-slate-400'}>
                         {cam.fps.toFixed(1)} fps
                       </span>
                     </td>
@@ -502,16 +494,16 @@ export const CameraNetworkView: React.FC = () => {
                     {/* Latency */}
                     <td className="py-2.5 px-3 text-right font-mono text-[11px]">
                       {cam.latencyMs !== null ? (
-                        <span className={cam.latencyMs < 50 ? 'text-emerald-700 font-semibold' : 'text-amber-700 font-bold'}>
+                        <span className={cam.latencyMs < 50 ? 'text-emerald-400 font-semibold' : 'text-amber-400 font-bold'}>
                           {cam.latencyMs}ms
                         </span>
                       ) : (
-                        <span className="text-slate-400">—</span>
+                        <span className="text-slate-500">—</span>
                       )}
                     </td>
 
                     {/* Last Heartbeat */}
-                    <td className="py-2.5 px-3 font-mono text-[11px] text-slate-600">
+                    <td className="py-2.5 px-3 font-mono text-[11px] text-slate-400">
                       {cam.lastHeartbeat}
                     </td>
 
@@ -523,8 +515,8 @@ export const CameraNetworkView: React.FC = () => {
                           onClick={() => handleToggleCameraStatus(cam.id)}
                           className={`p-1 rounded transition-colors cursor-pointer ${
                             isOnline
-                              ? 'text-rose-600 hover:bg-rose-50'
-                              : 'text-emerald-600 hover:bg-emerald-50'
+                              ? 'text-rose-400 hover:bg-rose-500/10'
+                              : 'text-emerald-400 hover:bg-emerald-500/10'
                           }`}
                           title={isOnline ? 'Standby / Deactivate camera' : 'Activate camera stream'}
                         >
@@ -555,12 +547,12 @@ export const CameraNetworkView: React.FC = () => {
         )}
 
         {/* Demo Telemetry Disclosure Footer */}
-        <div className="px-3.5 py-2 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+        <div className="px-3.5 py-2 bg-[#161e2e]/50 border-t border-[#1a2536] flex items-center justify-between text-[10px] text-slate-400 font-mono">
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-amber-400" />
             <span>Notice: Real hardware RTSP endpoints mapped to local synthetic simulation nodes in development mode.</span>
           </div>
-          <span className="font-bold text-slate-700">7 Active Channels</span>
+          <span className="font-bold text-slate-300">7 Active Channels</span>
         </div>
       </div>
 

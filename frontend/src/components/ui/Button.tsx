@@ -36,15 +36,15 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variantStyles = {
       primary:
-        'bg-slate-900 text-white hover:bg-slate-800 shadow-xs border border-slate-900 focus:ring-slate-900',
+        'bg-[#00c4df] text-slate-950 font-semibold hover:bg-[#00d8f6] shadow-xs border border-[#00c4df] focus:ring-[#00c4df]',
       secondary:
-        'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200/80 shadow-2xs hover:border-slate-300 focus:ring-slate-300',
+        'bg-[#161e2e] text-slate-200 hover:bg-[#1a2536] border border-[#1a2536] hover:border-slate-700 shadow-2xs focus:ring-[#00c4df]',
       outline:
-        'bg-transparent text-slate-700 hover:bg-slate-100 border border-slate-300/80 focus:ring-slate-300',
+        'bg-transparent text-slate-300 hover:bg-[#161e2e] border border-[#1a2536] focus:ring-[#00c4df]',
       ghost:
-        'bg-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 border-transparent shadow-none',
+        'bg-transparent text-slate-400 hover:text-white hover:bg-[#161e2e]/70 border-transparent shadow-none',
       danger:
-        'bg-rose-600 text-white hover:bg-rose-700 shadow-xs border border-rose-600 focus:ring-rose-500',
+        'bg-rose-600/90 text-white hover:bg-rose-600 shadow-xs border border-rose-500/40 focus:ring-rose-500',
     };
 
     return (

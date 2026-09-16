@@ -169,26 +169,27 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
     switch (status) {
       case 'ACTIVE':
         return (
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1.5 shadow-2xs">
-            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+          <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1.5 shadow-2xs">
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
             ACTIVE
           </span>
         );
       case 'CONFIRMED':
         return (
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1.5 shadow-2xs">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+          <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 shadow-2xs">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
             CONFIRMED
           </span>
         );
       case 'RECOVERED':
         return (
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-blue-100 text-blue-900 border border-blue-300 flex items-center gap-1.5 shadow-2xs">
-            <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+          <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1.5 shadow-2xs">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#00c4df]" />
             RECOVERED
           </span>
         );
       case 'CLOSED':
+      default:
         return (
           <span className="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-[#142033] text-slate-400 border border-[#20324c] flex items-center gap-1.5 shadow-2xs">
             <Archive className="w-3.5 h-3.5 text-slate-400" />
@@ -215,7 +216,7 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
 
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono font-bold text-[#00e5ff] tracking-widest uppercase">
+              <span className="text-[11px] font-mono font-bold text-[#00c4df] tracking-widest uppercase">
                 INVESTIGATION
               </span>
               <span className="text-slate-600">/</span>
@@ -225,7 +226,7 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
               {getStatusBadge(caseData.status)}
             </div>
             <div className="text-xs font-bold text-slate-300 flex items-center gap-1.5 mt-0.5">
-              <Tag className="w-3.5 h-3.5 text-[#00e5ff]" />
+              <Tag className="w-3.5 h-3.5 text-[#00c4df]" />
               <span>Target: <strong className="text-white">{caseData.objectName}</strong></span>
               {caseData.objectColor && (
                 <span className="text-slate-400 text-xs font-normal">({caseData.objectColor})</span>
@@ -241,7 +242,7 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
               type="button"
               id="inv-action-confirm"
               onClick={handleConfirmMatch}
-              className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-slate-950 text-xs font-extrabold flex items-center gap-1.5 shadow-[0_0_12px_rgba(16,185,129,0.3)] transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-slate-950 text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95"
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>CONFIRM MATCH</span>
@@ -253,7 +254,7 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
               type="button"
               id="inv-action-reject"
               onClick={handleRejectMatch}
-              className="px-3 py-1.5 rounded-lg bg-[#141f30] hover:bg-[#1c2c44] border border-[#213552] text-slate-300 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-[#141f30] hover:bg-[#1c2c44] border border-[#213552] text-slate-300 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
             >
               <XCircle className="w-3.5 h-3.5 text-rose-400" />
               <span>REJECT MATCH</span>
@@ -265,9 +266,9 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
               type="button"
               id="inv-action-recover"
               onClick={handleMarkRecovered}
-              className="px-3 py-1.5 rounded-lg bg-[#111a28] hover:bg-[#18253a] border border-[#20324c] text-cyan-300 hover:text-cyan-200 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-[#111a28] hover:bg-[#18253a] border border-[#20324c] text-cyan-300 hover:text-cyan-200 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-[#00e5ff]" />
+              <ShieldCheck className="w-3.5 h-3.5 text-[#00c4df]" />
               <span>MARK RECOVERED</span>
             </button>
           )}
@@ -277,7 +278,7 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
               type="button"
               id="inv-action-close"
               onClick={handleCloseInvestigation}
-              className="px-3 py-1.5 rounded-lg bg-[#101726] hover:bg-[#162134] border border-[#1b2940] text-slate-400 hover:text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-[#101726] hover:bg-[#162134] border border-[#1b2940] text-slate-400 hover:text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
             >
               <Archive className="w-3.5 h-3.5 text-slate-400" />
               <span>CLOSE DOCKET</span>
@@ -288,10 +289,10 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
             type="button"
             id="inv-action-generate-report"
             onClick={() => setShowReportModal(true)}
-            className="px-3.5 py-1.5 rounded-lg bg-[#00e5ff] hover:bg-[#00cce6] text-[#080b11] text-xs font-extrabold flex items-center gap-1.5 shadow-[0_0_15px_rgba(0,229,255,0.3)] transition-all cursor-pointer active:scale-95"
+            className="px-3.5 py-1.5 rounded-lg bg-[#00c4df] hover:bg-[#00b2cb] text-slate-950 text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95"
           >
             <FileText className="w-3.5 h-3.5" />
-            <span className="tracking-wide uppercase">GENERATE REPORT</span>
+            <span className="tracking-wide uppercase font-mono font-bold">GENERATE REPORT</span>
           </button>
         </div>
       </div>

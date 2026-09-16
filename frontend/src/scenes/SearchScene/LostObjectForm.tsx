@@ -121,10 +121,10 @@ export const LostObjectForm: React.FC<LostObjectFormProps> = ({ onSearchSubmit }
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto flex flex-col justify-between py-2 select-none animate-fade-in font-sans text-slate-800 space-y-4">
+    <div className="w-full max-w-4xl mx-auto space-y-4 font-sans text-slate-100 animate-fade-in pb-8">
       
-      {/* 1. Header & Context */}
-      <div className="flex items-center justify-between border-b border-slate-200/80 pb-3">
+      {/* 1. Header with Breadcrumb & Back Navigation */}
+      <div className="flex items-center justify-between pb-2 border-b border-[#162032]">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -132,26 +132,26 @@ export const LostObjectForm: React.FC<LostObjectFormProps> = ({ onSearchSubmit }
               setActiveFeedTab('home');
               setStage('HOME');
             }}
-            className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors cursor-pointer shadow-2xs"
+            className="p-1.5 rounded-lg bg-[#111722] border border-[#1f2b3e] text-slate-300 hover:text-white hover:bg-[#161e2e] transition-colors cursor-pointer"
             title="Return to Command Center"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight font-sans flex items-center gap-2">
-              <span>FIND AN OBJECT</span>
-              <span className="text-xs px-2 py-0.5 rounded bg-indigo-50 border border-indigo-200 text-indigo-700 font-mono font-bold">
-                OPTICAL SWEEP
+            <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight font-sans flex items-center gap-2">
+              <span>Find an Object</span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-[#00c4df]/10 border border-[#00c4df]/30 text-[#00c4df] font-mono font-semibold">
+                OPTICAL SEARCH
               </span>
             </h1>
-            <p className="text-xs text-slate-500 font-mono mt-0.5">
-              Specify object attributes, temporal range, and surveillance cameras to scan.
+            <p className="text-xs text-slate-400 font-mono mt-0.5">
+              Specify object attributes, temporal search window, and surveillance cameras to scan.
             </p>
           </div>
         </div>
 
-        <div className="hidden sm:flex items-center gap-2 text-right font-mono text-[11px] text-slate-500">
-          <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+        <div className="hidden sm:flex items-center gap-2 text-right font-mono text-[11px] text-slate-400">
+          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>ORACLE 21C READY</span>
         </div>
       </div>
@@ -160,10 +160,10 @@ export const LostObjectForm: React.FC<LostObjectFormProps> = ({ onSearchSubmit }
       <form onSubmit={handleSubmit} className="space-y-4">
         
         {/* FIELD 1: OBJECT SPECIFICATION */}
-        <div className="p-3.5 sm:p-4 rounded-xl bg-white border border-slate-200/90 shadow-2xs space-y-3">
+        <div className="p-4 rounded-xl bg-[#0f1520] border border-[#1a2536] space-y-3">
           <div className="flex items-center justify-between">
-            <label htmlFor="target-object-input" className="text-xs font-bold text-slate-900 uppercase font-mono flex items-center gap-1.5">
-              <Search className="w-3.5 h-3.5 text-indigo-600" />
+            <label htmlFor="target-object-input" className="text-xs font-semibold text-slate-200 uppercase font-mono flex items-center gap-1.5">
+              <Search className="w-3.5 h-3.5 text-[#00c4df]" />
               <span>1. Target Object Descriptor</span>
             </label>
             <span className="text-[10px] font-mono text-slate-400">REQUIRED</span>
@@ -178,7 +178,7 @@ export const LostObjectForm: React.FC<LostObjectFormProps> = ({ onSearchSubmit }
                 onChange={(e) => setObjectText(e.target.value)}
                 placeholder="Target object (e.g. Bottle, Backpack, Laptop, Person)..."
                 autoFocus
-                className="w-full px-3.5 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs sm:text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 focus:bg-white transition-all font-sans"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-[#090d14] border border-[#1a2536] text-xs sm:text-sm font-medium text-white placeholder:text-slate-500 focus:outline-none focus:border-[#00c4df] transition-all font-sans"
               />
             </div>
             <div className="sm:col-span-4">
@@ -187,7 +187,7 @@ export const LostObjectForm: React.FC<LostObjectFormProps> = ({ onSearchSubmit }
                 value={colorDescriptor}
                 onChange={(e) => setColorDescriptor(e.target.value)}
                 placeholder="Color / Attribute (e.g. Black, Red)..."
-                className="w-full px-3.5 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs sm:text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 focus:bg-white transition-all font-sans"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-[#090d14] border border-[#1a2536] text-xs sm:text-sm font-medium text-white placeholder:text-slate-500 focus:outline-none focus:border-[#00c4df] transition-all font-sans"
               />
             </div>
           </div>
@@ -202,8 +202,8 @@ export const LostObjectForm: React.FC<LostObjectFormProps> = ({ onSearchSubmit }
                 onClick={() => setObjectText(item.label)}
                 className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer flex items-center gap-1 ${
                   objectText.toLowerCase() === item.label.toLowerCase()
-                    ? 'bg-slate-900 text-white shadow-xs'
-                    : 'bg-slate-100 hover:bg-slate-200/80 text-slate-700'
+                    ? 'bg-[#00c4df] text-[#090d14] font-semibold'
+                    : 'bg-[#161e2e] hover:bg-[#1c263a] text-slate-300 border border-[#1f2b3e]'
                 }`}
               >
                 <span>{item.emoji}</span>
@@ -217,11 +217,11 @@ export const LostObjectForm: React.FC<LostObjectFormProps> = ({ onSearchSubmit }
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           
           {/* FIELD 2: DATE / DATE RANGE */}
-          <div className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs space-y-2.5">
+          <div className="p-4 rounded-xl bg-[#0f1520] border border-[#1a2536] space-y-2.5">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-900 uppercase font-mono flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-blue-600" />
-                <span>2. Date / Date Range</span>
+              <label className="text-xs font-semibold text-slate-200 uppercase font-mono flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-[#00c4df]" />
+                <span>2. Date Range</span>
               </label>
               <span className="text-[10px] font-mono text-slate-400">TEMPORAL</span>
             </div>
@@ -240,8 +240,8 @@ export const LostObjectForm: React.FC<LostObjectFormProps> = ({ onSearchSubmit }
                   onClick={() => handleDatePresetChange(p.id as DatePreset)}
                   className={`py-1 text-[10px] font-mono font-semibold rounded border transition-colors cursor-pointer ${
                     datePreset === p.id
-                      ? 'bg-blue-50 border-blue-300 text-blue-700'
-                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                      ? 'bg-[#00c4df]/15 border-[#00c4df]/40 text-[#00c4df]'
+                      : 'bg-[#161e2e] border-[#1f2b3e] text-slate-400 hover:text-white'
                   }`}
                 >
                   {p.label}
@@ -260,7 +260,7 @@ export const LostObjectForm: React.FC<LostObjectFormProps> = ({ onSearchSubmit }
                     setStartDate(e.target.value);
                     setDatePreset('custom');
                   }}
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono text-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-900"
+                  className="w-full px-2.5 py-1.5 rounded-lg bg-[#090d14] border border-[#1a2536] text-xs font-mono text-slate-200 focus:outline-none focus:border-[#00c4df]"
                 />
               </div>
               <div>
@@ -272,17 +272,17 @@ export const LostObjectForm: React.FC<LostObjectFormProps> = ({ onSearchSubmit }
                     setEndDate(e.target.value);
                     setDatePreset('custom');
                   }}
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono text-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-900"
+                  className="w-full px-2.5 py-1.5 rounded-lg bg-[#090d14] border border-[#1a2536] text-xs font-mono text-slate-200 focus:outline-none focus:border-[#00c4df]"
                 />
               </div>
             </div>
           </div>
 
           {/* FIELD 3: TIME RANGE */}
-          <div className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs space-y-2.5">
+          <div className="p-4 rounded-xl bg-[#0f1520] border border-[#1a2536] space-y-2.5">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-900 uppercase font-mono flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-amber-600" />
+              <label className="text-xs font-semibold text-slate-200 uppercase font-mono flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-amber-400" />
                 <span>3. Time Range</span>
               </label>
               <span className="text-[10px] font-mono text-slate-400">WINDOW</span>
@@ -302,8 +302,8 @@ export const LostObjectForm: React.FC<LostObjectFormProps> = ({ onSearchSubmit }
                   onClick={() => handleTimePresetChange(p.id as TimeRangePreset)}
                   className={`py-1 text-[10px] font-mono font-semibold rounded border transition-colors cursor-pointer ${
                     timePreset === p.id
-                      ? 'bg-amber-50 border-amber-300 text-amber-800'
-                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                      ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
+                      : 'bg-[#161e2e] border-[#1f2b3e] text-slate-400 hover:text-white'
                   }`}
                 >
                   {p.label}
@@ -322,7 +322,7 @@ export const LostObjectForm: React.FC<LostObjectFormProps> = ({ onSearchSubmit }
                     setStartTime(e.target.value);
                     setTimePreset('custom');
                   }}
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono text-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-900"
+                  className="w-full px-2.5 py-1.5 rounded-lg bg-[#090d14] border border-[#1a2536] text-xs font-mono text-slate-200 focus:outline-none focus:border-[#00c4df]"
                 />
               </div>
               <div>
@@ -334,7 +334,7 @@ export const LostObjectForm: React.FC<LostObjectFormProps> = ({ onSearchSubmit }
                     setEndTime(e.target.value);
                     setTimePreset('custom');
                   }}
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-mono text-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-900"
+                  className="w-full px-2.5 py-1.5 rounded-lg bg-[#090d14] border border-[#1a2536] text-xs font-mono text-slate-200 focus:outline-none focus:border-[#00c4df]"
                 />
               </div>
             </div>
@@ -342,10 +342,10 @@ export const LostObjectForm: React.FC<LostObjectFormProps> = ({ onSearchSubmit }
         </div>
 
         {/* FIELD 4: CAMERA / LOCATION SELECTION */}
-        <div className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs space-y-2.5">
+        <div className="p-4 rounded-xl bg-[#0f1520] border border-[#1a2536] space-y-2.5">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-slate-900 uppercase font-mono flex items-center gap-1.5">
-              <Camera className="w-3.5 h-3.5 text-emerald-600" />
+            <label className="text-xs font-semibold text-slate-200 uppercase font-mono flex items-center gap-1.5">
+              <Camera className="w-3.5 h-3.5 text-emerald-400" />
               <span>4. Camera & Sector Target</span>
             </label>
             <span className="text-[10px] font-mono text-slate-400">SURVEILLANCE MESH</span>
@@ -360,20 +360,20 @@ export const LostObjectForm: React.FC<LostObjectFormProps> = ({ onSearchSubmit }
                   onClick={() => setSelectedCamera(cam.id)}
                   className={`p-2.5 rounded-lg border transition-all cursor-pointer flex items-center justify-between ${
                     isSelected
-                      ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-                      : 'bg-slate-50 hover:bg-slate-100/90 border-slate-200 text-slate-700'
+                      ? 'bg-[#161e2e] border-[#00c4df] text-white shadow-xs'
+                      : 'bg-[#090d14] hover:bg-[#161e2e] border-[#1a2536] text-slate-300'
                   }`}
                 >
                   <div className="min-w-0">
-                    <div className="text-xs font-bold truncate">
+                    <div className="text-xs font-semibold truncate">
                       {cam.name}
                     </div>
-                    <div className={`text-[10px] font-mono truncate ${isSelected ? 'text-slate-300' : 'text-slate-400'}`}>
+                    <div className={`text-[10px] font-mono truncate ${isSelected ? 'text-cyan-300' : 'text-slate-400'}`}>
                       {cam.zone}
                     </div>
                   </div>
                   {isSelected && (
-                    <div className="w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 ml-1.5">
+                    <div className="w-4 h-4 rounded-full bg-emerald-500 text-[#090d14] flex items-center justify-center shrink-0 ml-1.5">
                       <Check className="w-2.5 h-2.5 stroke-[3]" />
                     </div>
                   )}
@@ -385,18 +385,18 @@ export const LostObjectForm: React.FC<LostObjectFormProps> = ({ onSearchSubmit }
 
         {/* PRIMARY ACTION BUTTON: START SEARCH */}
         <div className="pt-2 flex items-center justify-between">
-          <div className="text-xs font-mono text-slate-500 hidden sm:block">
-            <span>Scan Mode: </span>
-            <span className="font-bold text-slate-800">YOLOv8 + ByteTrack Real-Time Inference</span>
+          <div className="text-xs font-mono text-slate-400 hidden sm:block">
+            <span>Scan Engine: </span>
+            <span className="font-semibold text-white">YOLOv8 + ByteTrack Spatial Inference</span>
           </div>
 
           <button
             id="start-search-primary-btn"
             type="submit"
-            className="w-full sm:w-auto px-8 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 active:scale-98 text-white font-bold text-sm shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 group"
+            className="w-full sm:w-auto px-8 py-2.5 rounded-lg bg-[#00c4df] hover:opacity-90 active:scale-98 text-[#090d14] font-bold text-xs shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 group uppercase tracking-wider"
           >
-            <span>START SEARCH</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <span>Begin Search</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
       </form>
