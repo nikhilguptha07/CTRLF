@@ -1,30 +1,48 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { Canvas } from '@react-three/fiber';
 import gsap from 'gsap';
+import { CameraNetwork3D } from '../three/CameraNetwork3D';
+import { soundService } from '../../services/soundService';
 
 interface StartupExperienceProps {
   onComplete: () => void;
 }
 
-interface CheckItem {
-  id: string;
-  label: string;
-  status: 'pending' | 'active' | 'done';
+type IntroPhase = 
+  | 'void'             // Scene 1: Absolute darkness with faint technical signal
+  | 'telemetry'        // Scene 2: System Initialization telemetry
+  | 'spatial_network'  // Scene 3: 3D Camera Network boots in space
+  | 'search_pulse'     // Scene 4: Fast search signal activating CAM nodes
+  | 'brand_reveal'     // Scene 5: # CONTROLF — FIND WHAT MATTERS.
+  | 'zoom_transition'; // Scene 6: Seamless camera zoom into focal node -> Dashboard
+
+interface BootTelemetryItem {
+  module: string;
+  status: string;
+  active: boolean;
 }
 
-const INITIAL_CHECKS: CheckItem[] = [
-  { id: 'cam', label: 'Camera Network', status: 'pending' },
-  { id: 'ai', label: 'AI Detection Engine', status: 'pending' },
-  { id: 'idx', label: 'Object Index', status: 'pending' },
-  { id: 'sec', label: 'Security System', status: 'pending' },
+const BOOT_ITEMS: BootTelemetryItem[] = [
+  { module: 'NETWORK', status: 'CONNECTING', active: false },
+  { module: 'CAMERA FABRIC', status: 'ONLINE', active: false },
+  { module: 'VISION ENGINE', status: 'INITIALIZING', active: false },
+  { module: 'OBJECT INDEX', status: 'READY', active: false },
+  { module: 'SECURITY CORE', status: 'ACTIVE', active: false },
+];
+
+const PULSE_NODES = [
+  { id: 'CAM-01', location: 'North Main Lobby', status: 'ONLINE' },
+  { id: 'CAM-07', location: 'Overhead Sector A', status: 'ONLINE' },
+  { id: 'CAM-12', location: 'High Mast Junction', status: 'ONLINE' },
+  { id: 'CAM-18', location: 'Transit Concourse', status: 'ONLINE' },
 ];
 
 export const StartupExperience: React.FC<StartupExperienceProps> = ({ onComplete }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const brandSectionRef = useRef<HTMLDivElement>(null);
-  const sysInitSectionRef = useRef<HTMLDivElement>(null);
-
-  const [phase, setPhase] = useState<'black' | 'init' | 'checks' | 'brand' | 'fading'>('black');
-  const [checks, setChecks] = useState<CheckItem[]>(INITIAL_CHECKS);
+  const brandRef = useRef<HTMLDivElement>(null);
+  const [phase, setPhase] = useState<IntroPhase>('void');
+  const [activeTelemetryIndex, setActiveTelemetryIndex] = useState(0);
+  const [pulseNodeIndex, setPulseNodeIndex] = useState(0);
   const completedRef = useRef(false);
 
   const finishSequence = useCallback(() => {
@@ -40,8 +58,9 @@ export const StartupExperience: React.FC<StartupExperienceProps> = ({ onComplete
     if (containerRef.current) {
       gsap.to(containerRef.current, {
         opacity: 0,
-        duration: 0.45,
-        ease: 'power2.inOut',
+        scale: 1.04,
+        duration: 0.6,
+        ease: 'power3.inOut',
         onComplete: () => {
           onComplete();
         },
@@ -51,17 +70,17 @@ export const StartupExperience: React.FC<StartupExperienceProps> = ({ onComplete
     }
   }, [onComplete]);
 
-  // Check prefers-reduced-motion
+  // Reduced motion check
   useEffect(() => {
     if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       finishSequence();
     }
   }, [finishSequence]);
 
-  // Listen for Escape key to skip
+  // Escape key skip
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' || e.key === ' ') {
         finishSequence();
       }
     };
@@ -69,176 +88,200 @@ export const StartupExperience: React.FC<StartupExperienceProps> = ({ onComplete
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [finishSequence]);
 
-  // Main automated sequence timeline
+  // Master Orchestrated Cinematic Timeline (~7.5s)
   useEffect(() => {
     if (completedRef.current) return;
 
-    // Timeline step 1: Black screen to Init (350ms)
-    const tInit = setTimeout(() => {
-      setPhase('init');
-    }, 350);
+    // Scene 1: Void (0.0s -> 1.0s)
+    const tScene1 = setTimeout(() => {
+      setPhase('telemetry');
+      soundService.playScanPulse();
+    }, 1000);
 
-    // Timeline step 2: Checks begin (750ms)
-    const tCheck0 = setTimeout(() => {
-      setPhase('checks');
-      setChecks((prev) =>
-        prev.map((c, i) => (i === 0 ? { ...c, status: 'done' } : c))
-      );
-    }, 750);
+    // Scene 2: Boot telemetry sequence (1.0s -> 2.6s)
+    const tTel1 = setTimeout(() => setActiveTelemetryIndex(1), 1300);
+    const tTel2 = setTimeout(() => setActiveTelemetryIndex(2), 1600);
+    const tTel3 = setTimeout(() => setActiveTelemetryIndex(3), 1900);
+    const tTel4 = setTimeout(() => setActiveTelemetryIndex(4), 2200);
 
-    // Timeline step 3: Check 2 (1150ms)
-    const tCheck1 = setTimeout(() => {
-      setChecks((prev) =>
-        prev.map((c, i) => (i === 1 ? { ...c, status: 'done' } : c))
-      );
-    }, 1150);
+    // Scene 3: 3D Camera Network reveals in space (2.6s -> 4.4s)
+    const tScene3 = setTimeout(() => {
+      setPhase('spatial_network');
+      soundService.playCameraPower();
+    }, 2600);
 
-    // Timeline step 4: Check 3 (1550ms)
-    const tCheck2 = setTimeout(() => {
-      setChecks((prev) =>
-        prev.map((c, i) => (i === 2 ? { ...c, status: 'done' } : c))
-      );
-    }, 1550);
+    // Scene 4: Search Pulse sweeping through cameras (4.4s -> 5.8s)
+    const tScene4 = setTimeout(() => {
+      setPhase('search_pulse');
+    }, 4400);
+    const tPulse1 = setTimeout(() => setPulseNodeIndex(1), 4700);
+    const tPulse2 = setTimeout(() => setPulseNodeIndex(2), 5050);
+    const tPulse3 = setTimeout(() => setPulseNodeIndex(3), 5400);
 
-    // Timeline step 5: Check 4 (1950ms)
-    const tCheck3 = setTimeout(() => {
-      setChecks((prev) =>
-        prev.map((c, i) => (i === 3 ? { ...c, status: 'done' } : c))
-      );
-    }, 1950);
+    // Scene 5: ControlF Brand Reveal (5.8s -> 7.0s)
+    const tScene5 = setTimeout(() => {
+      setPhase('brand_reveal');
+      soundService.playDetected();
+      if (brandRef.current) {
+        gsap.fromTo(
+          brandRef.current,
+          { opacity: 0, y: 16, letterSpacing: '0.15em' },
+          { opacity: 1, y: 0, letterSpacing: '0.04em', duration: 0.8, ease: 'power3.out' }
+        );
+      }
+    }, 5800);
 
-    // Timeline step 6: Brand reveal (2450ms)
-    const tBrand = setTimeout(() => {
-      setPhase('brand');
-    }, 2450);
+    // Scene 6: Continuous camera dolly zoom -> enter app (7.0s -> 7.8s)
+    const tScene6 = setTimeout(() => {
+      setPhase('zoom_transition');
+    }, 7000);
 
-    // Timeline step 7: Complete and transition to dashboard (3250ms)
-    const tFinish = setTimeout(() => {
+    const tEnd = setTimeout(() => {
       finishSequence();
-    }, 3250);
+    }, 7700);
 
     return () => {
-      clearTimeout(tInit);
-      clearTimeout(tCheck0);
-      clearTimeout(tCheck1);
-      clearTimeout(tCheck2);
-      clearTimeout(tCheck3);
-      clearTimeout(tBrand);
-      clearTimeout(tFinish);
+      clearTimeout(tScene1);
+      clearTimeout(tTel1);
+      clearTimeout(tTel2);
+      clearTimeout(tTel3);
+      clearTimeout(tTel4);
+      clearTimeout(tScene3);
+      clearTimeout(tScene4);
+      clearTimeout(tPulse1);
+      clearTimeout(tPulse2);
+      clearTimeout(tPulse3);
+      clearTimeout(tScene5);
+      clearTimeout(tScene6);
+      clearTimeout(tEnd);
     };
   }, [finishSequence]);
 
   return (
     <div
       ref={containerRef}
-      role="dialog"
-      aria-label="System Startup Animation"
-      aria-modal="true"
-      className="fixed inset-0 z-[9999] bg-[#02050e] text-slate-100 flex flex-col items-center justify-center font-mono select-none overflow-hidden"
+      className="fixed inset-0 z-50 w-screen h-screen bg-[#080b11] text-slate-100 flex flex-col items-center justify-center select-none overflow-hidden"
     >
-      {/* Subtle fine architectural scan lines */}
-      <div 
-        className="absolute inset-0 pointer-events-none opacity-20"
-        style={{
-          backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px)',
-          backgroundSize: '100% 3px',
-        }}
-      />
+      {/* Background Subtle Radar Vignette */}
+      <div className="absolute inset-0 bg-radial-vignette pointer-events-none z-10" />
 
-      {/* Top Bar: Telemetry Header & Skip Button */}
-      <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-10">
-        <div className="flex items-center gap-2 text-[10px] tracking-widest text-slate-500 font-mono">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span>CTRLF // CORE_SYS_v2.4</span>
+      {/* Skip Button */}
+      <button
+        type="button"
+        onClick={finishSequence}
+        className="absolute top-6 right-8 z-30 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-mono font-semibold tracking-wider text-slate-400 hover:text-white uppercase transition-colors cursor-pointer flex items-center gap-1.5"
+      >
+        <span>Skip Sequence</span>
+        <span className="text-[9px] px-1 py-0.5 rounded bg-white/10 text-slate-300">ESC</span>
+      </button>
+
+      {/* 3D Camera Fabric Viewport (Active in Scenes 3, 4, 5, 6) */}
+      {(phase === 'spatial_network' || phase === 'search_pulse' || phase === 'brand_reveal' || phase === 'zoom_transition') && (
+        <div className={`absolute inset-0 z-0 transition-opacity duration-700 ${
+          phase === 'zoom_transition' ? 'scale-125 opacity-40 transition-transform duration-700 ease-in' : 'opacity-100'
+        }`}>
+          <Canvas
+            camera={{ position: [0, 4.2, 7.8], fov: 42 }}
+            dpr={[1, 1.5]}
+            gl={{ antialias: true, alpha: true }}
+          >
+            <ambientLight intensity={0.4} />
+            <directionalLight position={[6, 12, 8]} intensity={0.9} />
+            <CameraNetwork3D mode={phase === 'search_pulse' ? 'search' : 'intro'} />
+          </Canvas>
         </div>
+      )}
 
-        <button
-          type="button"
-          onClick={finishSequence}
-          className="px-3 py-1.5 rounded-md bg-slate-900/90 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 text-xs font-mono transition-all cursor-pointer flex items-center gap-2 group shadow-sm"
-          title="Skip intro animation (Esc)"
+      {/* Scene 1 & 2: System Boot Telemetry */}
+      {(phase === 'void' || phase === 'telemetry') && (
+        <div className="relative z-20 max-w-md w-full px-6 flex flex-col items-start space-y-3 font-mono">
+          <div className="flex items-center gap-2.5 text-xs font-bold tracking-widest text-[#00e5ff] uppercase">
+            <span className="inline-block w-2 h-2 rounded-full bg-[#00e5ff] animate-ping" />
+            <span>SYSTEM INITIALIZATION</span>
+          </div>
+
+          <div className="w-full space-y-1.5 pt-2 text-[12px] text-slate-400 border-l-2 border-[#00e5ff]/40 pl-3">
+            {BOOT_ITEMS.map((item, idx) => {
+              const isPassed = activeTelemetryIndex >= idx;
+              return (
+                <div
+                  key={item.module}
+                  className={`flex items-center justify-between transition-opacity duration-200 ${
+                    isPassed ? 'opacity-100 text-slate-200' : 'opacity-25 text-slate-600'
+                  }`}
+                >
+                  <span className="tracking-wider">{item.module}</span>
+                  <span className="font-bold tracking-widest text-slate-500">
+                    ................{' '}
+                    <span className={isPassed ? 'text-[#00e5ff]' : 'text-slate-600'}>
+                      {isPassed ? item.status : 'PENDING'}
+                    </span>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="text-[10px] tracking-wider text-slate-500 uppercase pt-2">
+            PHYSICAL SURVEILLANCE MATRIX // SECURE OPERATIONAL CORE
+          </div>
+        </div>
+      )}
+
+      {/* Scene 4: Fast Search Pulse Nodes Overlay */}
+      {phase === 'search_pulse' && (
+        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-xl bg-[#0d121d]/90 border border-[#00e5ff]/30 shadow-2xl backdrop-blur-md flex items-center gap-4 text-xs font-mono">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#00e5ff] animate-pulse" />
+            <span className="text-slate-400 text-[11px] uppercase">SIGNAL TRANSIT:</span>
+          </div>
+          <div className="flex items-center gap-3">
+            {PULSE_NODES.map((node, i) => {
+              const isLit = pulseNodeIndex >= i;
+              return (
+                <div
+                  key={node.id}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${
+                    isLit
+                      ? 'bg-[#00e5ff]/15 text-[#00e5ff] border border-[#00e5ff]/40'
+                      : 'text-slate-600 bg-white/5'
+                  }`}
+                >
+                  <span>{node.id}</span>
+                  <span className="text-[9px] opacity-75">{node.status}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Scene 5: ControlF Brand Reveal */}
+      {(phase === 'brand_reveal' || phase === 'zoom_transition') && (
+        <div
+          ref={brandRef}
+          className="relative z-20 flex flex-col items-center justify-center text-center space-y-3 px-6 select-none"
         >
-          <span className="text-[10px] text-slate-500 group-hover:text-slate-400 border border-slate-700/80 px-1 py-0.2 rounded font-sans">
-            ESC
-          </span>
-          <span>Skip</span>
-        </button>
-      </div>
-
-      {/* Main Content Area */}
-      <div className="relative z-10 max-w-lg w-full px-6 flex flex-col items-center text-center">
-        {/* Phase 1 & 2: System Initializing & Sequential Checks */}
-        {(phase === 'init' || phase === 'checks') && (
-          <div 
-            ref={sysInitSectionRef}
-            className="w-full space-y-6 animate-fade-in"
-          >
-            {/* Header */}
-            <div className="space-y-1">
-              <div className="text-xs sm:text-sm tracking-[0.2em] font-bold text-slate-300 uppercase">
-                ControlF System Initializing
-              </div>
-              <div className="h-0.5 w-16 mx-auto bg-indigo-500/80 rounded-full" />
-            </div>
-
-            {/* Checklist */}
-            <div className="w-full max-w-sm mx-auto space-y-2.5 text-left text-xs text-slate-400 font-mono py-2">
-              {checks.map((item) => {
-                const isDone = item.status === 'done';
-                return (
-                  <div
-                    key={item.id}
-                    className={`flex items-center justify-between border-b border-slate-800/60 pb-1.5 transition-opacity duration-200 ${
-                      isDone ? 'opacity-100' : 'opacity-25'
-                    }`}
-                  >
-                    <span className="tracking-wide text-slate-300">{item.label}</span>
-                    <span className="text-slate-600 font-mono px-2 select-none">
-                      ................
-                    </span>
-                    <span
-                      className={`font-bold transition-all ${
-                        isDone ? 'text-emerald-400 scale-110' : 'text-slate-600'
-                      }`}
-                    >
-                      {isDone ? '✓' : '·'}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00e5ff]/10 border border-[#00e5ff]/30 text-[10px] font-mono tracking-widest text-[#00e5ff] uppercase">
+            <span>SOC STATION 01</span>
+            <span>•</span>
+            <span>AUTONOMOUS SURVEILLANCE INTELLIGENCE</span>
           </div>
-        )}
 
-        {/* Phase 3: Brand Reveal */}
-        {phase === 'brand' && (
-          <div
-            ref={brandSectionRef}
-            className="space-y-3 animate-fade-in text-center"
-          >
-            {/* Minimal Brand Title */}
-            <h1 className="text-4xl sm:text-5xl font-extrabold tracking-[0.22em] text-white uppercase font-sans">
-              Control<span className="text-indigo-400">F</span>
-            </h1>
+          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white font-sans uppercase">
+            CONTROL·F
+          </h1>
 
-            {/* Precision Subtitle */}
-            <p className="text-[11px] sm:text-xs font-mono font-medium tracking-[0.2em] text-slate-400 uppercase">
-              "Intelligent Physical-World Search"
-            </p>
+          <p className="text-xs sm:text-sm font-mono tracking-widest text-slate-400 font-semibold uppercase">
+            FIND WHAT MATTERS.
+          </p>
 
-            <div className="pt-4 flex items-center justify-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-ping" />
-              <span className="text-[10px] text-slate-500 font-mono">ESTABLISHING SECURE CONSOLE...</span>
-            </div>
+          <div className="pt-4 flex items-center gap-1.5 text-[11px] font-mono text-[#00e5ff]/80">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#00e5ff] animate-ping" />
+            <span>CONNECTING TO MISSION COMMAND CENTER...</span>
           </div>
-        )}
-      </div>
-
-      {/* Bottom Telemetry Bar */}
-      <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between text-[10px] font-mono text-slate-600">
-        <span>SECURITY LEVEL: RESTRICTED</span>
-        <span>ORACLE 21c XE // BYTETRACK READY</span>
-      </div>
+        </div>
+      )}
     </div>
   );
 };

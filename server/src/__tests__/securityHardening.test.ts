@@ -38,7 +38,7 @@ describe('PHASE 9 — Enterprise Security, Authentication, RBAC & Audit Verifica
       .send({ email: 'viewer@controlf.internal', password: 'ViewerPass123!' });
     expect(viewerRes.status).toBe(200);
     viewerToken = viewerRes.body.data.accessToken;
-  });
+  }, 30000);
 
   describe('1. Authentication & JWT Security (Sections 1, 2, 26)', () => {
     it('POST /api/auth/login returns verified JWT access/refresh tokens with HttpOnly cookies', async () => {

@@ -11,6 +11,7 @@ import { AdminDetectionsTab } from './tabs/AdminDetectionsTab';
 import { AdminTracksTab } from './tabs/AdminTracksTab';
 import { AdminAuditLogsTab } from './tabs/AdminAuditLogsTab';
 import { AdminTableExplorerTab } from './tabs/AdminTableExplorerTab';
+import { AdminSettingsTab } from './tabs/AdminSettingsTab';
 import { apiClient } from '../../services/apiClient';
 
 interface AdminConsoleProps {
@@ -75,6 +76,8 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onReturnToDashboard 
         return <AdminAuditLogsTab />;
       case 'explorer':
         return <AdminTableExplorerTab initialTable={selectedExplorerTable} />;
+      case 'settings':
+        return <AdminSettingsTab />;
       case 'overview':
       default:
         return <AdminOverviewTab onNavigateTab={(tab) => setActiveTab(tab as AdminTab)} />;
@@ -82,8 +85,8 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onReturnToDashboard 
   };
 
   return (
-    <div className="w-screen h-screen overflow-hidden select-none font-sans bg-slate-100 text-slate-900">
-      <div className="w-full h-full flex flex-col bg-slate-100 text-slate-900">
+    <div className="w-screen h-screen overflow-hidden select-none font-sans bg-[#080b11] text-slate-100">
+      <div className="w-full h-full flex flex-col bg-[#080b11] text-slate-100">
         {/* Admin Header */}
         <AdminHeader
           onReturnToDashboard={onReturnToDashboard}
@@ -102,7 +105,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({ onReturnToDashboard 
           />
 
           {/* Dynamic Content Panel */}
-          <main className="flex-1 p-5 sm:p-6 lg:p-8 overflow-y-auto bg-slate-50/80">
+          <main className="flex-1 p-5 sm:p-6 lg:p-8 overflow-y-auto bg-[#080b11]">
             <div className="max-w-7xl mx-auto">
               {renderActiveTab()}
             </div>

@@ -26,12 +26,17 @@ export type InvestigationStatus = 'SEARCHING' | 'ANALYZING' | 'IN_PROGRESS' | 'R
 export interface ActiveInvestigation {
   caseId: string;
   object: string;
+  targetObject?: string;
   status: InvestigationStatus;
   camera: string;
   confidence: number;
   lastDetectedTime: string;
   operator?: string;
   notes?: string;
+  camerasSearched?: number;
+  matchesFound?: number;
+  lastDetection?: string;
+  startedAt?: string;
 }
 
 export type DetectionStatus = 'CONFIRMED' | 'UNRESOLVED' | 'FLAGGED';

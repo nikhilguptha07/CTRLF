@@ -190,8 +190,8 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
         );
       case 'CLOSED':
         return (
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-slate-200 text-slate-800 border border-slate-300 flex items-center gap-1.5 shadow-2xs">
-            <Archive className="w-3.5 h-3.5 text-slate-500" />
+          <span className="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-[#142033] text-slate-400 border border-[#20324c] flex items-center gap-1.5 shadow-2xs">
+            <Archive className="w-3.5 h-3.5 text-slate-400" />
             CLOSED
           </span>
         );
@@ -199,15 +199,15 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
   };
 
   return (
-    <div className="w-full flex flex-col font-sans text-slate-800 animate-fade-in space-y-3 select-none pb-4">
+    <div className="w-full flex flex-col font-sans text-slate-100 animate-fade-in space-y-3.5 select-none pb-6">
       
       {/* 1. Header Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 pb-3 pt-0.5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-[#162134] pb-3.5 pt-0.5">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={handleReturnToDashboard}
-            className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors cursor-pointer shadow-2xs"
+            className="p-1.5 rounded-lg bg-[#0c121d] border border-[#1a273c] text-slate-300 hover:text-white hover:bg-[#142033] transition-colors cursor-pointer shadow-inner"
             title="Return to Command Center"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -215,36 +215,36 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
 
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono font-bold text-indigo-600 tracking-wider uppercase">
+              <span className="text-[11px] font-mono font-bold text-[#00e5ff] tracking-widest uppercase">
                 INVESTIGATION
               </span>
-              <span className="text-slate-300">/</span>
-              <h1 className="text-base font-extrabold text-slate-900 font-mono tracking-tight">
+              <span className="text-slate-600">/</span>
+              <h1 className="text-base font-extrabold text-white font-mono tracking-tight">
                 #{caseData.caseId}
               </h1>
               {getStatusBadge(caseData.status)}
             </div>
-            <div className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mt-0.5">
-              <Tag className="w-3.5 h-3.5 text-slate-400" />
-              <span>Object: <strong className="text-slate-900">{caseData.objectName}</strong></span>
+            <div className="text-xs font-bold text-slate-300 flex items-center gap-1.5 mt-0.5">
+              <Tag className="w-3.5 h-3.5 text-[#00e5ff]" />
+              <span>Target: <strong className="text-white">{caseData.objectName}</strong></span>
               {caseData.objectColor && (
-                <span className="text-slate-500 font-normal">({caseData.objectColor})</span>
+                <span className="text-slate-400 text-xs font-normal">({caseData.objectColor})</span>
               )}
             </div>
           </div>
         </div>
 
         {/* Action Buttons Toolbar */}
-        <div className="flex items-center gap-1.5 flex-wrap self-end sm:self-center">
+        <div className="flex items-center gap-2 flex-wrap self-end sm:self-center">
           {caseData.status !== 'CONFIRMED' && caseData.status !== 'RECOVERED' && caseData.status !== 'CLOSED' && (
             <button
               type="button"
               id="inv-action-confirm"
               onClick={handleConfirmMatch}
-              className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1 shadow-2xs transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-slate-950 text-xs font-extrabold flex items-center gap-1.5 shadow-[0_0_12px_rgba(16,185,129,0.3)] transition-all cursor-pointer"
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Confirm Match</span>
+              <span>CONFIRM MATCH</span>
             </button>
           )}
 
@@ -253,10 +253,10 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
               type="button"
               id="inv-action-reject"
               onClick={handleRejectMatch}
-              className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-[#141f30] hover:bg-[#1c2c44] border border-[#213552] text-slate-300 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
             >
-              <XCircle className="w-3.5 h-3.5" />
-              <span>Reject Match</span>
+              <XCircle className="w-3.5 h-3.5 text-rose-400" />
+              <span>REJECT MATCH</span>
             </button>
           )}
 
@@ -265,10 +265,10 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
               type="button"
               id="inv-action-recover"
               onClick={handleMarkRecovered}
-              className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1 shadow-2xs transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-[#111a28] hover:bg-[#18253a] border border-[#20324c] text-cyan-300 hover:text-cyan-200 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
             >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Mark Recovered</span>
+              <ShieldCheck className="w-3.5 h-3.5 text-[#00e5ff]" />
+              <span>MARK RECOVERED</span>
             </button>
           )}
 
@@ -277,10 +277,10 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
               type="button"
               id="inv-action-close"
               onClick={handleCloseInvestigation}
-              className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold flex items-center gap-1 shadow-2xs transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-[#101726] hover:bg-[#162134] border border-[#1b2940] text-slate-400 hover:text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
             >
-              <Archive className="w-3.5 h-3.5" />
-              <span>Close</span>
+              <Archive className="w-3.5 h-3.5 text-slate-400" />
+              <span>CLOSE DOCKET</span>
             </button>
           )}
 
@@ -288,80 +288,80 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
             type="button"
             id="inv-action-generate-report"
             onClick={() => setShowReportModal(true)}
-            className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer active:scale-95"
+            className="px-3.5 py-1.5 rounded-lg bg-[#00e5ff] hover:bg-[#00cce6] text-[#080b11] text-xs font-extrabold flex items-center gap-1.5 shadow-[0_0_15px_rgba(0,229,255,0.3)] transition-all cursor-pointer active:scale-95"
           >
             <FileText className="w-3.5 h-3.5" />
-            <span className="tracking-wide">GENERATE INVESTIGATION REPORT</span>
+            <span className="tracking-wide uppercase">GENERATE REPORT</span>
           </button>
         </div>
       </div>
 
       {/* Success Notification Alert */}
       {actionSuccessMsg && (
-        <div className="px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2 animate-fade-in">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+        <div className="px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center gap-2 animate-fade-in font-mono">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>{actionSuccessMsg}</span>
         </div>
       )}
 
       {/* 2. Telemetry Quick Stats Banner */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-xs">
-        <div className="p-2.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
-          <span className="text-[10px] font-mono uppercase text-slate-400 font-semibold block">Search Started</span>
-          <span className="font-mono font-bold text-slate-900 mt-0.5 block">{caseData.searchStartedAt}</span>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-xs font-mono">
+        <div className="p-2.5 rounded-xl bg-[#0c121d] border border-[#1a273c]">
+          <span className="text-[10px] uppercase text-slate-500 font-semibold block">Search Started</span>
+          <span className="font-bold text-white mt-0.5 block">{caseData.searchStartedAt}</span>
         </div>
 
-        <div className="p-2.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
-          <span className="text-[10px] font-mono uppercase text-slate-400 font-semibold block">First Detection</span>
-          <span className="font-mono font-bold text-slate-900 mt-0.5 block">{caseData.firstDetectionAt}</span>
+        <div className="p-2.5 rounded-xl bg-[#0c121d] border border-[#1a273c]">
+          <span className="text-[10px] uppercase text-slate-500 font-semibold block">First Detection</span>
+          <span className="font-bold text-white mt-0.5 block">{caseData.firstDetectionAt}</span>
         </div>
 
-        <div className="p-2.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
-          <span className="text-[10px] font-mono uppercase text-slate-400 font-semibold block">Last Detection</span>
-          <span className="font-mono font-bold text-slate-900 mt-0.5 block">{caseData.lastDetectionAt}</span>
+        <div className="p-2.5 rounded-xl bg-[#0c121d] border border-[#1a273c]">
+          <span className="text-[10px] uppercase text-slate-500 font-semibold block">Last Detection</span>
+          <span className="font-bold text-white mt-0.5 block">{caseData.lastDetectionAt}</span>
         </div>
 
-        <div className="p-2.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
-          <span className="text-[10px] font-mono uppercase text-slate-400 font-semibold block">Cameras Analyzed</span>
-          <span className="font-mono font-bold text-indigo-700 mt-0.5 block">{caseData.camerasAnalyzedCount} Nodes</span>
+        <div className="p-2.5 rounded-xl bg-[#0c121d] border border-[#1a273c]">
+          <span className="text-[10px] uppercase text-slate-500 font-semibold block">Cameras Analyzed</span>
+          <span className="font-bold text-cyan-400 mt-0.5 block">{caseData.camerasAnalyzedCount} Nodes</span>
         </div>
 
-        <div className="p-2.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
-          <span className="text-[10px] font-mono uppercase text-slate-400 font-semibold block">Positive Matches</span>
-          <span className="font-mono font-bold text-emerald-700 mt-0.5 block">{caseData.positiveMatchesCount} Sightings</span>
+        <div className="p-2.5 rounded-xl bg-[#0c121d] border border-[#1a273c]">
+          <span className="text-[10px] uppercase text-slate-500 font-semibold block">Positive Matches</span>
+          <span className="font-bold text-emerald-400 mt-0.5 block">{caseData.positiveMatchesCount} Sightings</span>
         </div>
 
-        <div className="p-2.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
-          <span className="text-[10px] font-mono uppercase text-slate-400 font-semibold block">Last Known Location</span>
-          <span className="font-semibold text-slate-900 text-[11px] truncate mt-0.5 block font-sans">{caseData.lastKnownLocation}</span>
+        <div className="p-2.5 rounded-xl bg-[#0c121d] border border-[#1a273c]">
+          <span className="text-[10px] uppercase text-slate-500 font-semibold block">Last Known Location</span>
+          <span className="font-semibold text-white text-[11px] truncate mt-0.5 block font-sans">{caseData.lastKnownLocation}</span>
         </div>
       </div>
 
       {/* 3. Section Navigation Tabs */}
-      <div className="flex items-center gap-1 border-b border-slate-200 bg-slate-50/60 p-1 rounded-xl text-xs overflow-x-auto">
+      <div className="flex items-center gap-1.5 border-b border-[#162134] bg-[#090e17] p-1.5 rounded-xl text-xs overflow-x-auto">
         <button
           type="button"
           onClick={() => setActiveSection('overview')}
-          className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer shrink-0 ${
+          className={`px-3 py-1.5 rounded-lg font-bold font-mono transition-all cursor-pointer shrink-0 ${
             activeSection === 'overview'
-              ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
+              ? 'bg-[#142033] text-[#00e5ff] border border-[#00e5ff]/30 shadow-xs'
+              : 'text-slate-400 hover:text-white hover:bg-[#0f1726]'
           }`}
         >
-          Overview
+          OVERVIEW
         </button>
 
         <button
           type="button"
           onClick={() => setActiveSection('evidence')}
-          className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1 ${
+          className={`px-3 py-1.5 rounded-lg font-bold font-mono transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
             activeSection === 'evidence'
-              ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
+              ? 'bg-[#142033] text-[#00e5ff] border border-[#00e5ff]/30 shadow-xs'
+              : 'text-slate-400 hover:text-white hover:bg-[#0f1726]'
           }`}
         >
-          <span>Evidence</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-slate-100 text-slate-600">
+          <span>EVIDENCE</span>
+          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-[#1c2c44] text-cyan-300">
             {caseData.cameraJourney.length}
           </span>
         </button>
@@ -369,31 +369,31 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
         <button
           type="button"
           onClick={() => setActiveSection('journey')}
-          className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
+          className={`px-3 py-1.5 rounded-lg font-bold font-mono transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
             activeSection === 'journey'
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
+              ? 'bg-[#00e5ff] text-[#080b11] shadow-[0_0_12px_rgba(0,229,255,0.3)]'
+              : 'text-slate-400 hover:text-white hover:bg-[#0f1726]'
           }`}
         >
           <Camera className="w-3.5 h-3.5" />
-          <span>Camera Journey</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-indigo-500/30 text-indigo-100">
-            Flow
+          <span>CAMERA JOURNEY</span>
+          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-black/20 text-inherit">
+            SPATIAL
           </span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveSection('timeline')}
-          className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1 ${
+          className={`px-3 py-1.5 rounded-lg font-bold font-mono transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
             activeSection === 'timeline'
-              ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
+              ? 'bg-[#142033] text-[#00e5ff] border border-[#00e5ff]/30 shadow-xs'
+              : 'text-slate-400 hover:text-white hover:bg-[#0f1726]'
           }`}
         >
           <Clock className="w-3.5 h-3.5" />
-          <span>Timeline</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-slate-100 text-slate-600">
+          <span>TIMELINE</span>
+          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-[#1c2c44] text-cyan-300">
             {caseData.timeline.length}
           </span>
         </button>
@@ -401,15 +401,15 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
         <button
           type="button"
           onClick={() => setActiveSection('notes')}
-          className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1 ${
+          className={`px-3 py-1.5 rounded-lg font-bold font-mono transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
             activeSection === 'notes'
-              ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
+              ? 'bg-[#142033] text-[#00e5ff] border border-[#00e5ff]/30 shadow-xs'
+              : 'text-slate-400 hover:text-white hover:bg-[#0f1726]'
           }`}
         >
           <MessageSquare className="w-3.5 h-3.5" />
-          <span>Notes</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-slate-100 text-slate-600">
+          <span>NOTES</span>
+          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-[#1c2c44] text-cyan-300">
             {caseData.notes.length}
           </span>
         </button>
@@ -417,14 +417,14 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
         <button
           type="button"
           onClick={() => setActiveSection('activity')}
-          className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1 ${
+          className={`px-3 py-1.5 rounded-lg font-bold font-mono transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
             activeSection === 'activity'
-              ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
+              ? 'bg-[#142033] text-[#00e5ff] border border-[#00e5ff]/30 shadow-xs'
+              : 'text-slate-400 hover:text-white hover:bg-[#0f1726]'
           }`}
         >
           <Activity className="w-3.5 h-3.5" />
-          <span>Activity Log</span>
+          <span>AUDIT LOG</span>
         </button>
       </div>
 
@@ -435,7 +435,7 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 animate-fade-in text-xs">
           {/* Primary Evidence Frame Preview */}
           <div className="md:col-span-6 flex flex-col space-y-2">
-            <div className="aspect-video rounded-xl bg-slate-950 overflow-hidden border border-slate-200 shadow-inner relative group">
+            <div className="aspect-video rounded-xl bg-[#070a10] overflow-hidden border border-[#1a273c] shadow-inner relative group">
               <img 
                 src={caseData.primaryEvidenceUrl} 
                 alt={caseData.objectName} 
@@ -445,7 +445,7 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
                 }}
               />
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-4">
-                <div className="w-2/3 h-2/3 border-2 border-emerald-400/90 rounded-sm relative shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                <div className="w-2/3 h-2/3 border-2 border-emerald-400 rounded-sm relative shadow-[0_0_15px_rgba(16,185,129,0.4)]">
                   <div className="absolute top-0 left-0 bg-emerald-500 text-slate-950 font-mono text-[9px] font-extrabold px-1.5 py-0.5 uppercase tracking-wider">
                     {caseData.objectName} • {caseData.primaryConfidence.toFixed(1)}%
                   </div>
@@ -454,7 +454,7 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
               <button
                 type="button"
                 onClick={() => setLightboxImage(caseData.primaryEvidenceUrl)}
-                className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 hover:bg-black/80 text-white transition-colors cursor-pointer"
+                className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/70 hover:bg-black text-white transition-colors cursor-pointer"
                 title="Inspect Frame"
               >
                 <Maximize2 className="w-3.5 h-3.5" />
@@ -463,40 +463,40 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
 
             <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 px-1">
               <span>PRIMARY EVIDENCE CAPTURE</span>
-              <span>CONFIDENCE: {caseData.primaryConfidence.toFixed(1)}%</span>
+              <span className="text-emerald-400 font-bold">CONFIDENCE: {caseData.primaryConfidence.toFixed(1)}%</span>
             </div>
           </div>
 
           {/* Synopsis & Investigation Details */}
           <div className="md:col-span-6 flex flex-col justify-between space-y-3">
-            <div className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs space-y-2.5">
-              <h3 className="font-bold text-slate-900 font-sans text-xs uppercase flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                <FileText className="w-3.5 h-3.5 text-indigo-600" />
+            <div className="p-4 rounded-xl bg-[#0c121d] border border-[#1a273c] shadow-inner space-y-2.5">
+              <h3 className="font-bold text-white font-mono text-xs uppercase flex items-center gap-1.5 border-b border-[#162134] pb-2">
+                <FileText className="w-3.5 h-3.5 text-[#00e5ff]" />
                 <span>Incident Synopsis</span>
               </h3>
-              <p className="text-slate-600 leading-relaxed text-xs">
+              <p className="text-slate-300 leading-relaxed text-xs">
                 {caseData.summaryNotes}
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div className="p-3 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
-                <span className="text-[10px] font-mono uppercase text-slate-400 font-semibold block">Last Known Camera</span>
-                <span className="font-mono font-bold text-slate-900 text-xs truncate block mt-0.5">
+            <div className="grid grid-cols-2 gap-2 font-mono">
+              <div className="p-3 rounded-xl bg-[#0c121d] border border-[#1a273c]">
+                <span className="text-[10px] uppercase text-slate-500 font-semibold block">Last Known Camera</span>
+                <span className="font-bold text-cyan-300 text-xs truncate block mt-0.5">
                   {caseData.lastKnownCamera}
                 </span>
               </div>
 
-              <div className="p-3 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
-                <span className="text-[10px] font-mono uppercase text-slate-400 font-semibold block">Assigned Unit</span>
-                <span className="font-bold text-slate-900 text-xs truncate block mt-0.5">
+              <div className="p-3 rounded-xl bg-[#0c121d] border border-[#1a273c]">
+                <span className="text-[10px] uppercase text-slate-500 font-semibold block">Assigned Unit</span>
+                <span className="font-bold text-white text-xs truncate block mt-0.5">
                   {caseData.assignedUnit}
                 </span>
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 font-mono text-[10px] text-slate-600 break-all">
-              <span className="text-slate-400 uppercase font-bold block mb-0.5">SHA-256 Audit Integrity Hash:</span>
+            <div className="p-3 rounded-xl bg-[#080d15] border border-[#162234] font-mono text-[10px] text-cyan-300 break-all">
+              <span className="text-slate-500 uppercase font-bold block mb-0.5">SHA-256 Audit Integrity Hash:</span>
               {caseData.evidenceHash}
             </div>
           </div>
@@ -507,15 +507,15 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
       {activeSection === 'evidence' && (
         <div className="space-y-3 animate-fade-in text-xs">
           <div className="flex items-center justify-between">
-            <span className="font-mono text-slate-500 font-bold text-xs">
+            <span className="font-mono text-slate-400 font-bold text-xs">
               CAPTURED SURVEILLANCE EVIDENCE FRAMES ({caseData.cameraJourney.length} ITEMS)
             </span>
             <div className="flex items-center gap-1">
               <button
                 type="button"
                 onClick={() => setEvidenceMode('annotated')}
-                className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold transition-all cursor-pointer ${
-                  evidenceMode === 'annotated' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'
+                className={`px-2.5 py-1 rounded text-[11px] font-mono font-bold transition-all cursor-pointer ${
+                  evidenceMode === 'annotated' ? 'bg-[#00e5ff] text-[#080b11]' : 'bg-[#101726] text-slate-400 hover:text-white'
                 }`}
               >
                 Annotated
@@ -523,8 +523,8 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
               <button
                 type="button"
                 onClick={() => setEvidenceMode('original')}
-                className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold transition-all cursor-pointer ${
-                  evidenceMode === 'original' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'
+                className={`px-2.5 py-1 rounded text-[11px] font-mono font-bold transition-all cursor-pointer ${
+                  evidenceMode === 'original' ? 'bg-[#00e5ff] text-[#080b11]' : 'bg-[#101726] text-slate-400 hover:text-white'
                 }`}
               >
                 Original
@@ -536,9 +536,9 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
             {caseData.cameraJourney.map((item, idx) => (
               <div 
                 key={item.id} 
-                className="rounded-xl bg-white border border-slate-200/90 shadow-2xs overflow-hidden flex flex-col justify-between group hover:border-indigo-300 transition-all"
+                className="rounded-xl bg-[#0c121d] border border-[#1a273c] overflow-hidden flex flex-col justify-between group hover:border-[#00e5ff]/50 transition-all shadow-inner"
               >
-                <div className="relative aspect-video bg-slate-950 overflow-hidden cursor-pointer" onClick={() => setLightboxImage(item.evidenceFrameUrl)}>
+                <div className="relative aspect-video bg-[#070a10] overflow-hidden cursor-pointer" onClick={() => setLightboxImage(item.evidenceFrameUrl)}>
                   <img 
                     src={item.evidenceFrameUrl} 
                     alt={item.cameraName} 
@@ -549,27 +549,27 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
                   />
                   {evidenceMode === 'annotated' && item.boundingBox && (
                     <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-3">
-                      <div className="w-2/3 h-2/3 border-2 border-emerald-400 rounded-sm relative">
-                        <span className="absolute top-0 left-0 bg-emerald-500 text-slate-950 font-mono text-[8px] font-bold px-1 uppercase">
+                      <div className="w-2/3 h-2/3 border-2 border-emerald-400 rounded-sm relative shadow-[0_0_12px_rgba(16,185,129,0.3)]">
+                        <span className="absolute top-0 left-0 bg-emerald-500 text-slate-950 font-mono text-[8px] font-extrabold px-1 uppercase">
                           MATCH • {item.confidence?.toFixed(1)}%
                         </span>
                       </div>
                     </div>
                   )}
-                  <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.2 rounded bg-black/70 text-[9px] font-mono text-white">
+                  <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.2 rounded bg-black/80 text-[9px] font-mono text-white">
                     FRAME #{idx + 1} • {item.timeShort}
                   </span>
                 </div>
 
-                <div className="p-2.5 space-y-1">
-                  <div className="font-mono font-bold text-slate-900 text-xs truncate">
+                <div className="p-3 space-y-1">
+                  <div className="font-mono font-bold text-white text-xs truncate">
                     {item.cameraName}
                   </div>
-                  <div className="text-[11px] text-slate-500 truncate font-sans">
+                  <div className="text-[11px] text-slate-400 truncate font-sans">
                     {item.location}
                   </div>
                   {item.transitionNote && (
-                    <p className="text-[10px] text-slate-600 line-clamp-2 pt-1 font-sans">
+                    <p className="text-[10px] text-slate-400 line-clamp-2 pt-1 font-sans">
                       {item.transitionNote}
                     </p>
                   )}
@@ -584,15 +584,15 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
       {activeSection === 'journey' && (
         <div className="space-y-4 animate-fade-in text-xs">
           
-          {/* Transparent Capability Banner (Prompt Compliance) */}
-          <div className="p-3 rounded-xl bg-slate-100 border border-slate-200/90 flex items-start gap-2.5 text-xs text-slate-600">
-            <Info className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+          {/* Transparent Capability Banner */}
+          <div className="p-3 rounded-xl bg-[#080d15] border border-[#162234] flex items-start gap-2.5 text-xs text-slate-300">
+            <Info className="w-4 h-4 text-[#00e5ff] shrink-0 mt-0.5" />
             <div className="space-y-0.5">
-              <span className="font-bold text-slate-900 font-mono block uppercase text-[11px]">
-                Multi-Camera ReID & Sequence Reconstruction Pipeline
+              <span className="font-bold text-white font-mono block uppercase text-[11px]">
+                Multi-Camera Re-ID & Spatial Progression Pipeline
               </span>
-              <p className="text-[11px] leading-relaxed">
-                Visualizing correlated spatial progression across surveillance nodes. Sequence timestamps and multi-camera transitions are calibrated through synchronized CCTV nodes.
+              <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
+                Visualizing correlated spatial progression across connected surveillance nodes. Sequence timestamps and multi-camera transitions are calibrated through synchronized CCTV nodes.
               </p>
             </div>
           </div>
@@ -601,74 +601,74 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
           <div className="flex flex-col md:flex-row items-stretch justify-between gap-3">
             {caseData.cameraJourney.map((step, idx) => (
               <React.Fragment key={step.id}>
-                <div className="flex-1 p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs space-y-2.5 flex flex-col justify-between">
+                <div className="flex-1 p-3.5 rounded-xl bg-[#0c121d] border border-[#1a273c] space-y-2.5 flex flex-col justify-between shadow-inner">
                   <div>
                     {/* Step Badge & Camera ID */}
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                      <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-indigo-700">
-                        <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px]">
+                    <div className="flex items-center justify-between border-b border-[#141f30] pb-2">
+                      <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-[#00e5ff]">
+                        <span className="w-5 h-5 rounded-full bg-[#00e5ff]/20 text-[#00e5ff] flex items-center justify-center text-[10px] font-mono">
                           {idx + 1}
                         </span>
                         <span className="uppercase">{step.cameraId}</span>
                       </div>
-                      <span className="font-mono text-[11px] font-semibold text-slate-500">
+                      <span className="font-mono text-[11px] font-semibold text-slate-400">
                         {step.timestamp}
                       </span>
                     </div>
 
                     {/* Camera Location */}
                     <div className="mt-2 space-y-0.5">
-                      <span className="font-bold text-slate-900 text-xs block font-mono">
+                      <span className="font-bold text-white text-xs block font-mono">
                         {step.cameraName}
                       </span>
-                      <span className="text-slate-500 text-[11px] block font-sans">
+                      <span className="text-slate-400 text-[11px] block font-sans">
                         {step.location}
                       </span>
                     </div>
 
                     {/* Evidence Thumbnail */}
-                    <div className="mt-2.5 aspect-video rounded-lg bg-slate-950 overflow-hidden relative group">
+                    <div className="mt-2.5 aspect-video rounded-lg bg-[#070a10] overflow-hidden relative group border border-[#18253a]">
                       <img 
                         src={step.evidenceFrameUrl} 
                         alt={step.cameraName} 
-                        className="w-full h-full object-cover cursor-pointer"
+                        className="w-full h-full object-cover cursor-pointer group-hover:scale-105 transition-transform"
                         onClick={() => setLightboxImage(step.evidenceFrameUrl)}
                         onError={(e) => {
                           (e.target as HTMLElement).style.display = 'none';
                         }}
                       />
                       {step.confidence && (
-                        <div className="absolute bottom-1 right-1 px-1.5 py-0.2 rounded bg-emerald-600 text-white font-mono text-[9px] font-bold">
+                        <div className="absolute bottom-1 right-1 px-1.5 py-0.2 rounded bg-emerald-600 text-slate-950 font-mono text-[9px] font-extrabold">
                           {step.confidence.toFixed(1)}% Match
                         </div>
                       )}
                     </div>
 
                     {step.transitionNote && (
-                      <p className="mt-2 text-[11px] text-slate-600 italic">
+                      <p className="mt-2 text-[11px] text-slate-300 italic font-sans">
                         &ldquo;{step.transitionNote}&rdquo;
                       </p>
                     )}
                   </div>
 
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] font-mono text-slate-400">
+                  <div className="pt-2 border-t border-[#141f30] flex items-center justify-between text-[10px] font-mono text-slate-400">
                     <span>DWELL: {step.dwellTimeSeconds || 30}s</span>
-                    <span className="text-emerald-700 font-bold">CORRELATED</span>
+                    <span className="text-emerald-400 font-bold">CORRELATED</span>
                   </div>
                 </div>
 
                 {/* Arrow Divider between steps (Desktop: horizontal, Mobile: vertical) */}
                 {idx < caseData.cameraJourney.length - 1 && (
-                  <div className="hidden md:flex items-center justify-center text-slate-400 px-1">
+                  <div className="hidden md:flex items-center justify-center text-slate-500 px-1">
                     <div className="flex flex-col items-center">
-                      <ArrowRight className="w-5 h-5 text-indigo-500 stroke-[2.5]" />
+                      <ArrowRight className="w-5 h-5 text-[#00e5ff] stroke-[2.5]" />
                       <span className="text-[9px] font-mono text-slate-400 mt-1">TRANSIT</span>
                     </div>
                   </div>
                 )}
                 {idx < caseData.cameraJourney.length - 1 && (
-                  <div className="flex md:hidden items-center justify-center text-slate-400 py-1">
-                    <span className="text-xs font-mono text-indigo-600 font-bold">↓ TRANSIT AXIS</span>
+                  <div className="flex md:hidden items-center justify-center text-slate-500 py-1">
+                    <span className="text-xs font-mono text-[#00e5ff] font-bold">↓ TRANSIT AXIS</span>
                   </div>
                 )}
               </React.Fragment>
@@ -679,35 +679,35 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
 
       {/* SECTION 4: TIMELINE */}
       {activeSection === 'timeline' && (
-        <div className="p-4 rounded-xl bg-white border border-slate-200/90 shadow-2xs space-y-4 animate-fade-in text-xs">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <span className="font-mono text-slate-900 font-bold text-xs uppercase">
+        <div className="p-4 rounded-xl bg-[#0c121d] border border-[#1a273c] shadow-inner space-y-4 animate-fade-in text-xs">
+          <div className="flex items-center justify-between border-b border-[#162134] pb-2">
+            <span className="font-mono text-white font-bold text-xs uppercase">
               Chronological Investigation Timeline
             </span>
-            <span className="text-[11px] font-mono text-slate-500">
+            <span className="text-[11px] font-mono text-slate-400">
               {caseData.timeline.length} Recorded Events
             </span>
           </div>
 
-          <div className="relative pl-6 space-y-5 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+          <div className="relative pl-6 space-y-5 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#1e2f49]">
             {caseData.timeline.map((item) => (
               <div key={item.id} className="relative group">
                 {/* Timeline Node Dot */}
-                <div className="absolute -left-6 top-1 w-3 h-3 rounded-full bg-white border-2 border-indigo-600 shadow-xs" />
+                <div className="absolute -left-6 top-1 w-3 h-3 rounded-full bg-[#080b11] border-2 border-[#00e5ff] shadow-[0_0_8px_rgba(0,229,255,0.5)]" />
 
                 <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3">
-                  <span className="font-mono font-bold text-indigo-700 text-xs shrink-0 w-16">
+                  <span className="font-mono font-bold text-cyan-400 text-xs shrink-0 w-16">
                     {item.timeFormatted}
                   </span>
                   <div className="flex-1">
-                    <span className="font-bold text-slate-900 font-sans text-xs">
+                    <span className="font-bold text-white font-sans text-xs">
                       {item.title}
                     </span>
-                    <span className="text-slate-600 ml-2 font-sans">
+                    <span className="text-slate-300 ml-2 font-sans">
                       — {item.description}
                     </span>
                     {item.camera && (
-                      <span className="ml-2 font-mono text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-600">
+                      <span className="ml-2 font-mono text-[10px] px-1.5 py-0.2 rounded bg-[#131e30] text-cyan-300 border border-[#1d2d46]">
                         {item.camera}
                       </span>
                     )}
@@ -723,8 +723,8 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
       {activeSection === 'notes' && (
         <div className="space-y-4 animate-fade-in text-xs">
           {/* Add Note Form */}
-          <form onSubmit={handleAddNote} className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs space-y-2.5">
-            <label className="font-bold text-slate-900 uppercase text-[11px] font-mono block">
+          <form onSubmit={handleAddNote} className="p-3.5 rounded-xl bg-[#0c121d] border border-[#1a273c] shadow-inner space-y-2.5">
+            <label className="font-bold text-white uppercase text-[11px] font-mono block">
               Add Investigator Observation Note
             </label>
             <div className="flex gap-2">
@@ -733,14 +733,14 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
                 value={newNoteContent}
                 onChange={(e) => setNewNoteContent(e.target.value)}
                 placeholder="Enter physical observations, suspect trajectory, or custody details..."
-                className="flex-1 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-900"
+                className="flex-1 px-3 py-2 rounded-lg bg-[#080d15] border border-[#1e2c42] text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-[#00e5ff]"
               />
               <button
                 type="submit"
-                className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
+                className="px-4 py-2 rounded-lg bg-[#00e5ff] hover:bg-[#00cce6] text-[#080b11] font-extrabold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>Append Note</span>
+                <span>APPEND NOTE</span>
               </button>
             </div>
           </form>
@@ -748,16 +748,16 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
           {/* Notes History Ledger */}
           <div className="space-y-2.5">
             {caseData.notes.map((note) => (
-              <div key={note.id} className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs space-y-1.5">
+              <div key={note.id} className="p-3.5 rounded-xl bg-[#0c121d] border border-[#1a273c] shadow-inner space-y-1.5">
                 <div className="flex items-center justify-between text-[11px]">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-900 font-sans">{note.author}</span>
-                    <span className="text-slate-400 font-mono">•</span>
-                    <span className="text-slate-500 font-mono text-[10px]">{note.authorRole}</span>
+                    <span className="font-bold text-white font-sans">{note.author}</span>
+                    <span className="text-slate-500 font-mono">•</span>
+                    <span className="text-cyan-400 font-mono text-[10px]">{note.authorRole}</span>
                   </div>
-                  <span className="font-mono text-slate-400 text-[10px]">{note.timeFormatted}</span>
+                  <span className="font-mono text-slate-500 text-[10px]">{note.timeFormatted}</span>
                 </div>
-                <p className="text-slate-700 text-xs leading-relaxed font-sans">
+                <p className="text-slate-300 text-xs leading-relaxed font-sans">
                   {note.content}
                 </p>
               </div>
@@ -768,32 +768,32 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
 
       {/* SECTION 6: ACTIVITY LOG */}
       {activeSection === 'activity' && (
-        <div className="p-4 rounded-xl bg-white border border-slate-200/90 shadow-2xs space-y-3 animate-fade-in text-xs">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <span className="font-mono text-slate-900 font-bold text-xs uppercase">
+        <div className="p-4 rounded-xl bg-[#0c121d] border border-[#1a273c] shadow-inner space-y-3 animate-fade-in text-xs">
+          <div className="flex items-center justify-between border-b border-[#162134] pb-2">
+            <span className="font-mono text-white font-bold text-xs uppercase">
               Immutable Case Audit Trail
             </span>
-            <span className="text-[10px] font-mono text-emerald-700 font-semibold">
-              TAMPER-PROOF LEDGER
+            <span className="text-[10px] font-mono text-emerald-400 font-semibold">
+              TAMPER-PROOF ORACLE XE LEDGER
             </span>
           </div>
 
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-[#141f30]">
             {caseData.activityLog.map((act) => (
               <div key={act.id} className="py-2.5 flex items-start justify-between gap-3 text-xs">
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-900">{act.action}</span>
-                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-100 text-slate-600">
+                    <span className="font-bold text-white">{act.action}</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#142033] text-cyan-300 border border-[#1d2d46]">
                       {act.category}
                     </span>
                   </div>
                   {act.details && (
-                    <p className="text-[11px] text-slate-600 font-sans">{act.details}</p>
+                    <p className="text-[11px] text-slate-400 font-sans">{act.details}</p>
                   )}
                 </div>
 
-                <div className="text-right shrink-0 text-[10px] font-mono text-slate-400">
+                <div className="text-right shrink-0 text-[10px] font-mono text-slate-500">
                   <div>{act.actor}</div>
                   <div>{act.timeFormatted}</div>
                 </div>
@@ -809,12 +809,12 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
           onClick={() => setLightboxImage(null)}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md cursor-pointer animate-fade-in"
         >
-          <div className="relative max-w-4xl max-h-[85vh] rounded-2xl overflow-hidden border border-white/20 shadow-2xl">
+          <div className="relative max-w-4xl max-h-[85vh] rounded-2xl overflow-hidden border border-[#1e2f49] shadow-2xl">
             <img src={lightboxImage} alt="Full evidence preview" className="w-full h-full object-contain" />
             <button
               type="button"
               onClick={() => setLightboxImage(null)}
-              className="absolute top-3 right-3 p-1.5 rounded-full bg-black/60 text-white hover:bg-black/80 cursor-pointer"
+              className="absolute top-3 right-3 p-1.5 rounded-full bg-black/70 text-white hover:bg-black cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -827,6 +827,7 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
         caseData={caseData}
         isOpen={showReportModal}
         onClose={() => setShowReportModal(false)}
+        onCloseCase={handleCloseInvestigation}
       />
     </div>
   );

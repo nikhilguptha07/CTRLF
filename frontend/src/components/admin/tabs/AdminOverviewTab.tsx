@@ -153,14 +153,15 @@ export const AdminOverviewTab: React.FC<AdminOverviewTabProps> = ({ onNavigateTa
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in font-sans">
+    <div className="space-y-6 animate-fade-in font-sans text-slate-100">
       {/* Overview Intro Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-[#0c121d] border border-[#1a273c] shadow-xl">
         <div>
-          <h2 className="text-base font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-base font-extrabold text-white tracking-tight uppercase font-mono flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#00e5ff] animate-pulse" />
             System Operations & Database Health
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-400 mt-1">
             Authoritative surveillance telemetry backed by Oracle Database 21c XE Thin Driver.
           </p>
         </div>
@@ -169,7 +170,7 @@ export const AdminOverviewTab: React.FC<AdminOverviewTabProps> = ({ onNavigateTa
           <button
             type="button"
             onClick={fetchStats}
-            className="px-3.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-100 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95"
+            className="px-3.5 py-1.5 rounded-xl bg-[#101726] border border-[#1b2940] text-[#00e5ff] text-xs font-mono font-bold hover:bg-[#162134] hover:border-[#00e5ff]/40 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Refresh Telemetry</span>
@@ -185,24 +186,24 @@ export const AdminOverviewTab: React.FC<AdminOverviewTabProps> = ({ onNavigateTa
             <div
               key={idx}
               onClick={() => onNavigateTab(kpi.tab)}
-              className="group p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:border-indigo-400 transition-all cursor-pointer flex flex-col justify-between"
+              className="group p-5 rounded-2xl bg-[#0c121d] border border-[#1a273c] shadow-lg hover:border-[#00e5ff]/50 hover:shadow-[0_0_20px_rgba(0,229,255,0.08)] transition-all cursor-pointer flex flex-col justify-between"
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[11px] font-extrabold tracking-wider uppercase text-slate-400">
+                <span className="text-[11px] font-extrabold tracking-wider uppercase text-slate-400 font-mono">
                   {kpi.title}
                 </span>
-                <div className="w-8 h-8 rounded-xl bg-slate-100 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="w-8 h-8 rounded-xl bg-[#101726] border border-[#1b2940] text-[#00e5ff] flex items-center justify-center group-hover:scale-110 group-hover:border-[#00e5ff]/40 transition-all">
                   <Icon className="w-4 h-4" />
                 </div>
               </div>
 
               <div>
-                <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                <div className="text-2xl sm:text-3xl font-black text-white tracking-tight font-mono">
                   {kpi.value}
                 </div>
-                <div className="flex items-center justify-between text-xs text-slate-500 mt-1">
+                <div className="flex items-center justify-between text-xs text-slate-400 mt-1">
                   <span>{kpi.subtext}</span>
-                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-indigo-600 transition-opacity" />
+                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-[#00e5ff] transition-opacity" />
                 </div>
               </div>
             </div>
@@ -211,31 +212,31 @@ export const AdminOverviewTab: React.FC<AdminOverviewTabProps> = ({ onNavigateTa
       </div>
 
       {/* Database Quick Health Strip */}
-      <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+      <div className="p-5 rounded-2xl bg-[#0c121d] border border-[#1a273c] shadow-xl space-y-4">
+        <div className="flex items-center justify-between border-b border-[#162134] pb-3">
           <div className="flex items-center gap-2.5">
-            <Server className="w-4 h-4 text-indigo-600" />
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+            <Server className="w-4 h-4 text-[#00e5ff]" />
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">
               Oracle 21c XE Relational Persistence Layer
             </h3>
           </div>
-          <span className="text-[11px] font-mono text-slate-500">
+          <span className="text-[11px] font-mono text-slate-400">
             PDB: {stats?.databaseName || 'XEPDB1'} · Mode: {stats?.oracleMode || 'ORACLE_21C_XE_THIN'}
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60">
-            <span className="text-slate-400 block text-[10px] uppercase font-bold">Driver Architecture</span>
-            <span className="font-semibold text-slate-800">Pure Thin TCP/IP Mode (Instant Client Free)</span>
+          <div className="p-3 rounded-xl bg-[#101726] border border-[#1b2940]">
+            <span className="text-slate-400 block text-[10px] uppercase font-bold font-mono">Driver Architecture</span>
+            <span className="font-semibold text-slate-200">Pure Thin TCP/IP Mode (Instant Client Free)</span>
           </div>
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60">
-            <span className="text-slate-400 block text-[10px] uppercase font-bold">Roundtrip Latency</span>
-            <span className="font-semibold text-emerald-600 font-mono">{stats?.latencyMs ?? 1} ms (Zero Overhead)</span>
+          <div className="p-3 rounded-xl bg-[#101726] border border-[#1b2940]">
+            <span className="text-slate-400 block text-[10px] uppercase font-bold font-mono">Roundtrip Latency</span>
+            <span className="font-semibold text-emerald-400 font-mono">{stats?.latencyMs ?? 1} ms (Zero Overhead)</span>
           </div>
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60">
-            <span className="text-slate-400 block text-[10px] uppercase font-bold">Audit Integrity</span>
-            <span className="font-semibold text-indigo-600">SHA-256 Tamper-Evident Hash Chain</span>
+          <div className="p-3 rounded-xl bg-[#101726] border border-[#1b2940]">
+            <span className="text-slate-400 block text-[10px] uppercase font-bold font-mono">Audit Integrity</span>
+            <span className="font-semibold text-[#00e5ff] font-mono">SHA-256 Tamper-Evident Hash Chain</span>
           </div>
         </div>
       </div>

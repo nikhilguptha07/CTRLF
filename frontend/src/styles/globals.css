@@ -43,62 +43,64 @@ code, kbd, samp, pre, .font-mono {
   letter-spacing: -0.015em;
 }
 
-/* Premium Floating Glass Panel according to exact specification:
-   background: rgba(255,255,255,0.18)
-   backdrop-filter: blur(35px)
-   border: 1px solid rgba(255,255,255,0.35)
-   internal highlights, subtle reflections, realistic shadows, rounded corners, slight refraction illusion
-*/
-.glass-panel-floating {
-  background: rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(35px) saturate(180%);
-  -webkit-backdrop-filter: blur(35px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 28px;
-  box-shadow: 
-    0 30px 70px -15px rgba(15, 23, 42, 0.16),
-    0 15px 35px -10px rgba(0, 0, 0, 0.08),
-    inset 0 1px 2px 0 rgba(255, 255, 255, 0.75),
-    inset 0 -1px 2px 0 rgba(255, 255, 255, 0.25),
-    inset 0 0 25px rgba(255, 255, 255, 0.12);
-  position: relative;
-  overflow: hidden;
+/* Security Operations Center (SOC) Dark Mission-Control Design System */
+.soc-panel {
+  background: #0d121d;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
 }
 
-/* Diagonal subtle specular reflection across glass */
-.glass-panel-floating::before {
-  content: '';
-  position: absolute;
-  top: -20%;
-  left: -20%;
-  width: 140%;
-  height: 70%;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.32) 0%,
-    rgba(255, 255, 255, 0.1) 40%,
-    rgba(255, 255, 255, 0) 70%
-  );
-  pointer-events: none;
-  transform: skewY(-5deg);
-  opacity: 0.85;
+.soc-panel-elevated {
+  background: #111726;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 14px 40px -10px rgba(0, 0, 0, 0.65);
 }
 
-/* Subtle glass cards inside the dashboard */
-.glass-card-subtle {
-  background: rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: 20px;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+.soc-panel-glass {
+  background: rgba(13, 18, 29, 0.78);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.glass-card-subtle:hover {
-  background: rgba(255, 255, 255, 0.65);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+.soc-border {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.soc-border-cyan {
+  border-color: rgba(6, 182, 212, 0.4);
+}
+
+.soc-glow-cyan {
+  box-shadow: 0 0 25px -4px rgba(6, 182, 212, 0.3);
+}
+
+.soc-glow-teal {
+  box-shadow: 0 0 25px -4px rgba(20, 184, 166, 0.3);
+}
+
+.soc-glow-amber {
+  box-shadow: 0 0 25px -4px rgba(245, 158, 11, 0.3);
+}
+
+.soc-glow-emerald {
+  box-shadow: 0 0 25px -4px rgba(16, 185, 129, 0.3);
+}
+
+.soc-glow-red {
+  box-shadow: 0 0 25px -4px rgba(244, 63, 94, 0.3);
+}
+
+/* Subtle Technical Grid Floor Pattern */
+.bg-grid-technical {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+.bg-radial-vignette {
+  background: radial-gradient(circle at 50% 30%, transparent 20%, rgba(8, 11, 17, 0.95) 90%);
 }
 
 /* Button Microinteraction according to specification:

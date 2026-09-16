@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { 
   Search, 
   X, 
@@ -19,7 +19,8 @@ import {
   Bell,
   Network,
   ShieldCheck,
-  ChevronDown
+  ChevronDown,
+  Command
 } from 'lucide-react';
 import { MainDashboard } from './MainDashboard';
 import { LostObjectForm } from '../SearchScene/LostObjectForm';
@@ -31,6 +32,7 @@ import { SettingsView } from '../../components/dashboard/SettingsView';
 import { InvestigationView } from '../../components/investigation/InvestigationView';
 import { CameraNetworkView } from '../../components/camera/CameraNetworkView';
 import { AlertCenterView } from '../../components/alerts/AlertCenterView';
+import { CommandPalette } from '../../components/common/CommandPalette';
 import { useExperienceStore } from '../../store/useExperienceStore';
 import { useAdminRouter } from '../../hooks/useAdminRouter';
 
@@ -40,7 +42,7 @@ export const DashboardWindow: React.FC = () => {
     setStage, 
     activeFeedTab, 
     setActiveFeedTab, 
-    startSearchFlow,
+    startSearchFlow, 
     currentUser,
     currentUserRole,
     setCurrentUserRole,
@@ -50,13 +52,26 @@ export const DashboardWindow: React.FC = () => {
     setShowOracleModal
   } = useExperienceStore();
   const { navigate } = useAdminRouter();
-  const [headerSearch, setHeaderSearch] = useState('');
+
   const [showChatAssistant, setShowChatAssistant] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
   const [showRoleSelector, setShowRoleSelector] = useState(false);
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
   const windowRef = useRef<HTMLDivElement>(null);
 
   const isFormView = stage === 'OBJECT_INPUT' || stage === 'QUESTION' || activeFeedTab === 'search';
+
+  // Global keyboard shortcut: Ctrl+K / Cmd+K to open Command Palette
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setShowCommandPalette((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleNavClick = (tab: any, targetStage: any = 'HOME') => {
     if (!isAuthenticated && tab !== 'home' && tab !== 'overview') {
@@ -78,17 +93,6 @@ export const DashboardWindow: React.FC = () => {
     }
     setActiveFeedTab('search');
     setStage('OBJECT_INPUT');
-  };
-
-  const handleHeaderSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isAuthenticated) {
-      setShowAuthModal(true);
-      return;
-    }
-    if (headerSearch.trim()) {
-      startSearchFlow(headerSearch.trim());
-    }
   };
 
   const handleChatSubmit = (e: React.FormEvent) => {
@@ -138,76 +142,86 @@ export const DashboardWindow: React.FC = () => {
     <div
       id="dashboard-window"
       ref={windowRef}
-      className="w-full max-w-5xl h-[560px] sm:h-[570px] max-h-[calc(100vh-125px)] rounded-2xl bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-xl flex flex-col overflow-hidden relative select-none font-sans"
-      style={{
-        boxShadow: '0 20px 45px -12px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.8) inset',
-      }}
+      className="w-full h-full flex flex-col bg-[#080b11] text-slate-100 select-none overflow-hidden font-sans relative"
     >
-      {/* 1. Top Enterprise Application Bar */}
-      <header className="h-12 px-5 sm:px-6 border-b border-slate-200/80 flex items-center justify-between shrink-0 bg-white/80 backdrop-blur-md relative z-10 text-xs">
+      {/* Global Command Palette */}
+      <CommandPalette 
+        isOpen={showCommandPalette} 
+        onClose={() => setShowCommandPalette(false)} 
+      />
+
+      {/* 1. Top Enterprise Application Bar (Dark SOC Graphite Aesthetic) */}
+      <header className="h-13 px-4 sm:px-6 border-b border-[#162032] flex items-center justify-between shrink-0 bg-[#0c111a]/95 backdrop-blur-md relative z-20 text-xs">
         
-        {/* Left: Brand Identity & Enterprise Badge */}
+        {/* Left: Brand Identity & Enterprise Telemetry */}
         <div 
           onClick={() => { setActiveFeedTab('home'); setStage('HOME'); }}
-          className="flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition-opacity"
+          className="flex items-center gap-3 cursor-pointer hover:opacity-90 transition-opacity"
         >
-          <div className="w-6.5 h-6.5 rounded-lg bg-slate-900 flex items-center justify-center text-white shadow-xs">
-            <Radio className="w-3.5 h-3.5 text-indigo-400" />
+          <div className="w-7 h-7 rounded-lg bg-[#00e5ff]/10 border border-[#00e5ff]/30 flex items-center justify-center text-[#00e5ff] shadow-[0_0_12px_rgba(0,229,255,0.2)]">
+            <Radio className="w-4 h-4 text-[#00e5ff] animate-pulse" />
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-extrabold text-slate-900 text-sm tracking-tight uppercase font-sans">
-              Control<span className="text-indigo-600">F</span>
+            <span className="font-extrabold text-white text-sm tracking-wider uppercase font-sans">
+              CONTROL<span className="text-[#00e5ff]">F</span>
             </span>
-            <span className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200/80 text-[10px] font-mono font-medium text-slate-600">
-              v2.4 Enterprise
+            <span className="text-slate-500 font-mono text-[11px] hidden md:inline">//</span>
+            <span className="text-slate-300 font-mono text-[11px] font-semibold hidden md:inline">
+              Command Center
+            </span>
+            <span className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-[#131b29] border border-[#1e2a40] text-[9px] font-mono font-medium text-cyan-400">
+              SOC STATION 01
             </span>
           </div>
         </div>
 
-        {/* Center: Global Search Omnibar */}
-        <form 
-          onSubmit={handleHeaderSearchSubmit}
-          className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100/90 border border-slate-200/80 text-slate-700 w-72 sm:w-84 shadow-2xs focus-within:ring-2 focus-within:ring-slate-900/10 focus-within:bg-white focus-within:border-slate-300 transition-all"
-        >
-          <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-          <input
-            type="text"
-            value={headerSearch}
-            onChange={(e) => setHeaderSearch(e.target.value)}
-            placeholder="Search targets, cameras, timestamps..."
-            className="w-full bg-transparent border-none outline-none text-xs text-slate-800 placeholder:text-slate-400 font-medium"
-          />
-          <kbd className="hidden md:inline-block px-1.5 py-0.5 text-[9px] font-mono bg-white border border-slate-200 rounded text-slate-400 shadow-2xs">
-            /
-          </kbd>
-          {headerSearch && (
-            <X 
-              onClick={() => setHeaderSearch('')} 
-              className="w-3 h-3 text-slate-400 hover:text-slate-600 cursor-pointer shrink-0" 
-            />
-          )}
-        </form>
+        {/* Center: System Status & Global Command Palette Trigger */}
+        <div className="flex items-center gap-3">
+          {/* Status Indicator */}
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-[#0d1624] border border-[#1b2c45] text-[10px] font-mono">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+            </span>
+            <span className="text-slate-300 font-semibold">SYSTEM STATUS</span>
+            <span className="text-emerald-400 font-bold">OPERATIONAL</span>
+          </div>
 
-        {/* Right: Clean Action Button & Role Switcher */}
-        <div className="flex items-center gap-2">
-          {/* Phase 6 RBAC: Role Selector Dropdown */}
+          {/* Command Search Omnibar / Palette Trigger */}
+          <div 
+            onClick={() => setShowCommandPalette(true)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0d1420] hover:bg-[#121c2c] border border-[#1a2638] text-slate-400 w-56 sm:w-72 shadow-inner cursor-pointer transition-all group"
+          >
+            <Search className="w-3.5 h-3.5 text-cyan-400/80 group-hover:text-cyan-400 shrink-0" />
+            <span className="text-xs text-slate-400 group-hover:text-slate-300 font-medium truncate">
+              Search cameras, cases, targets...
+            </span>
+            <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-mono bg-[#162234] border border-[#24344e] rounded text-slate-300 shadow-2xs ml-auto">
+              <Command className="w-2.5 h-2.5" /> K
+            </kbd>
+          </div>
+        </div>
+
+        {/* Right: Role Switcher & Primary Action */}
+        <div className="flex items-center gap-2.5">
+          {/* RBAC Role Selector Dropdown */}
           <div className="relative">
             <button
               type="button"
               onClick={() => setShowRoleSelector(!showRoleSelector)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200/80 border border-slate-200 text-[11px] font-mono font-bold text-slate-800 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0e1624] hover:bg-[#142033] border border-[#1c2d47] text-[11px] font-mono font-bold text-slate-200 transition-colors cursor-pointer"
               title="Active Role: Click to switch between SUPER ADMIN, SECURITY MANAGER, and OPERATOR"
             >
               <ShieldCheck className={`w-3.5 h-3.5 ${
-                currentUserRole === 'SUPER ADMIN' ? 'text-indigo-600' : currentUserRole === 'SECURITY MANAGER' ? 'text-emerald-600' : 'text-blue-600'
+                currentUserRole === 'SUPER ADMIN' ? 'text-[#00e5ff]' : currentUserRole === 'SECURITY MANAGER' ? 'text-emerald-400' : 'text-blue-400'
               }`} />
               <span className="hidden md:inline">{currentUserRole}</span>
               <ChevronDown className="w-3 h-3 text-slate-400" />
             </button>
 
             {showRoleSelector && (
-              <div className="absolute right-0 mt-1.5 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 z-50 text-xs animate-fade-in font-sans">
-                <div className="px-3 py-1 text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider">
+              <div className="absolute right-0 mt-1.5 w-52 bg-[#0c121d] rounded-xl shadow-2xl border border-[#1d2b42] py-1.5 z-50 text-xs animate-fade-in font-sans">
+                <div className="px-3 py-1.5 text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider border-b border-[#162032]">
                   Select Security Role
                 </div>
                 {(['SUPER ADMIN', 'SECURITY MANAGER', 'OPERATOR'] as const).map((role) => (
@@ -218,29 +232,30 @@ export const DashboardWindow: React.FC = () => {
                       setCurrentUserRole(role);
                       setShowRoleSelector(false);
                     }}
-                    className={`w-full text-left px-3 py-1.5 flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer ${
-                      currentUserRole === role ? 'font-bold text-indigo-600 bg-indigo-50/50' : 'text-slate-700'
+                    className={`w-full text-left px-3 py-2 flex items-center justify-between hover:bg-[#142033] transition-colors cursor-pointer ${
+                      currentUserRole === role ? 'font-bold text-[#00e5ff] bg-[#00e5ff]/5' : 'text-slate-300'
                     }`}
                   >
                     <span className="font-mono text-[11px]">{role}</span>
-                    {currentUserRole === role && <CheckCircle2 className="w-3 h-3 text-indigo-600" />}
+                    {currentUserRole === role && <CheckCircle2 className="w-3 h-3 text-[#00e5ff]" />}
                   </button>
                 ))}
               </div>
             )}
           </div>
 
+          {/* Quick Overview button when inside other views */}
           {activeFeedTab !== 'home' && activeFeedTab !== 'overview' && (
             <button
               type="button"
               onClick={() => { setActiveFeedTab('home'); setStage('HOME'); }}
-              className="px-2.5 py-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md text-xs font-medium transition-colors cursor-pointer"
+              className="px-2.5 py-1 text-slate-400 hover:text-white hover:bg-[#142033] rounded-md text-xs font-medium transition-colors cursor-pointer"
             >
               Overview
             </button>
           )}
 
-          {/* Primary Action Button */}
+          {/* Primary Action Button: Find Object */}
           <button
             type="button"
             onClick={() => {
@@ -251,24 +266,24 @@ export const DashboardWindow: React.FC = () => {
               setActiveFeedTab('search');
               setStage('OBJECT_INPUT');
             }}
-            className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95"
+            className="px-3.5 py-1.5 bg-[#00e5ff] hover:bg-[#00cce6] text-[#080b11] text-xs font-extrabold rounded-lg shadow-[0_0_16px_rgba(0,229,255,0.3)] transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
           >
             <Search className="w-3.5 h-3.5" />
-            <span>Find Object</span>
+            <span>FIND AN OBJECT</span>
           </button>
         </div>
       </header>
 
-      {/* 2. Main Body with Enterprise Sidebar & Dynamic View */}
+      {/* 2. Main Body with Enterprise SOC Sidebar & Dynamic View */}
       <div className="flex-1 flex overflow-hidden relative z-10">
         
         {/* Left Enterprise Navigation Sidebar */}
-        <aside className="w-44 sm:w-48 border-r border-slate-200/80 p-3 flex flex-col justify-between shrink-0 bg-slate-50/50 backdrop-blur-sm text-xs select-none">
+        <aside className="w-48 sm:w-52 border-r border-[#151f2e] p-3 flex flex-col justify-between shrink-0 bg-[#0a0f18] text-xs select-none">
           <div className="space-y-4">
             
             {/* Group 1: SURVEILLANCE & SEARCH */}
             <div>
-              <div className="px-2 pb-1.5 text-[10px] font-bold tracking-wider uppercase text-slate-400 font-mono">
+              <div className="px-2.5 pb-1.5 text-[10px] font-bold tracking-widest uppercase text-slate-500 font-mono">
                 Surveillance
               </div>
               <nav className="space-y-0.5">
@@ -279,13 +294,13 @@ export const DashboardWindow: React.FC = () => {
                   onClick={() => handleNavClick('home', 'HOME')}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
                     (activeFeedTab === 'home' || activeFeedTab === 'overview') && stage === 'HOME'
-                      ? 'bg-slate-900 text-white shadow-xs font-semibold'
-                      : 'text-slate-600 hover:bg-slate-100/90 font-medium'
+                      ? 'bg-[#101927] text-[#00e5ff] border border-[#00e5ff]/30 font-semibold shadow-xs'
+                      : 'text-slate-400 hover:bg-[#0f1522] hover:text-slate-200 font-medium'
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <LayoutDashboard className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">Overview</span>
+                    <span className="truncate">Command Center</span>
                   </div>
                 </button>
 
@@ -296,67 +311,55 @@ export const DashboardWindow: React.FC = () => {
                   onClick={() => handleNavClick('cctv', 'HOME')}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
                     activeFeedTab === 'cctv' && stage === 'HOME'
-                      ? 'bg-slate-900 text-white shadow-xs font-semibold'
-                      : 'text-slate-600 hover:bg-slate-100/90 font-medium'
+                      ? 'bg-[#101927] text-[#00e5ff] border border-[#00e5ff]/30 font-semibold shadow-xs'
+                      : 'text-slate-400 hover:bg-[#0f1522] hover:text-slate-200 font-medium'
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <Video className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">Live Cameras</span>
+                    <span className="truncate">Live CCTV</span>
                   </div>
-                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded font-mono ${
-                    activeFeedTab === 'cctv' && stage === 'HOME'
-                      ? 'bg-white/20 text-white'
-                      : 'bg-emerald-100 text-emerald-800'
-                  }`}>
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                     4 Live
                   </span>
                 </button>
 
-                {/* 2b. Camera Network (Phase 6 Requirement #1) */}
+                {/* 2b. Camera Network */}
                 <button
                   type="button"
                   data-nav="cameras"
                   onClick={() => handleNavClick('cameras', 'HOME')}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
                     activeFeedTab === 'cameras' && stage === 'HOME'
-                      ? 'bg-slate-900 text-white shadow-xs font-semibold'
-                      : 'text-slate-600 hover:bg-slate-100/90 font-medium'
+                      ? 'bg-[#101927] text-[#00e5ff] border border-[#00e5ff]/30 font-semibold shadow-xs'
+                      : 'text-slate-400 hover:bg-[#0f1522] hover:text-slate-200 font-medium'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <Network className="w-3.5 h-3.5 shrink-0 text-indigo-500" />
+                    <Network className="w-3.5 h-3.5 shrink-0 text-cyan-400" />
                     <span className="truncate">Camera Network</span>
                   </div>
-                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded font-mono ${
-                    activeFeedTab === 'cameras' && stage === 'HOME'
-                      ? 'bg-white/20 text-white'
-                      : 'bg-indigo-50 text-indigo-700 border border-indigo-200/60'
-                  }`}>
-                    7 Nodes
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded font-mono bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
+                    8 Nodes
                   </span>
                 </button>
 
-                {/* 2c. Alert Center (Phase 6 Requirement #2) */}
+                {/* 2c. Alert Center */}
                 <button
                   type="button"
                   data-nav="alerts"
                   onClick={() => handleNavClick('alerts', 'HOME')}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
                     activeFeedTab === 'alerts' && stage === 'HOME'
-                      ? 'bg-slate-900 text-white shadow-xs font-semibold'
-                      : 'text-slate-600 hover:bg-slate-100/90 font-medium'
+                      ? 'bg-[#101927] text-[#00e5ff] border border-[#00e5ff]/30 font-semibold shadow-xs'
+                      : 'text-slate-400 hover:bg-[#0f1522] hover:text-slate-200 font-medium'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <Bell className="w-3.5 h-3.5 shrink-0 text-rose-500" />
+                    <Bell className="w-3.5 h-3.5 shrink-0 text-rose-400" />
                     <span className="truncate">Alert Center</span>
                   </div>
-                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded font-mono ${
-                    activeFeedTab === 'alerts' && stage === 'HOME'
-                      ? 'bg-white/20 text-white'
-                      : 'bg-rose-100 text-rose-800 border border-rose-200'
-                  }`}>
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded font-mono bg-rose-500/20 text-rose-300 border border-rose-500/30">
                     5 Active
                   </span>
                 </button>
@@ -368,17 +371,15 @@ export const DashboardWindow: React.FC = () => {
                   onClick={() => handleNavClick('search', 'OBJECT_INPUT')}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
                     isFormView
-                      ? 'bg-slate-900 text-white shadow-xs font-semibold'
-                      : 'text-slate-600 hover:bg-slate-100/90 font-medium'
+                      ? 'bg-[#101927] text-[#00e5ff] border border-[#00e5ff]/30 font-semibold shadow-xs'
+                      : 'text-slate-400 hover:bg-[#0f1522] hover:text-slate-200 font-medium'
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <Search className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">Find Object</span>
                   </div>
-                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded font-mono ${
-                    isFormView ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-800'
-                  }`}>
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded font-mono bg-[#00e5ff]/20 text-[#00e5ff] border border-[#00e5ff]/30">
                     AI
                   </span>
                 </button>
@@ -390,19 +391,15 @@ export const DashboardWindow: React.FC = () => {
                   onClick={() => handleNavClick('investigation', 'HOME')}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
                     activeFeedTab === 'investigation' && stage === 'HOME'
-                      ? 'bg-slate-900 text-white shadow-xs font-semibold'
-                      : 'text-slate-600 hover:bg-slate-100/90 font-medium'
+                      ? 'bg-[#101927] text-[#00e5ff] border border-[#00e5ff]/30 font-semibold shadow-xs'
+                      : 'text-slate-400 hover:bg-[#0f1522] hover:text-slate-200 font-medium'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <FolderSearch className="w-3.5 h-3.5 shrink-0 text-indigo-600" />
+                    <FolderSearch className="w-3.5 h-3.5 shrink-0 text-[#00e5ff]" />
                     <span className="truncate">Investigations</span>
                   </div>
-                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded font-mono ${
-                    activeFeedTab === 'investigation' && stage === 'HOME'
-                      ? 'bg-white/20 text-white'
-                      : 'bg-indigo-50 text-indigo-700 border border-indigo-200/60'
-                  }`}>
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30">
                     Active
                   </span>
                 </button>
@@ -411,7 +408,7 @@ export const DashboardWindow: React.FC = () => {
 
             {/* Group 2: DATA & INTELLIGENCE */}
             <div>
-              <div className="px-2 pb-1.5 text-[10px] font-bold tracking-wider uppercase text-slate-400 font-mono">
+              <div className="px-2.5 pb-1.5 text-[10px] font-bold tracking-widest uppercase text-slate-500 font-mono">
                 Data & Activity
               </div>
               <nav className="space-y-0.5">
@@ -422,19 +419,15 @@ export const DashboardWindow: React.FC = () => {
                   onClick={() => handleNavClick('history', 'HOME')}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
                     (activeFeedTab === 'history' || activeFeedTab === 'logs') && stage === 'HOME'
-                      ? 'bg-slate-900 text-white shadow-xs font-semibold'
-                      : 'text-slate-600 hover:bg-slate-100/90 font-medium'
+                      ? 'bg-[#101927] text-[#00e5ff] border border-[#00e5ff]/30 font-semibold shadow-xs'
+                      : 'text-slate-400 hover:bg-[#0f1522] hover:text-slate-200 font-medium'
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <Clock className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">Detection History</span>
                   </div>
-                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded font-mono ${
-                    (activeFeedTab === 'history' || activeFeedTab === 'logs') && stage === 'HOME'
-                      ? 'bg-white/20 text-white'
-                      : 'bg-slate-200 text-slate-600'
-                  }`}>
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded font-mono bg-[#142033] text-slate-400">
                     DB
                   </span>
                 </button>
@@ -446,19 +439,15 @@ export const DashboardWindow: React.FC = () => {
                   onClick={() => handleNavClick('heatmaps', 'HOME')}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
                     activeFeedTab === 'heatmaps' && stage === 'HOME'
-                      ? 'bg-slate-900 text-white shadow-xs font-semibold'
-                      : 'text-slate-600 hover:bg-slate-100/90 font-medium'
+                      ? 'bg-[#101927] text-[#00e5ff] border border-[#00e5ff]/30 font-semibold shadow-xs'
+                      : 'text-slate-400 hover:bg-[#0f1522] hover:text-slate-200 font-medium'
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <Layers className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">Analytics</span>
+                    <span className="truncate">Spatial Heatmap</span>
                   </div>
-                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded font-mono ${
-                    activeFeedTab === 'heatmaps' && stage === 'HOME'
-                      ? 'bg-white/20 text-white'
-                      : 'bg-slate-200 text-slate-600'
-                  }`}>
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded font-mono bg-[#142033] text-slate-400">
                     3D
                   </span>
                 </button>
@@ -470,8 +459,8 @@ export const DashboardWindow: React.FC = () => {
                   onClick={() => handleNavClick('upload', 'HOME')}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
                     activeFeedTab === 'upload' && stage === 'HOME'
-                      ? 'bg-slate-900 text-white shadow-xs font-semibold'
-                      : 'text-slate-600 hover:bg-slate-100/90 font-medium'
+                      ? 'bg-[#101927] text-[#00e5ff] border border-[#00e5ff]/30 font-semibold shadow-xs'
+                      : 'text-slate-400 hover:bg-[#0f1522] hover:text-slate-200 font-medium'
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -484,7 +473,7 @@ export const DashboardWindow: React.FC = () => {
 
             {/* Group 3: CONFIGURATION */}
             <div>
-              <div className="px-2 pb-1.5 text-[10px] font-bold tracking-wider uppercase text-slate-400 font-mono">
+              <div className="px-2.5 pb-1.5 text-[10px] font-bold tracking-widest uppercase text-slate-500 font-mono">
                 System
               </div>
               <nav className="space-y-0.5">
@@ -495,8 +484,8 @@ export const DashboardWindow: React.FC = () => {
                   onClick={() => handleNavClick('settings', 'HOME')}
                   className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
                     activeFeedTab === 'settings' && stage === 'HOME'
-                      ? 'bg-slate-900 text-white shadow-xs font-semibold'
-                      : 'text-slate-600 hover:bg-slate-100/90 font-medium'
+                      ? 'bg-[#101927] text-[#00e5ff] border border-[#00e5ff]/30 font-semibold shadow-xs'
+                      : 'text-slate-400 hover:bg-[#0f1522] hover:text-slate-200 font-medium'
                   }`}
                 >
                   <Settings className="w-3.5 h-3.5 shrink-0" />
@@ -509,14 +498,14 @@ export const DashboardWindow: React.FC = () => {
                     type="button"
                     data-nav="admin"
                     onClick={() => navigate('/admin')}
-                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer bg-indigo-50/90 hover:bg-indigo-100/90 text-indigo-900 border border-indigo-200/80 shadow-2xs font-semibold mt-1"
+                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer bg-[#00e5ff]/10 hover:bg-[#00e5ff]/20 text-[#00e5ff] border border-[#00e5ff]/30 shadow-xs font-semibold mt-1"
                     title="Open Dedicated Admin Console"
                   >
                     <div className="flex items-center gap-2">
-                      <Shield className="w-3.5 h-3.5 shrink-0 text-indigo-600" />
+                      <Shield className="w-3.5 h-3.5 shrink-0 text-[#00e5ff]" />
                       <span className="truncate">Admin Console</span>
                     </div>
-                    <ChevronRight className="w-3 h-3 text-indigo-400" />
+                    <ChevronRight className="w-3 h-3 text-[#00e5ff]/80" />
                   </button>
                 )}
               </nav>
@@ -527,11 +516,11 @@ export const DashboardWindow: React.FC = () => {
           <div 
             onClick={() => setShowOracleModal(true)}
             title="Oracle 21c Database Health & Schema Inspector"
-            className="p-2.5 rounded-xl bg-white border border-slate-200/90 text-[10px] text-slate-700 flex flex-col gap-1.5 cursor-pointer hover:border-slate-300 transition-all shadow-2xs group"
+            className="p-2.5 rounded-xl bg-[#0d1420] border border-[#1a283e] text-[10px] text-slate-300 flex flex-col gap-1.5 cursor-pointer hover:border-cyan-500/50 transition-all shadow-inner group"
           >
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 font-bold text-slate-800">
-                <Database className="w-3.5 h-3.5 text-emerald-600" />
+              <div className="flex items-center gap-1.5 font-bold text-slate-200">
+                <Database className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Oracle 21c XE</span>
               </div>
               <span className="relative flex h-2 w-2">
@@ -539,15 +528,15 @@ export const DashboardWindow: React.FC = () => {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
               </span>
             </div>
-            <div className="flex items-center justify-between text-[9px] text-slate-500 font-mono">
+            <div className="flex items-center justify-between text-[9px] text-slate-400 font-mono">
               <span>STATE: CONNECTED</span>
-              <span className="text-emerald-700 font-bold">12ms</span>
+              <span className="text-emerald-400 font-bold">12ms</span>
             </div>
           </div>
         </aside>
 
         {/* Center Dynamic Content Area */}
-        <main className="flex-1 p-5 sm:p-6 overflow-y-auto flex flex-col justify-between bg-gradient-to-b from-white/30 via-white/50 to-slate-50/50 relative">
+        <main className="flex-1 p-4 sm:p-5 overflow-y-auto flex flex-col justify-between bg-[#080b11] relative">
           {renderActiveView()}
 
           {/* Floating AI Assistant Trigger */}
@@ -556,7 +545,7 @@ export const DashboardWindow: React.FC = () => {
               type="button"
               title="Surveillance AI Assistant"
               onClick={() => setShowChatAssistant((prev) => !prev)}
-              className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-md hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              className="w-10 h-10 rounded-xl bg-[#00e5ff] text-[#080b11] flex items-center justify-center shadow-[0_0_15px_rgba(0,229,255,0.4)] hover:bg-[#00cce6] transition-all hover:scale-105 active:scale-95 cursor-pointer font-bold"
             >
               <MessageSquare className="w-4.5 h-4.5" />
             </button>
@@ -564,19 +553,19 @@ export const DashboardWindow: React.FC = () => {
 
           {/* AI Assistant Flyout */}
           {showChatAssistant && (
-            <div className="absolute right-5 bottom-16 w-80 rounded-xl bg-white/98 backdrop-blur-xl border border-slate-200 shadow-xl p-4 z-30 space-y-3 animate-fade-in text-xs text-slate-700">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                <div className="flex items-center gap-2 font-bold text-slate-900">
-                  <Sparkles className="w-4 h-4 text-indigo-600" />
-                  <span>ControlF Assistant</span>
+            <div className="absolute right-5 bottom-16 w-84 rounded-xl bg-[#0c121d] border border-[#1f2d44] shadow-2xl p-4 z-30 space-y-3 animate-fade-in text-xs text-slate-200">
+              <div className="flex items-center justify-between border-b border-[#182335] pb-2">
+                <div className="flex items-center gap-2 font-bold text-white">
+                  <Sparkles className="w-4 h-4 text-[#00e5ff]" />
+                  <span>ControlF Optical Assistant</span>
                 </div>
                 <X 
                   onClick={() => setShowChatAssistant(false)} 
-                  className="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-pointer" 
+                  className="w-4 h-4 text-slate-400 hover:text-white cursor-pointer" 
                 />
               </div>
 
-              <p className="text-slate-500 text-[11px] leading-relaxed">
+              <p className="text-slate-400 text-[11px] leading-relaxed">
                 Enter target descriptor to command optical CCTV sweep:
               </p>
 
@@ -586,16 +575,16 @@ export const DashboardWindow: React.FC = () => {
                   value={chatMessage}
                   onChange={(e) => setChatMessage(e.target.value)}
                   placeholder="e.g. Black backpack..."
-                  className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:bg-white"
+                  className="w-full px-3 py-2 rounded-lg bg-[#080b11] border border-[#1e2c42] text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-[#00e5ff] focus:border-[#00e5ff]"
                 />
                 <div className="flex items-center justify-between pt-1">
-                  <span className="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
+                  <span className="text-[10px] text-emerald-400 font-medium flex items-center gap-1 font-mono">
                     <CheckCircle2 className="w-3 h-3" />
                     Oracle 21c Engine
                   </span>
                   <button
                     type="submit"
-                    className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-[11px] shadow-xs cursor-pointer transition-colors"
+                    className="px-3 py-1.5 rounded-lg bg-[#00e5ff] hover:bg-[#00cce6] text-[#080b11] font-bold text-[11px] shadow-xs cursor-pointer transition-colors"
                   >
                     Locate
                   </button>
@@ -608,3 +597,4 @@ export const DashboardWindow: React.FC = () => {
     </div>
   );
 };
+
