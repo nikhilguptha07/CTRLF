@@ -8,11 +8,11 @@ import { adminController } from '../controllers/adminController';
 
 const router = Router();
 
-// Protect all admin routes with strict authentication and ADMIN role requirement
+// Protect all admin routes with strict authentication and role requirement
 // 401 Unauthorized if token missing / invalid
-// 403 Forbidden if authenticated user is not ADMIN
+// 403 Forbidden if authenticated user is not SUPER ADMIN or SECURITY MANAGER
 router.use(authenticate);
-router.use(requireRole('ADMIN'));
+router.use(requireRole('SUPER ADMIN', 'ADMIN', 'SECURITY MANAGER'));
 
 // 1. Overview KPIs
 router.get('/stats', adminController.getOverview.bind(adminController));
@@ -21,10 +21,10 @@ router.get('/overview', adminController.getOverview.bind(adminController));
 // 2. Database Status & Metadata (Safe, No Secrets)
 router.get('/database', adminController.getDatabase.bind(adminController));
 
-// 3. User Management
+// 3. User Management - Super Admin only can create/modify users
 router.get('/users', adminController.getUsers.bind(adminController));
-router.post('/users', adminController.createUser.bind(adminController));
-router.patch('/users/:id', adminController.updateUser.bind(adminController));
+router.post('/users', requireRole('SUPER ADMIN', 'ADMIN'), adminController.createUser.bind(adminController));
+router.patch('/users/:id', requireRole('SUPER ADMIN', 'ADMIN'), adminController.updateUser.bind(adminController));
 
 // 4. Camera Management
 router.get('/cameras', adminController.getCameras.bind(adminController));
@@ -49,8 +49,8 @@ router.get('/audit-logs', adminController.getAuditLogs.bind(adminController));
 // 9. Approved Table Browser
 router.get('/tables/:tableName', adminController.getTableData.bind(adminController));
 
-// 10. Database Purge Action
-router.post('/clear-database', async (req: Request, res: Response, next: NextFunction) => {
+// 10. Database Purge Action - Super Admin only
+router.post('/clear-database', requireRole('SUPER ADMIN', 'ADMIN'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await db.clearOperationalData();
     await authService.seedDefaultUsers();

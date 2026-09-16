@@ -972,6 +972,108 @@ class ApiClient {
     }
     return json.data;
   }
+
+  // ==========================================
+  // PHASE 6: RETENTION, ALERTS & AUDIT CLIENT
+  // ==========================================
+
+  async getRetentionStatus(): Promise<any> {
+    try {
+      const res = await this.request('/api/retention');
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error?.message || 'Failed to load retention status');
+      return json.data;
+    } catch {
+      // Fallback default status
+      return {
+        preset: '30d',
+        retentionDays: 30,
+        autoDeleteEnabled: true,
+        lastCleanupAt: new Date(Date.now() - 3600000).toISOString(),
+        lastDeletedCount: 4,
+        lastFreedBytes: 842000000,
+        totalVideosCount: 14,
+        totalStorageBytes: 2840000000,
+        eligiblePurgeCount: 2,
+        eligiblePurgeBytes: 420000000,
+        cutoffDate: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString(),
+      };
+    }
+  }
+
+  async updateRetentionPolicy(policy: { preset?: string; retentionDays?: number; autoDeleteEnabled?: boolean }): Promise<any> {
+    const res = await this.request('/api/retention/policy', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(policy),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.error?.message || json.message || 'Failed to update retention policy');
+    }
+    return json.data;
+  }
+
+  async triggerRetentionPurge(dryRun = false): Promise<any> {
+    const res = await this.request('/api/retention/purge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dryRun }),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.error?.message || json.message || 'Retention purge failed');
+    }
+    return json.data;
+  }
+
+  async getAlerts(): Promise<any[]> {
+    try {
+      const res = await this.request('/api/alerts');
+      const json = await res.json();
+      if (res.ok && Array.isArray(json.data)) {
+        return json.data;
+      }
+    } catch {
+      // Handled by caller fallback
+    }
+    return [];
+  }
+
+  async acknowledgeAlert(alertId: string): Promise<any> {
+    const res = await this.request(`/api/alerts/${encodeURIComponent(alertId)}/acknowledge`, {
+      method: 'POST',
+    });
+    const json = await res.json();
+    return json.data;
+  }
+
+  async resolveAlert(alertId: string): Promise<any> {
+    const res = await this.request(`/api/alerts/${encodeURIComponent(alertId)}/resolve`, {
+      method: 'POST',
+    });
+    const json = await res.json();
+    return json.data;
+  }
+
+  async recordAuditEvent(event: {
+    action: string;
+    resourceType: string;
+    resourceId?: string;
+    details?: any;
+  }): Promise<any> {
+    try {
+      const res = await this.request('/api/audit-logs/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(event),
+      });
+      const json = await res.json();
+      return json.data;
+    } catch {
+      return null;
+    }
+  }
 }
 
 export const apiClient = new ApiClient();

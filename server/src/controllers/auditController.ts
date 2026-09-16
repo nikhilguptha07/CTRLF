@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { auditService } from '../services/auditService';
-import { sendSuccess } from '../utils/response';
+import { sendSuccess, sendError } from '../utils/response';
 
 export class AuditController {
   async getLogs(req: Request, res: Response, next: NextFunction) {
@@ -27,6 +27,31 @@ export class AuditController {
         message: verification.valid ? 'Audit hash chain intact and verified.' : 'Hash mismatch detected.',
         timestamp: new Date().toISOString(),
       });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async recordEvent(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { action, resourceType, resourceId, details, status } = req.body;
+      if (!action || !resourceType) {
+        return sendError(res, 'VALIDATION_ERROR', 'Action and resourceType are required', 400);
+      }
+
+      const log = await auditService.record({
+        userId: req.user?.userId || 'OPERATOR',
+        action,
+        resourceType,
+        resourceId: resourceId || null,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+        requestId: req.id,
+        status: status || 'SUCCESS',
+        details: details || null,
+      });
+
+      return sendSuccess(res, log, 201);
     } catch (err) {
       next(err);
     }

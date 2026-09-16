@@ -45,6 +45,8 @@ server/uploads/frames/*
 server/uploads/original/*
 server/uploads/temp/*
 server/uploads/videos/*
+server/uploads/reports/*
+!server/uploads/reports/.gitkeep
 !server/uploads/evidence/.gitkeep
 !server/uploads/evidence/*.jpg
 !server/uploads/frames/.gitkeep

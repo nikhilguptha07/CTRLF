@@ -8,19 +8,27 @@ import historyRoutes from './historyRoutes';
 import auditRoutes from './auditRoutes';
 import evidenceRoutes from './evidenceRoutes';
 import adminRoutes from './adminRoutes';
+import retentionRoutes from './retentionRoutes';
+import alertRoutes from './alertRoutes';
 import { authenticate, optionalAuthenticate } from '../middleware/authMiddleware';
 import { db } from '../config/database';
 import { env } from '../config/env';
+import { healthService } from '../services/healthService';
 
 const router = Router();
 
-// Lightweight Liveness Ping (Section 32)
-router.get('/health', (_req, res) => {
-  res.status(200).json({
+// Subsystem Health Check Endpoint (Phase 8 Production Standard)
+router.get('/health', async (_req, res) => {
+  const report = await healthService.getHealthReport();
+  const statusCode = report.status === 'unhealthy' ? 503 : 200;
+  res.status(statusCode).json({
     status: 'ONLINE',
+    success: report.status !== 'unhealthy',
     system: 'CONTROL F Surveillance Intelligence Backend',
-    timestamp: new Date().toISOString(),
     version: '2.5.0',
+    timestamp: new Date().toISOString(),
+    services: report.services,
+    data: report,
   });
 });
 
@@ -88,6 +96,8 @@ router.use('/search-history', historyRoutes);
 router.use('/audit-logs', auditRoutes);
 router.use('/evidence', evidenceRoutes);
 router.use('/admin', adminRoutes);
+router.use('/retention', retentionRoutes);
+router.use('/alerts', alertRoutes);
 
 // AI capability endpoints
 router.get('/ai/classes', async (_req, res, next) => {

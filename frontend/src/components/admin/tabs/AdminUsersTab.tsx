@@ -17,7 +17,7 @@ interface UserRecord {
   username: string;
   email: string;
   fullName: string;
-  role: 'ADMIN' | 'OPERATOR' | 'USER';
+  role: 'SUPER ADMIN' | 'SECURITY MANAGER' | 'OPERATOR' | 'ADMIN' | 'USER';
   status: 'ACTIVE' | 'DISABLED';
   isActive: boolean;
   lastLoginAt: string | null;
@@ -95,7 +95,7 @@ export const AdminUsersTab: React.FC = () => {
     }
   };
 
-  const handleUpdateRole = async (newRole: 'ADMIN' | 'OPERATOR' | 'USER') => {
+  const handleUpdateRole = async (newRole: 'SUPER ADMIN' | 'SECURITY MANAGER' | 'OPERATOR' | 'ADMIN' | 'USER') => {
     if (!editingUser) return;
     setIsSubmitting(true);
     try {
@@ -374,9 +374,9 @@ export const AdminUsersTab: React.FC = () => {
                   onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:outline-none"
                 >
-                  <option value="OPERATOR">OPERATOR (Standard Surveillance Dashboard)</option>
-                  <option value="USER">USER (Viewer & Search Only)</option>
-                  <option value="ADMIN">ADMIN (Full Console Administration)</option>
+                  <option value="SUPER ADMIN">SUPER ADMIN (Full Console & Retention Administration)</option>
+                  <option value="SECURITY MANAGER">SECURITY MANAGER (Investigations, Cameras, Alerts)</option>
+                  <option value="OPERATOR">OPERATOR (Surveillance & Find Object Only)</option>
                 </select>
               </div>
 
@@ -424,7 +424,7 @@ export const AdminUsersTab: React.FC = () => {
             </div>
 
             <div className="space-y-2 pt-1">
-              {(['ADMIN', 'OPERATOR', 'USER'] as const).map((r) => (
+              {(['SUPER ADMIN', 'SECURITY MANAGER', 'OPERATOR'] as const).map((r) => (
                 <button
                   key={r}
                   type="button"

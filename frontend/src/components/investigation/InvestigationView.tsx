@@ -24,6 +24,7 @@ import type {
 import { investigationService } from '../../services/investigationService';
 import { ForensicReportModal } from './ForensicReportModal';
 import { useExperienceStore } from '../../store/useExperienceStore';
+import { apiClient } from '../../services/apiClient';
 
 interface InvestigationViewProps {
   initialCaseId?: string;
@@ -71,6 +72,13 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
     if (updated) {
       setCaseData(updated);
       triggerSuccessMsg('Target match confirmed. Status updated to CONFIRMED.');
+      // Phase 6 Audit Log: detection confirmation
+      apiClient.recordAuditEvent({
+        action: 'DETECTION_CONFIRMED',
+        resourceType: 'INVESTIGATION',
+        resourceId: caseData.caseId,
+        details: { object: caseData.objectName, status: 'CONFIRMED', operator: operatorName },
+      });
     }
   };
 
@@ -84,6 +92,13 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
     if (updated) {
       setCaseData(updated);
       triggerSuccessMsg('Match dismissed. Recorded in investigation audit log.');
+      // Phase 6 Audit Log: detection rejection
+      apiClient.recordAuditEvent({
+        action: 'DETECTION_REJECTED',
+        resourceType: 'INVESTIGATION',
+        resourceId: caseData.caseId,
+        details: { object: caseData.objectName, status: 'ACTIVE', operator: operatorName },
+      });
     }
   };
 
@@ -97,6 +112,13 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
     if (updated) {
       setCaseData(updated);
       triggerSuccessMsg('Object marked as RECOVERED.');
+      // Phase 6 Audit Log: investigation closure
+      apiClient.recordAuditEvent({
+        action: 'INVESTIGATION_CLOSED',
+        resourceType: 'INVESTIGATION',
+        resourceId: caseData.caseId,
+        details: { status: 'RECOVERED', object: caseData.objectName, operator: operatorName },
+      });
     }
   };
 
@@ -110,6 +132,13 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
     if (updated) {
       setCaseData(updated);
       triggerSuccessMsg('Investigation case closed.');
+      // Phase 6 Audit Log: investigation closure
+      apiClient.recordAuditEvent({
+        action: 'INVESTIGATION_CLOSED',
+        resourceType: 'INVESTIGATION',
+        resourceId: caseData.caseId,
+        details: { status: 'CLOSED', object: caseData.objectName, operator: operatorName },
+      });
     }
   };
 
@@ -259,10 +288,10 @@ export const InvestigationView: React.FC<InvestigationViewProps> = ({ initialCas
             type="button"
             id="inv-action-generate-report"
             onClick={() => setShowReportModal(true)}
-            className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
+            className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer active:scale-95"
           >
             <FileText className="w-3.5 h-3.5" />
-            <span>Generate Report</span>
+            <span className="tracking-wide">GENERATE INVESTIGATION REPORT</span>
           </button>
         </div>
       </div>

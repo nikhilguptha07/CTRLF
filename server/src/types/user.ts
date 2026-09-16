@@ -1,4 +1,4 @@
-export type UserRole = 'ADMIN' | 'OPERATOR' | 'USER' | 'VIEWER';
+export type UserRole = 'SUPER ADMIN' | 'SECURITY MANAGER' | 'OPERATOR' | 'ADMIN' | 'USER' | 'VIEWER';
 
 export enum Permission {
   CAMERA_VIEW = 'CAMERA_VIEW',
@@ -11,9 +11,56 @@ export enum Permission {
   AUDIT_VIEW = 'AUDIT_VIEW',
   USER_MANAGE = 'USER_MANAGE',
   SYSTEM_CONFIGURE = 'SYSTEM_CONFIGURE',
+  RETENTION_MANAGE = 'RETENTION_MANAGE',
+  RETENTION_VIEW = 'RETENTION_VIEW',
+  INVESTIGATION_MANAGE = 'INVESTIGATION_MANAGE',
+  ALERT_MANAGE = 'ALERT_MANAGE',
+  PRIVACY_MANAGE = 'PRIVACY_MANAGE',
 }
 
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
+  'SUPER ADMIN': [
+    Permission.CAMERA_VIEW,
+    Permission.CAMERA_MANAGE,
+    Permission.SEARCH_CREATE,
+    Permission.SEARCH_CANCEL,
+    Permission.VIDEO_UPLOAD,
+    Permission.DETECTION_VIEW,
+    Permission.EVIDENCE_VIEW,
+    Permission.AUDIT_VIEW,
+    Permission.USER_MANAGE,
+    Permission.SYSTEM_CONFIGURE,
+    Permission.RETENTION_MANAGE,
+    Permission.RETENTION_VIEW,
+    Permission.INVESTIGATION_MANAGE,
+    Permission.ALERT_MANAGE,
+    Permission.PRIVACY_MANAGE,
+  ],
+  'SECURITY MANAGER': [
+    Permission.CAMERA_VIEW,
+    Permission.CAMERA_MANAGE,
+    Permission.SEARCH_CREATE,
+    Permission.SEARCH_CANCEL,
+    Permission.VIDEO_UPLOAD,
+    Permission.DETECTION_VIEW,
+    Permission.EVIDENCE_VIEW,
+    Permission.AUDIT_VIEW,
+    Permission.RETENTION_VIEW,
+    Permission.INVESTIGATION_MANAGE,
+    Permission.ALERT_MANAGE,
+    Permission.PRIVACY_MANAGE,
+  ],
+  OPERATOR: [
+    Permission.CAMERA_VIEW,
+    Permission.SEARCH_CREATE,
+    Permission.SEARCH_CANCEL,
+    Permission.VIDEO_UPLOAD,
+    Permission.DETECTION_VIEW,
+    Permission.EVIDENCE_VIEW,
+    Permission.ALERT_MANAGE,
+    Permission.RETENTION_VIEW,
+  ],
+  // Legacy aliases for backward compatibility
   ADMIN: [
     Permission.CAMERA_VIEW,
     Permission.CAMERA_MANAGE,
@@ -25,14 +72,11 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.AUDIT_VIEW,
     Permission.USER_MANAGE,
     Permission.SYSTEM_CONFIGURE,
-  ],
-  OPERATOR: [
-    Permission.CAMERA_VIEW,
-    Permission.SEARCH_CREATE,
-    Permission.SEARCH_CANCEL,
-    Permission.VIDEO_UPLOAD,
-    Permission.DETECTION_VIEW,
-    Permission.EVIDENCE_VIEW,
+    Permission.RETENTION_MANAGE,
+    Permission.RETENTION_VIEW,
+    Permission.INVESTIGATION_MANAGE,
+    Permission.ALERT_MANAGE,
+    Permission.PRIVACY_MANAGE,
   ],
   USER: [
     Permission.CAMERA_VIEW,
@@ -40,11 +84,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIDEO_UPLOAD,
     Permission.DETECTION_VIEW,
     Permission.EVIDENCE_VIEW,
+    Permission.RETENTION_VIEW,
   ],
   VIEWER: [
     Permission.CAMERA_VIEW,
     Permission.DETECTION_VIEW,
     Permission.EVIDENCE_VIEW,
+    Permission.RETENTION_VIEW,
   ],
 };
 

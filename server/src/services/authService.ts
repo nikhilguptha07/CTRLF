@@ -337,11 +337,25 @@ export class AuthService {
 
     const defaultUsers = [
       {
+        username: 'superadmin',
+        email: 'superadmin@controlf.internal',
+        password: 'Password123!',
+        fullName: 'Super Administrator',
+        role: 'SUPER ADMIN' as UserRole,
+      },
+      {
+        username: 'secmanager',
+        email: 'manager@controlf.internal',
+        password: 'Password123!',
+        fullName: 'Chief Security Officer',
+        role: 'SECURITY MANAGER' as UserRole,
+      },
+      {
         username: 'admin',
         email: 'admin@ctrlf.local',
         password: 'Password123!',
         fullName: 'System Security Administrator',
-        role: 'ADMIN' as UserRole,
+        role: 'SUPER ADMIN' as UserRole,
       },
       {
         username: 'operator1',

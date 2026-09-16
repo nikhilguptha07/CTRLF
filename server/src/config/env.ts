@@ -8,7 +8,9 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(5000),
   API_PREFIX: z.string().default('/api'),
   CLIENT_URL: z.string().default('http://localhost:5173'),
+  CORS_ALLOWED_ORIGINS: z.string().default('http://localhost:5173,http://127.0.0.1:5173'),
   AI_SERVICE_URL: z.string().default('http://localhost:8000'),
+  STORAGE_PROVIDER: z.enum(['local', 's3']).default('local'),
 
   // Internal Service Security (Section 18)
   INTERNAL_SERVICE_KEY: z.string().default('ctrlf_internal_service_key_2026_sec#'),

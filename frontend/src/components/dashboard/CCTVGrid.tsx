@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { apiClient, type CameraStreamHealth } from '../../services/apiClient';
 import { socketClient } from '../../services/socketClient';
+import { EmptyState } from '../ui/UnifiedStates';
 
 export interface CameraNode {
   id: string;
@@ -428,7 +429,18 @@ export const CCTVGrid: React.FC = () => {
 
       {/* 2x2 Camera Feed Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 min-h-0">
-        {cameras.map((cam) => {
+        {cameras.length === 0 ? (
+          <div className="col-span-full py-12">
+            <EmptyState
+              icon={Camera}
+              title="No Cameras Provisioned"
+              description="The surveillance camera fleet currently has 0 configured endpoints. Add an RTSP camera stream or provision a simulated channel."
+              actionLabel="Add Camera Stream"
+              onAction={() => setShowAddModal(true)}
+            />
+          </div>
+        ) : (
+          cameras.map((cam) => {
           const worker = orchestratorCameras[cam.id];
           const isTargetFound = worker?.status === 'TARGET_FOUND';
           const isPreempted = worker?.status === 'CANCELLED_PREEMPTED';
@@ -805,7 +817,8 @@ export const CCTVGrid: React.FC = () => {
               </div>
             </div>
           );
-        })}
+        })
+        )}
       </div>
 
       {/* Bottom status strip */}

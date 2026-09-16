@@ -262,3 +262,57 @@ code, kbd, samp, pre, .font-mono {
   color: #0f172a;
 }
 
+/* =========================================================================
+   FORENSIC REPORT PRINT & PDF STYLES
+   ========================================================================= */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 10mm 12mm 10mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide app navigation, background windows, canvas, buttons */
+  #dashboard-window > :not(.fixed),
+  header,
+  nav,
+  canvas,
+  button,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Ensure modal content expands cleanly to full printed page */
+  .fixed.inset-0 {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  #printable-forensic-dossier {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Prevent awkward page break cuts across cards */
+  .print-avoid-break,
+  .aspect-video,
+  table,
+  .grid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}
+

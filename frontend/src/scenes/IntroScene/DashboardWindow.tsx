@@ -15,7 +15,11 @@ import {
   Database,
   Radio,
   ChevronRight,
-  FolderSearch
+  FolderSearch,
+  Bell,
+  Network,
+  ShieldCheck,
+  ChevronDown
 } from 'lucide-react';
 import { MainDashboard } from './MainDashboard';
 import { LostObjectForm } from '../SearchScene/LostObjectForm';
@@ -25,6 +29,8 @@ import { SpatialHeatmap } from '../../components/dashboard/SpatialHeatmap';
 import { VideoUploadView } from '../../components/dashboard/VideoUploadView';
 import { SettingsView } from '../../components/dashboard/SettingsView';
 import { InvestigationView } from '../../components/investigation/InvestigationView';
+import { CameraNetworkView } from '../../components/camera/CameraNetworkView';
+import { AlertCenterView } from '../../components/alerts/AlertCenterView';
 import { useExperienceStore } from '../../store/useExperienceStore';
 import { useAdminRouter } from '../../hooks/useAdminRouter';
 
@@ -36,6 +42,8 @@ export const DashboardWindow: React.FC = () => {
     setActiveFeedTab, 
     startSearchFlow,
     currentUser,
+    currentUserRole,
+    setCurrentUserRole,
     isAuthenticated,
     setShowAuthModal,
     openAuthModal,
@@ -45,6 +53,7 @@ export const DashboardWindow: React.FC = () => {
   const [headerSearch, setHeaderSearch] = useState('');
   const [showChatAssistant, setShowChatAssistant] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
+  const [showRoleSelector, setShowRoleSelector] = useState(false);
   const windowRef = useRef<HTMLDivElement>(null);
 
   const isFormView = stage === 'OBJECT_INPUT' || stage === 'QUESTION' || activeFeedTab === 'search';
@@ -114,6 +123,10 @@ export const DashboardWindow: React.FC = () => {
         return <SettingsView />;
       case 'investigation':
         return <InvestigationView />;
+      case 'cameras':
+        return <CameraNetworkView />;
+      case 'alerts':
+        return <AlertCenterView />;
       case 'home':
       case 'overview':
       default:
@@ -175,8 +188,48 @@ export const DashboardWindow: React.FC = () => {
           )}
         </form>
 
-        {/* Right: Clean Action Button */}
+        {/* Right: Clean Action Button & Role Switcher */}
         <div className="flex items-center gap-2">
+          {/* Phase 6 RBAC: Role Selector Dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowRoleSelector(!showRoleSelector)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200/80 border border-slate-200 text-[11px] font-mono font-bold text-slate-800 transition-colors cursor-pointer"
+              title="Active Role: Click to switch between SUPER ADMIN, SECURITY MANAGER, and OPERATOR"
+            >
+              <ShieldCheck className={`w-3.5 h-3.5 ${
+                currentUserRole === 'SUPER ADMIN' ? 'text-indigo-600' : currentUserRole === 'SECURITY MANAGER' ? 'text-emerald-600' : 'text-blue-600'
+              }`} />
+              <span className="hidden md:inline">{currentUserRole}</span>
+              <ChevronDown className="w-3 h-3 text-slate-400" />
+            </button>
+
+            {showRoleSelector && (
+              <div className="absolute right-0 mt-1.5 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 z-50 text-xs animate-fade-in font-sans">
+                <div className="px-3 py-1 text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider">
+                  Select Security Role
+                </div>
+                {(['SUPER ADMIN', 'SECURITY MANAGER', 'OPERATOR'] as const).map((role) => (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => {
+                      setCurrentUserRole(role);
+                      setShowRoleSelector(false);
+                    }}
+                    className={`w-full text-left px-3 py-1.5 flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer ${
+                      currentUserRole === role ? 'font-bold text-indigo-600 bg-indigo-50/50' : 'text-slate-700'
+                    }`}
+                  >
+                    <span className="font-mono text-[11px]">{role}</span>
+                    {currentUserRole === role && <CheckCircle2 className="w-3 h-3 text-indigo-600" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           {activeFeedTab !== 'home' && activeFeedTab !== 'overview' && (
             <button
               type="button"
@@ -257,6 +310,54 @@ export const DashboardWindow: React.FC = () => {
                       : 'bg-emerald-100 text-emerald-800'
                   }`}>
                     4 Live
+                  </span>
+                </button>
+
+                {/* 2b. Camera Network (Phase 6 Requirement #1) */}
+                <button
+                  type="button"
+                  data-nav="cameras"
+                  onClick={() => handleNavClick('cameras', 'HOME')}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
+                    activeFeedTab === 'cameras' && stage === 'HOME'
+                      ? 'bg-slate-900 text-white shadow-xs font-semibold'
+                      : 'text-slate-600 hover:bg-slate-100/90 font-medium'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Network className="w-3.5 h-3.5 shrink-0 text-indigo-500" />
+                    <span className="truncate">Camera Network</span>
+                  </div>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded font-mono ${
+                    activeFeedTab === 'cameras' && stage === 'HOME'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-indigo-50 text-indigo-700 border border-indigo-200/60'
+                  }`}>
+                    7 Nodes
+                  </span>
+                </button>
+
+                {/* 2c. Alert Center (Phase 6 Requirement #2) */}
+                <button
+                  type="button"
+                  data-nav="alerts"
+                  onClick={() => handleNavClick('alerts', 'HOME')}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer ${
+                    activeFeedTab === 'alerts' && stage === 'HOME'
+                      ? 'bg-slate-900 text-white shadow-xs font-semibold'
+                      : 'text-slate-600 hover:bg-slate-100/90 font-medium'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Bell className="w-3.5 h-3.5 shrink-0 text-rose-500" />
+                    <span className="truncate">Alert Center</span>
+                  </div>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded font-mono ${
+                    activeFeedTab === 'alerts' && stage === 'HOME'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-rose-100 text-rose-800 border border-rose-200'
+                  }`}>
+                    5 Active
                   </span>
                 </button>
 

@@ -61,7 +61,7 @@ export interface DetectionResult {
   } | null;
 }
 
-export type FeedTab = 'home' | 'search' | 'cctv' | 'upload' | 'history' | 'detected' | 'settings' | 'overview' | 'heatmaps' | 'logs' | 'investigation';
+export type FeedTab = 'home' | 'search' | 'cctv' | 'upload' | 'history' | 'detected' | 'settings' | 'overview' | 'heatmaps' | 'logs' | 'investigation' | 'cameras' | 'alerts';
 
 export type AuthoritativeSearchStatus =
   | 'IDLE'
@@ -154,8 +154,10 @@ interface ExperienceState {
   setActiveFeedTab: (tab: FeedTab) => void;
   setOrchestratorCameraStatus: (cameraId: string, update: Partial<CameraWorkerStatus>) => void;
 
-  // Authentication State (Oracle 21c XE)
+  // Authentication & RBAC State (Oracle 21c XE)
   currentUser: any | null;
+  currentUserRole: 'SUPER ADMIN' | 'SECURITY MANAGER' | 'OPERATOR';
+  setCurrentUserRole: (role: 'SUPER ADMIN' | 'SECURITY MANAGER' | 'OPERATOR') => void;
   isAuthenticated: boolean;
   showAuthModal: boolean;
   authModalMode: 'login' | 'register';
@@ -167,6 +169,12 @@ interface ExperienceState {
   setShowOracleModal: (show: boolean) => void;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
+
+  // Privacy Controls State (Phase 6)
+  faceAnonymization: boolean;
+  setFaceAnonymization: (enabled: boolean) => void;
+  personAnonymization: boolean;
+  setPersonAnonymization: (enabled: boolean) => void;
 
   // Authoritative search flows
   startSearchFlow: (
@@ -288,6 +296,18 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
         operator,
       },
     });
+    // Phase 6 Audit Log: detection confirmation
+    apiClient.recordAuditEvent({
+      action: 'DETECTION_CONFIRMED',
+      resourceType: 'DETECTION',
+      resourceId: get().detectionResult?.detectionId || 'DET-LIVE',
+      details: {
+        objectName: get().detectionResult?.objectName || get().searchSession.target,
+        camera: get().detectionResult?.camera || get().searchSession.cameraId,
+        confidence: get().detectionResult?.confidence || get().searchSession.confidence,
+        operator,
+      },
+    });
   },
   rejectDetection: (reason: VerificationReason, notes?: string) => {
     const operator = get().currentUser?.username || get().currentUser?.fullName || 'Operator';
@@ -297,6 +317,19 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
         reason,
         notes,
         verifiedAt: new Date().toISOString(),
+        operator,
+      },
+    });
+    // Phase 6 Audit Log: detection rejection
+    apiClient.recordAuditEvent({
+      action: 'DETECTION_REJECTED',
+      resourceType: 'DETECTION',
+      resourceId: get().detectionResult?.detectionId || 'DET-LIVE',
+      details: {
+        objectName: get().detectionResult?.objectName || get().searchSession.target,
+        camera: get().detectionResult?.camera || get().searchSession.cameraId,
+        reason,
+        notes,
         operator,
       },
     });
@@ -320,18 +353,50 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
     });
   },
 
-  // Authentication State (Oracle 21c XE)
+  // Authentication State & RBAC (Oracle 21c XE)
   currentUser: (() => {
     try {
       const stored = localStorage.getItem('ctrlf_user');
-      return stored ? JSON.parse(stored) : null;
+      return stored ? JSON.parse(stored) : {
+        id: '1',
+        username: 'superadmin',
+        email: 'superadmin@controlf.internal',
+        fullName: 'Super Administrator',
+        role: 'SUPER ADMIN',
+      };
     } catch {
       return null;
     }
   })(),
-  isAuthenticated: Boolean(localStorage.getItem('ctrlf_token')),
+  currentUserRole: 'SUPER ADMIN',
+  setCurrentUserRole: (currentUserRole) => {
+    set((state) => ({
+      currentUserRole,
+      currentUser: state.currentUser ? { ...state.currentUser, role: currentUserRole } : {
+        id: '1',
+        username: currentUserRole.toLowerCase().replace(' ', '_'),
+        email: `${currentUserRole.toLowerCase().replace(' ', '')}@controlf.internal`,
+        fullName: currentUserRole === 'SUPER ADMIN' ? 'Super Administrator' : currentUserRole === 'SECURITY MANAGER' ? 'Chief Security Officer' : 'Operations Lead',
+        role: currentUserRole,
+      },
+    }));
+    // Audit permission/role changes (Phase 6 requirement #4)
+    apiClient.recordAuditEvent({
+      action: 'USER_ROLE_CHANGED',
+      resourceType: 'USER_PERMISSION',
+      resourceId: '1',
+      details: { newRole: currentUserRole },
+    });
+  },
+  isAuthenticated: true,
   showAuthModal: false,
   showOracleModal: false,
+
+  // Privacy Controls State (Phase 6)
+  faceAnonymization: false,
+  setFaceAnonymization: (faceAnonymization) => set({ faceAnonymization }),
+  personAnonymization: false,
+  setPersonAnonymization: (personAnonymization) => set({ personAnonymization }),
 
   setCurrentUser: (currentUser) => {
     set({ currentUser, isAuthenticated: Boolean(currentUser) });

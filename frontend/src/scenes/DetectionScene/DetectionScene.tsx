@@ -324,7 +324,7 @@ export const DetectionScene: React.FC<DetectionSceneProps> = ({ timelineTime }) 
     <div className="relative w-full h-full bg-[#0d121a] overflow-hidden select-none font-sans">
       <Canvas
         camera={{ position: camera.position, fov: camera.fov }}
-        dpr={[1, 2]}
+        dpr={[1, 1.5]}
         gl={{
           antialias: true,
           alpha: false,

@@ -28,7 +28,7 @@ export const IntroScene: React.FC = () => {
       <div className="absolute inset-0 z-0 pointer-events-none">
         <Canvas
           camera={{ position: [0, 0, 5.5], fov: 45 }}
-          dpr={[1, 1.75]}
+          dpr={[1, 1.5]}
           gl={{ antialias: true, alpha: true }}
         >
           <CloudEnvironment />

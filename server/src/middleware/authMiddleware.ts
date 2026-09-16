@@ -72,6 +72,12 @@ export function optionalAuthenticate(req: Request, _res: Response, next: NextFun
   next();
 }
 
+export function normalizeRole(role: UserRole | string): UserRole {
+  if (role === 'ADMIN') return 'SUPER ADMIN';
+  if (role === 'USER') return 'OPERATOR';
+  return role as UserRole;
+}
+
 /**
  * Centralized RBAC Permission Authorization Middleware (Section 5)
  * Checks server-side permissions for the caller's role against ROLE_PERMISSIONS matrix
@@ -82,7 +88,8 @@ export function authorize(permission: Permission) {
       return sendError(res, 'UNAUTHORIZED', 'Authentication required', 401);
     }
 
-    const permissions = ROLE_PERMISSIONS[req.user.role] || [];
+    const effectiveRole = normalizeRole(req.user.role);
+    const permissions = ROLE_PERMISSIONS[req.user.role] || ROLE_PERMISSIONS[effectiveRole] || [];
     if (!permissions.includes(permission)) {
       return sendError(
         res,
@@ -97,15 +104,19 @@ export function authorize(permission: Permission) {
 }
 
 /**
- * Legacy Role-Based Guard (Section 3)
+ * Enterprise Role-Based Guard (Section 3)
+ * Supports SUPER ADMIN, SECURITY MANAGER, OPERATOR
  */
 export function requireRole(...allowedRoles: UserRole[]) {
+  const normalizedAllowed = allowedRoles.map((r) => normalizeRole(r));
+
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return sendError(res, 'UNAUTHORIZED', 'Authentication required', 401);
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    const callerRole = normalizeRole(req.user.role);
+    if (!normalizedAllowed.includes(callerRole) && !allowedRoles.includes(req.user.role)) {
       return sendError(
         res,
         'FORBIDDEN',

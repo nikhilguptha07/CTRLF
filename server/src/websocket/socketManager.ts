@@ -4,6 +4,7 @@ import { env } from '../config/env';
 import { logger } from '../utils/logger';
 import { SearchStage } from '../types/search';
 import { DetectionResult } from '../types/detection';
+import { isAllowedOrigin } from '../utils/corsValidator';
 
 export interface ProgressPayload {
   searchId: string;
@@ -25,8 +26,11 @@ export class SocketManager {
   init(server: HttpServer): Server {
     this.io = new Server(server, {
       cors: {
-        origin: (_origin, callback) => {
-          callback(null, true);
+        origin: (origin, callback) => {
+          if (isAllowedOrigin(origin)) {
+            return callback(null, true);
+          }
+          return callback(new Error(`WebSocket CORS blocked for origin: ${origin}`));
         },
         methods: ['GET', 'POST'],
         credentials: true,

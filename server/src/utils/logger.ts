@@ -30,6 +30,13 @@ class Logger {
       'rtspurl',
       'secret',
       'encryption_key',
+      'api_key',
+      'apikey',
+      'service_key',
+      'servicekey',
+      'oracle_password',
+      'credential',
+      'private_key',
     ];
 
     for (const [key, value] of Object.entries(data as Record<string, unknown>)) {

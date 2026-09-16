@@ -10,6 +10,8 @@ import { errorHandler } from './middleware/errorHandler';
 import { requestIdMiddleware } from './middleware/requestIdMiddleware';
 import { optionalAuthenticate, authorize } from './middleware/authMiddleware';
 import { Permission } from './types/user';
+import { healthService } from './services/healthService';
+import { isAllowedOrigin } from './utils/corsValidator';
 
 export const app = express();
 
@@ -31,21 +33,14 @@ app.use(
   })
 );
 
-// 3. Cross-Origin Resource Sharing with dynamic localhost support (Section 28)
+// 3. Origin Verification & Cross-Origin Resource Sharing
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      const isLocalhost =
-        origin.startsWith('http://localhost:') ||
-        origin.startsWith('http://127.0.0.1:') ||
-        origin === 'http://localhost' ||
-        origin === 'http://127.0.0.1' ||
-        origin === env.CLIENT_URL;
-      if (isLocalhost) {
+      if (isAllowedOrigin(origin)) {
         return callback(null, true);
       }
-      return callback(null, true);
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -88,6 +83,21 @@ app.get('/', (_req, res) => {
       cameras: `${env.API_PREFIX}/cameras`,
       videos: `${env.API_PREFIX}/videos`,
     },
+  });
+});
+
+// Root health check endpoint for container / load balancer probes
+app.get('/health', async (_req, res) => {
+  const report = await healthService.getHealthReport();
+  const statusCode = report.status === 'unhealthy' ? 503 : 200;
+  res.status(statusCode).json({
+    status: 'ONLINE',
+    success: report.status !== 'unhealthy',
+    system: 'CONTROL F Surveillance Intelligence Backend',
+    version: '2.5.0',
+    timestamp: new Date().toISOString(),
+    services: report.services,
+    data: report,
   });
 });
 

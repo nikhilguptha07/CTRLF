@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useExperienceStore } from '../../store/useExperienceStore';
 import { apiClient } from '../../services/apiClient';
+import { LoadingState, EmptyState } from '../ui/UnifiedStates';
 
 interface LogItem {
   id: string;
@@ -197,14 +198,25 @@ export const DetectionLogs: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {logs.length === 0 ? (
+              {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="py-20 text-center text-slate-400 font-sans text-xs">
-                    <Clock className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                    <span className="font-semibold text-slate-600 block">No search records in database</span>
-                    <span className="text-[11px] text-slate-400 block mt-0.5">
-                      {isAdmin ? 'All past operational data has been cleared.' : 'You have not performed any searches yet.'}
-                    </span>
+                  <td colSpan={7} className="py-12">
+                    <LoadingState 
+                      message="Querying Oracle 21c XE Ledger..." 
+                      subMessage="Synchronizing audit chain and event checkpoints" 
+                    />
+                  </td>
+                </tr>
+              ) : logs.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-8">
+                    <EmptyState
+                      icon={Clock}
+                      title="No Search Records in Database"
+                      description={isAdmin ? "All past operational search data and telemetry records have been cleared." : "You have not performed any object searches yet. Start a new search from the dashboard."}
+                      actionLabel="Initiate Search"
+                      onAction={() => startSearchFlow('bottle')}
+                    />
                   </td>
                 </tr>
               ) : (
