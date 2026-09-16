@@ -3,6 +3,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';
+import fs from 'fs';
 import { env } from './config/env';
 import routes from './routes';
 import { apiRateLimiter } from './middleware/rateLimiter';
@@ -28,6 +29,10 @@ app.use(
         imgSrc: ["'self'", 'data:', 'blob:', 'http:', 'https:'],
         mediaSrc: ["'self'", 'data:', 'blob:', 'http:', 'https:'],
         connectSrc: ["'self'", 'http:', 'https:', 'ws:', 'wss:'],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+        workerSrc: ["'self'", 'blob:'],
       },
     },
   })
@@ -43,21 +48,18 @@ app.use(
       return callback(new Error(`CORS blocked for origin: ${origin}`));
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Request-ID', 'X-Internal-Service-Key'],
   })
 );
 
-// 4. Request Parsing with strict payload bounds
+// 4. Body Parsers & Cookie Parser
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-// 5. Global API Rate Limiter (Section 25)
-app.use(env.API_PREFIX, apiRateLimiter);
+// 5. Rate Limiting Protection (Section 25)
+app.use(apiRateLimiter);
 
-// 6. Evidence Access Control (Section 24)
-// Only authenticated users with EVIDENCE_VIEW permission may retrieve evidence files
+// 6. Partitioned Static Storage Mounts (Sections 18 & 19)
 app.use(
   '/uploads/evidence',
   optionalAuthenticate,
@@ -65,26 +67,19 @@ app.use(
   express.static(path.resolve(env.UPLOAD_DIR, 'evidence'))
 );
 
-// General static assets (non-evidence frames/thumbnails)
 app.use('/uploads/videos', express.static(path.resolve(env.UPLOAD_DIR, 'videos')));
 app.use('/uploads/frames', express.static(path.resolve(env.UPLOAD_DIR, 'frames')));
 
+// Serve compiled frontend static assets in fullstack / unified deployments (e.g. Render Web Service)
+const frontendDistPath = path.resolve(__dirname, '../../frontend/dist');
+const hasFrontendDist = fs.existsSync(frontendDistPath);
+
+if (hasFrontendDist) {
+  app.use(express.static(frontendDistPath));
+}
+
 // 7. Mount Authoritative API Routes
-app.get('/', (_req, res) => {
-  res.status(200).json({
-    status: 'ONLINE',
-    system: 'CONTROL F Surveillance Intelligence Backend',
-    version: '2.5.0',
-    endpoints: {
-      health: `${env.API_PREFIX}/health`,
-      ready: `${env.API_PREFIX}/ready`,
-      auth: `${env.API_PREFIX}/auth`,
-      search: `${env.API_PREFIX}/search`,
-      cameras: `${env.API_PREFIX}/cameras`,
-      videos: `${env.API_PREFIX}/videos`,
-    },
-  });
-});
+app.use(env.API_PREFIX, routes);
 
 // Root health check endpoint for container / load balancer probes
 app.get('/health', async (_req, res) => {
@@ -101,7 +96,34 @@ app.get('/health', async (_req, res) => {
   });
 });
 
-app.use(env.API_PREFIX, routes);
+app.get('/', (req, res) => {
+  if (hasFrontendDist && req.accepts('html')) {
+    return res.sendFile(path.join(frontendDistPath, 'index.html'));
+  }
+  res.status(200).json({
+    status: 'ONLINE',
+    system: 'CONTROL F Surveillance Intelligence Backend',
+    version: '2.5.0',
+    endpoints: {
+      health: `${env.API_PREFIX}/health`,
+      ready: `${env.API_PREFIX}/ready`,
+      auth: `${env.API_PREFIX}/auth`,
+      search: `${env.API_PREFIX}/search`,
+      cameras: `${env.API_PREFIX}/cameras`,
+      videos: `${env.API_PREFIX}/videos`,
+    },
+  });
+});
+
+// Single Page Application routing fallback for React router
+if (hasFrontendDist) {
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads') || req.path === '/health') {
+      return next();
+    }
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
+  });
+}
 
 // 8. Centralized Safe Error Handling Pipeline (Section 16)
 app.use(errorHandler);
