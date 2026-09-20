@@ -3,9 +3,16 @@ import { Volume2, VolumeX, Sliders, Shield, Eye } from 'lucide-react';
 import { useExperienceStore } from '../../store/useExperienceStore';
 
 export const SettingsView: React.FC = () => {
-  const { soundEnabled, toggleSound, volume, setVolume } = useExperienceStore();
-  const [confidenceScore, setConfidenceScore] = React.useState(90);
-  const [securityActive, setSecurityActive] = React.useState(true);
+  const { 
+    soundEnabled, 
+    toggleSound, 
+    volume, 
+    setVolume,
+    detectionSensitivity,
+    setDetectionSensitivity,
+    securityActive,
+    setSecurityActive,
+  } = useExperienceStore();
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6 my-auto py-4 animate-fade-in">
@@ -75,14 +82,14 @@ export const SettingsView: React.FC = () => {
           <div className="space-y-1.5 pt-1">
             <div className="flex justify-between text-xs text-slate-600 font-medium">
               <span>Minimum Confidence Score</span>
-              <span className="font-mono text-emerald-700 font-semibold">{confidenceScore}.0%</span>
+              <span className="font-mono text-emerald-700 font-semibold">{detectionSensitivity}.0%</span>
             </div>
             <input
               type="range"
               min="75"
               max="99"
-              value={confidenceScore}
-              onChange={(e) => setConfidenceScore(parseInt(e.target.value, 10))}
+              value={detectionSensitivity}
+              onChange={(e) => setDetectionSensitivity(parseInt(e.target.value, 10))}
               className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
             />
           </div>
@@ -101,7 +108,7 @@ export const SettingsView: React.FC = () => {
           </div>
           <button
             type="button"
-            onClick={() => setSecurityActive(prev => !prev)}
+            onClick={() => setSecurityActive(!securityActive)}
             className={`text-[10px] font-bold px-2.5 py-1 rounded-md transition-all cursor-pointer ${
               securityActive ? 'text-emerald-700 bg-emerald-100' : 'text-slate-600 bg-slate-200'
             }`}

@@ -25,7 +25,7 @@ import { extractFrameFromVideo } from '../../utils/clientFrameExtractor';
 function getColorBadge(colorName?: string | null) {
   if (!colorName || colorName === 'UNKNOWN') {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-slate-300 text-[11px] font-mono">
+      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200/80 text-slate-600 text-[11px] font-mono">
         <span className="w-2 h-2 rounded-full bg-slate-400" />
         <span>Any / Unspecified</span>
       </span>
@@ -33,22 +33,23 @@ function getColorBadge(colorName?: string | null) {
   }
 
   const c = colorName.toUpperCase();
-  let dotColor = 'bg-slate-300';
-  let badgeBorder = 'border-slate-700';
+  let dotColor = 'bg-slate-400';
+  let badgeClasses = 'bg-slate-100 border-slate-200 text-slate-700';
 
-  if (c === 'RED') { dotColor = 'bg-rose-500'; badgeBorder = 'border-rose-500/30 text-rose-300'; }
-  else if (c === 'BLUE') { dotColor = 'bg-blue-500'; badgeBorder = 'border-blue-500/30 text-blue-300'; }
-  else if (c === 'GREEN') { dotColor = 'bg-emerald-500'; badgeBorder = 'border-emerald-500/30 text-emerald-300'; }
-  else if (c === 'YELLOW') { dotColor = 'bg-yellow-400'; badgeBorder = 'border-yellow-500/30 text-yellow-300'; }
-  else if (c === 'ORANGE') { dotColor = 'bg-orange-500'; badgeBorder = 'border-orange-500/30 text-orange-300'; }
-  else if (c === 'PURPLE') { dotColor = 'bg-purple-500'; badgeBorder = 'border-purple-500/30 text-purple-300'; }
-  else if (c === 'BLACK') { dotColor = 'bg-slate-900 border border-slate-600'; badgeBorder = 'border-slate-700 text-slate-300'; }
-  else if (c === 'WHITE') { dotColor = 'bg-white'; badgeBorder = 'border-slate-500 text-white'; }
-  else if (c === 'GRAY' || c === 'GREY') { dotColor = 'bg-slate-400'; badgeBorder = 'border-slate-600 text-slate-300'; }
-  else if (c === 'BROWN') { dotColor = 'bg-amber-700'; badgeBorder = 'border-amber-700/40 text-amber-300'; }
+  if (c === 'RED') { dotColor = 'bg-rose-500'; badgeClasses = 'bg-rose-50 border-rose-200 text-rose-700'; }
+  else if (c === 'BLUE') { dotColor = 'bg-blue-600'; badgeClasses = 'bg-blue-50 border-blue-200 text-blue-700'; }
+  else if (c === 'GREEN') { dotColor = 'bg-emerald-500'; badgeClasses = 'bg-emerald-50 border-emerald-200 text-emerald-700'; }
+  else if (c === 'YELLOW') { dotColor = 'bg-amber-400'; badgeClasses = 'bg-amber-50 border-amber-200 text-amber-800'; }
+  else if (c === 'ORANGE') { dotColor = 'bg-orange-500'; badgeClasses = 'bg-orange-50 border-orange-200 text-orange-700'; }
+  else if (c === 'PURPLE') { dotColor = 'bg-purple-600'; badgeClasses = 'bg-purple-50 border-purple-200 text-purple-700'; }
+  else if (c === 'BLACK') { dotColor = 'bg-slate-900'; badgeClasses = 'bg-slate-100 border-slate-300 text-slate-800'; }
+  else if (c === 'WHITE') { dotColor = 'bg-white border border-slate-300'; badgeClasses = 'bg-slate-50 border-slate-200 text-slate-800'; }
+  else if (c === 'GRAY' || c === 'GREY') { dotColor = 'bg-slate-400'; badgeClasses = 'bg-slate-100 border-slate-200 text-slate-600'; }
+  else if (c === 'BROWN') { dotColor = 'bg-amber-700'; badgeClasses = 'bg-amber-50 border-amber-200 text-amber-900'; }
+  else if (c === 'SILVER') { dotColor = 'bg-slate-300 border border-slate-400'; badgeClasses = 'bg-slate-100 border-slate-200 text-slate-700'; }
 
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/5 border ${badgeBorder} text-[11px] font-mono capitalize`}>
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border ${badgeClasses} text-[11px] font-mono capitalize shadow-2xs`}>
       <span className={`w-2 h-2 rounded-full ${dotColor} shrink-0`} />
       <span>{colorName.toLowerCase()}</span>
     </span>
@@ -168,7 +169,8 @@ export const CinematicResultsView: React.FC = () => {
       let isCancelled = false;
       const targetLabel = detectionResult?.objectName || targetClass || 'Target';
       const conf = detectionResult?.confidence ?? 97.8;
-      const lastSec = (detectionResult?.lastSeenTimestampMs ? detectionResult.lastSeenTimestampMs / 1000 : 3.0);
+      const rawMs = detectionResult?.lastSeenTimestampMs ?? (allDetectedTracks?.[0]?.lastSeen ? allDetectedTracks[0].lastSeen * 1000 : (allDetectedTracks?.[0]?.timestampMs ?? null));
+      const lastSec = (rawMs != null && rawMs > 0 ? rawMs / 1000 : 3.0);
 
       Promise.all([
         extractFrameFromVideo(userSource, {
@@ -210,7 +212,7 @@ export const CinematicResultsView: React.FC = () => {
         isCancelled = true;
       };
     }
-  }, [activeVideoSource, isTargetFound, detectionResult, targetClass, targetColor, dominantColor]);
+  }, [activeVideoSource, isTargetFound, detectionResult, targetClass, targetColor, dominantColor, allDetectedTracks]);
 
   // Format timestamp helper
   const formatTimestamp = (ms?: number | null, fallback?: string | null) => {
@@ -221,6 +223,18 @@ export const CinematicResultsView: React.FC = () => {
       return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
     }
     return fallback || '00:00';
+  };
+
+  const parseTimeStringToSeconds = (ts?: string | null): number => {
+    if (!ts) return 3.0;
+    const parts = ts.split(':').map(p => parseFloat(p));
+    if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+      return parts[0] * 60 + parts[1];
+    }
+    if (parts.length === 1 && !isNaN(parts[0])) {
+      return parts[0];
+    }
+    return 3.0;
   };
 
   // Normalized display confidence guaranteed to be valid percentage (e.g. 94.8%)
@@ -268,27 +282,35 @@ export const CinematicResultsView: React.FC = () => {
   const handleSpotChange = (spot: 'LAST_SPOT' | 'INITIAL_SPOT') => {
     setBlobUrl(null);
     if (spot === 'LAST_SPOT') {
-      const lastAnn = topAnnotatedUrl || clientExtractedUrls.lastAnnotated || `/api/search/${sessionId}/evidence/frame?type=annotated&spot=last_spot`;
-      const lastOrig = topOriginalUrl || clientExtractedUrls.lastOriginal || `/api/search/${sessionId}/evidence/frame?type=original&spot=last_spot`;
+      const lastAnn = (hasUserUploadedVideo && clientExtractedUrls.lastAnnotated)
+        ? clientExtractedUrls.lastAnnotated
+        : (topAnnotatedUrl || clientExtractedUrls.lastAnnotated || `/api/search/${sessionId}/evidence/frame?type=annotated&spot=last_spot`);
+      const lastOrig = (hasUserUploadedVideo && clientExtractedUrls.lastOriginal)
+        ? clientExtractedUrls.lastOriginal
+        : (topOriginalUrl || clientExtractedUrls.lastOriginal || `/api/search/${sessionId}/evidence/frame?type=original&spot=last_spot`);
 
-      const lastSeenMs = detectionResult?.lastSeenTimestampMs;
-      const computedFrame = detectionResult?.lastSeenFrame ?? (lastSeenMs != null ? Math.round(lastSeenMs / 33.33) : (isReferenceClip && targetClass.toLowerCase().includes('bottle') ? 110 : 30));
-      const computedTs = detectionResult?.lastSeenTimestamp || formatTimestamp(lastSeenMs, '00:03');
+      const lastSeenMs = detectionResult?.lastSeenTimestampMs ?? matchingTargets[0]?.lastSeenMs;
+      const computedFrame = detectionResult?.lastSeenFrame ?? matchingTargets[0]?.frameNumber ?? (lastSeenMs != null ? Math.round(lastSeenMs / 33.33) : (isReferenceClip && targetClass.toLowerCase().includes('bottle') ? 110 : 30));
+      const computedTs = detectionResult?.lastSeenTimestamp ?? matchingTargets[0]?.lastSeenFormatted ?? formatTimestamp(lastSeenMs, '00:03');
 
       setEvidenceModal(prev => ({
         ...prev,
         spotType: 'LAST_SPOT',
         frameNumber: computedFrame,
         timestamp: computedTs,
-        confidence: detectionResult?.confidence || 97.8,
+        confidence: detectionResult?.confidence || matchingTargets[0]?.confidence || 97.8,
         annotatedUrl: lastAnn,
         originalUrl: lastOrig,
         status: 'LOADING',
         errorMessage: null,
       }));
     } else {
-      const initAnn = clientExtractedUrls.initialAnnotated || (sessionId ? toFullUrl(`/api/search/${sessionId}/evidence/frame?type=annotated&spot=initial`) : topAnnotatedUrl);
-      const initOrig = clientExtractedUrls.initialOriginal || (sessionId ? toFullUrl(`/api/search/${sessionId}/evidence/frame?type=original&spot=initial`) : topOriginalUrl);
+      const initAnn = (hasUserUploadedVideo && clientExtractedUrls.initialAnnotated)
+        ? clientExtractedUrls.initialAnnotated
+        : (clientExtractedUrls.initialAnnotated || (sessionId ? toFullUrl(`/api/search/${sessionId}/evidence/frame?type=annotated&spot=initial`) : topAnnotatedUrl));
+      const initOrig = (hasUserUploadedVideo && clientExtractedUrls.initialOriginal)
+        ? clientExtractedUrls.initialOriginal
+        : (clientExtractedUrls.initialOriginal || (sessionId ? toFullUrl(`/api/search/${sessionId}/evidence/frame?type=original&spot=initial`) : topOriginalUrl));
 
       setEvidenceModal(prev => ({
         ...prev,
@@ -351,6 +373,16 @@ export const CinematicResultsView: React.FC = () => {
 
     let ann = params.annotatedUrl || primaryTarget?.annotatedUrl;
     let orig = params.originalUrl || primaryTarget?.originalUrl;
+
+    if (hasUserUploadedVideo) {
+      if (isLastSpot && clientExtractedUrls.lastAnnotated) {
+        ann = clientExtractedUrls.lastAnnotated;
+        orig = clientExtractedUrls.lastOriginal || ann;
+      } else if (!isLastSpot && clientExtractedUrls.initialAnnotated) {
+        ann = clientExtractedUrls.initialAnnotated;
+        orig = clientExtractedUrls.initialOriginal || ann;
+      }
+    }
 
     if (!ann) {
       if (isLastSpot && clientExtractedUrls.lastAnnotated) {
@@ -494,16 +526,22 @@ export const CinematicResultsView: React.FC = () => {
       // Check if this track has a specific evidence frame
       const matchingEvidence = allEvidenceItems.find((ev: any) => 
         (ev.trackId != null && Number(ev.trackId) === Number(trkTrackId)) ||
-        (ev.track_id != null && Number(ev.track_id) === Number(trkTrackId))
+        (ev.track_id != null && Number(ev.track_id) === Number(trkTrackId)) ||
+        (ev.selectionPolicy === 'last_known_position') ||
+        (ev.annotatedImagePath && (ev.annotatedImagePath.startsWith('data:') || ev.annotatedImagePath.startsWith('blob:')))
       );
 
-      const rowAnnotatedUrl = matchingEvidence?.annotatedImagePath
-        ? toFullUrl(matchingEvidence.annotatedImagePath)
-        : (sessionId ? toFullUrl(`/api/search/${sessionId}/evidence/frame?type=annotated${trkTrackId ? `&trackId=${trkTrackId}` : ''}`) : topAnnotatedUrl);
+      const rowAnnotatedUrl = (hasUserUploadedVideo && clientExtractedUrls.lastAnnotated)
+        ? clientExtractedUrls.lastAnnotated
+        : (matchingEvidence?.annotatedImagePath
+          ? toFullUrl(matchingEvidence.annotatedImagePath)
+          : (topAnnotatedUrl || (sessionId ? toFullUrl(`/api/search/${sessionId}/evidence/frame?type=annotated${trkTrackId ? `&trackId=${trkTrackId}` : ''}`) : '')));
 
-      const rowOriginalUrl = matchingEvidence?.originalImagePath
-        ? toFullUrl(matchingEvidence.originalImagePath)
-        : (sessionId ? toFullUrl(`/api/search/${sessionId}/evidence/frame?type=original${trkTrackId ? `&trackId=${trkTrackId}` : ''}`) : topOriginalUrl);
+      const rowOriginalUrl = (hasUserUploadedVideo && clientExtractedUrls.lastOriginal)
+        ? clientExtractedUrls.lastOriginal
+        : (matchingEvidence?.originalImagePath
+          ? toFullUrl(matchingEvidence.originalImagePath)
+          : (topOriginalUrl || (sessionId ? toFullUrl(`/api/search/${sessionId}/evidence/frame?type=original${trkTrackId ? `&trackId=${trkTrackId}` : ''}`) : '')));
 
       const rawBbox = trk.bbox || (trk.bboxX != null ? { x1: trk.bboxX, y1: trk.bboxY, width: trk.bboxWidth, height: trk.bboxHeight } : null) || detectionResult?.boundingBox;
       const rowBbox = rawBbox || ((isReferenceClip && isBottle) ? { x1: 276, y1: 442, width: 36, height: 108 } : null);
@@ -546,14 +584,47 @@ export const CinematicResultsView: React.FC = () => {
         return;
       }
 
-      // Direct data: or blob: URI from client extraction
-      if (activeModalUrl.startsWith('data:') || activeModalUrl.startsWith('blob:')) {
-        setBlobUrl(activeModalUrl);
-        setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
-        return;
+      // 1. If user uploaded a video (or activeVideoSource available), ALWAYS prioritize client-side extraction of genuine frame
+      if (hasUserUploadedVideo && (uploadedRec?.file || uploadedRec?.blobUrl || activeVideoSource)) {
+        const userSrc = uploadedRec?.file || uploadedRec?.blobUrl || activeVideoSource;
+        const isLast = evidenceModal.spotType !== 'INITIAL_SPOT';
+        const userFallback = isLast
+          ? (evidenceModal.mode === 'ORIGINAL' ? (clientExtractedUrls.lastOriginal || clientExtractedUrls.lastAnnotated) : clientExtractedUrls.lastAnnotated)
+          : (evidenceModal.mode === 'ORIGINAL' ? (clientExtractedUrls.initialOriginal || clientExtractedUrls.initialAnnotated) : clientExtractedUrls.initialAnnotated);
+
+        if (userFallback) {
+          if (isMounted) {
+            setBlobUrl(userFallback);
+            setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
+          }
+          return;
+        }
+
+        try {
+          const sec = isLast
+            ? (detectionResult?.lastSeenTimestampMs ? detectionResult.lastSeenTimestampMs / 1000 : (matchingTargets[0]?.lastSeenMs ? matchingTargets[0].lastSeenMs / 1000 : (evidenceModal.timestamp ? parseTimeStringToSeconds(evidenceModal.timestamp) : 3.0)))
+            : 0.33;
+
+          const directFrame = await extractFrameFromVideo(userSrc, {
+            timestampSeconds: sec,
+            annotate: evidenceModal.mode === 'ANNOTATED',
+            label: evidenceModal.objectName || targetClass || 'Target',
+            confidence: evidenceModal.confidence || detectionResult?.confidence || 95.0,
+            bbox: evidenceModal.bbox || detectionResult?.boundingBox,
+            dominantColor: evidenceModal.colorName || targetColor || dominantColor,
+          });
+
+          if (directFrame && isMounted) {
+            setBlobUrl(directFrame);
+            setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
+            return;
+          }
+        } catch (clientExtractErr) {
+          console.warn('[EVIDENCE CLIENT EXTRACT PRE-FETCH WARNING]', clientExtractErr);
+        }
       }
 
-      // 1. Direct local static evidence photos
+      // 2. Direct local static evidence photos
       if (activeModalUrl.startsWith('/evidence/')) {
         try {
           const photoRes = await fetch(activeModalUrl);
@@ -590,6 +661,13 @@ export const CinematicResultsView: React.FC = () => {
         }
 
         const contentType = res.headers.get('content-type') || '';
+        const evidenceSource = res.headers.get('x-evidence-source') || '';
+
+        // If backend returned an SVG placeholder and we have a video source or uploaded video, reject SVG and extract genuine frame
+        if (contentType.includes('svg') || evidenceSource === 'SYNTHETIC_SURVEILLANCE_ENGINE') {
+          throw new Error('Server returned synthetic vector fallback; extracting genuine frame');
+        }
+
         if (!contentType.includes('image/')) {
           throw new Error(`Invalid content-type received: ${contentType}`);
         }
@@ -616,7 +694,8 @@ export const CinematicResultsView: React.FC = () => {
         console.warn('[EVIDENCE BLOB FETCH FALLBACK]', activeModalUrl, err);
         if (isMounted) {
           // If user uploaded a video, prioritize client-extracted real frame
-          if (hasUserUploadedVideo) {
+          const userSrc = uploadedRec?.file || uploadedRec?.blobUrl || activeVideoSource;
+          if (userSrc) {
             const isLast = evidenceModal.spotType !== 'INITIAL_SPOT';
             const userFallback = isLast
               ? (evidenceModal.mode === 'ORIGINAL' ? (clientExtractedUrls.lastOriginal || clientExtractedUrls.lastAnnotated) : clientExtractedUrls.lastAnnotated)
@@ -627,18 +706,17 @@ export const CinematicResultsView: React.FC = () => {
               return;
             }
 
-            const userSrc = uploadedRec?.file || uploadedRec?.blobUrl;
-            if (userSrc) {
-              try {
-                const sec = isLast
-                  ? (detectionResult?.lastSeenTimestampMs ? detectionResult.lastSeenTimestampMs / 1000 : 3.0)
-                  : 0.33;
+            try {
+              const sec = isLast
+                ? (detectionResult?.lastSeenTimestampMs ? detectionResult.lastSeenTimestampMs / 1000 : (matchingTargets[0]?.lastSeenMs ? matchingTargets[0].lastSeenMs / 1000 : (evidenceModal.timestamp ? parseTimeStringToSeconds(evidenceModal.timestamp) : 3.0)))
+                : 0.33;
               const directFrame = await extractFrameFromVideo(userSrc, {
                 timestampSeconds: sec,
                 annotate: evidenceModal.mode === 'ANNOTATED',
                 label: evidenceModal.objectName || targetClass || 'Target',
-                confidence: evidenceModal.confidence || 95.0,
+                confidence: evidenceModal.confidence || detectionResult?.confidence || 95.0,
                 bbox: evidenceModal.bbox || detectionResult?.boundingBox,
+                dominantColor: evidenceModal.colorName || targetColor || dominantColor,
               });
               if (directFrame) {
                 setBlobUrl(directFrame);
@@ -649,7 +727,6 @@ export const CinematicResultsView: React.FC = () => {
               console.warn('[ON-DEMAND FRAME EXTRACTION ERROR]', onDemandErr);
             }
           }
-        }
 
         // Check if we have a dynamic client-extracted frame
         const activeClientUrl = evidenceModal.mode === 'ORIGINAL'
@@ -747,38 +824,38 @@ export const CinematicResultsView: React.FC = () => {
   }, [evidenceModal.isOpen, activeModalUrl, evidenceModal.spotType, evidenceModal.mode]);
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-xl animate-fade-in text-white font-sans overflow-y-auto">
-      <div className="w-full max-w-4xl bg-slate-950/95 border border-white/15 rounded-3xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh]">
+    <div className="absolute inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-md animate-fade-in text-slate-800 font-sans overflow-y-auto">
+      <div className="w-full max-w-4xl bg-white/95 backdrop-blur-2xl border border-slate-200/90 rounded-3xl shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh]">
         
         {/* 1. Header Section */}
-        <div className="p-5 sm:p-6 border-b border-white/10 flex flex-wrap items-center justify-between gap-4 bg-gradient-to-r from-slate-900/90 via-slate-950/80 to-slate-900/90">
+        <div className="p-5 sm:p-6 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-4 bg-gradient-to-r from-slate-50/90 via-white/80 to-blue-50/40">
           <div className="space-y-1">
             <div className="flex items-center gap-2.5">
-              <span className="text-[10px] font-mono tracking-widest uppercase px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+              <span className="text-[10px] font-mono tracking-widest uppercase px-2.5 py-0.5 rounded-full bg-blue-50 text-[#4361ee] border border-blue-200 font-semibold">
                 FORENSIC REPORT
               </span>
-              <span className="text-xs text-slate-400 font-mono truncate max-w-xs sm:max-w-md">
+              <span className="text-xs text-slate-500 font-mono truncate max-w-xs sm:max-w-md">
                 Source: {videoName}
               </span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 flex items-center gap-2">
               <span>SEARCH RESULTS</span>
             </h1>
           </div>
 
           {/* Search Target Spec Box & View CCTV Action */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-3 bg-white/5 px-3.5 py-2 rounded-2xl border border-white/10">
+            <div className="flex items-center gap-3 bg-slate-100/80 px-3.5 py-2 rounded-2xl border border-slate-200/80">
               <div className="text-right">
-                <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Target</div>
-                <div className="text-xs font-bold text-white uppercase font-mono">
+                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Target</div>
+                <div className="text-xs font-bold text-slate-800 uppercase font-mono">
                   {targetClass}
                 </div>
               </div>
-              <div className="h-6 w-[1px] bg-white/15" />
+              <div className="h-6 w-[1px] bg-slate-200" />
               <div>
-                <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Color</div>
-                <div className="text-xs font-mono font-semibold text-blue-300">
+                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Color</div>
+                <div className="text-xs font-mono font-semibold text-[#4361ee]">
                   {targetColor ? targetColor.toUpperCase() : 'ANY COLOR'}
                 </div>
               </div>
@@ -787,50 +864,50 @@ export const CinematicResultsView: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowResultsView(false)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-white/10 hover:bg-white/20 text-slate-200 text-xs font-mono font-semibold transition-all cursor-pointer border border-white/10 shadow-xs"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-mono font-semibold transition-all cursor-pointer border border-slate-200 shadow-xs hover:border-slate-300"
               title="Minimize report to view 3D CCTV room"
             >
-              <Eye className="w-3.5 h-3.5 text-blue-400" />
+              <Eye className="w-3.5 h-3.5 text-[#4361ee]" />
               <span>View CCTV</span>
             </button>
           </div>
         </div>
 
         {/* 2. Target Verdict Banner */}
-        <div className="px-5 sm:px-6 py-3.5 border-b border-white/10 bg-black/40">
+        <div className="px-5 sm:px-6 py-3.5 border-b border-slate-200/80">
           {isTargetFound && detectionResult ? (
-            <div className="flex items-center justify-between flex-wrap gap-2 text-emerald-400 font-mono text-xs">
+            <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-2xl flex items-center justify-between flex-wrap gap-2 text-emerald-800 font-mono text-xs">
               <div className="flex items-center gap-2.5">
-                <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                <strong className="font-bold text-sm tracking-wide uppercase text-white">
+                <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                <strong className="font-bold text-sm tracking-wide uppercase text-slate-900">
                   TARGET FOUND
                 </strong>
-                <span className="px-2 py-0.5 rounded-md bg-emerald-950/70 border border-emerald-500/30 text-[10px] text-emerald-300 uppercase font-bold">
+                <span className="px-2 py-0.5 rounded-md bg-emerald-100 border border-emerald-300 text-[10px] text-emerald-800 uppercase font-bold">
                   {targetClass} · {dominantColor ? dominantColor.toUpperCase() : (targetColor ? targetColor.toUpperCase() : 'ANY COLOR')} · {displayConfidence.toFixed(1)}%
                 </span>
               </div>
-              <div className="flex items-center gap-3 text-[11px] text-slate-300">
-                <span>LAST SEEN: <strong className="text-white font-bold">{detectionResult.lastSeenTimestamp || detectionResult.timestamp || '00:03'}</strong></span>
+              <div className="flex items-center gap-3 text-[11px] text-slate-600">
+                <span>LAST SEEN: <strong className="text-slate-900 font-bold">{detectionResult.lastSeenTimestamp || detectionResult.timestamp || '00:03'}</strong></span>
                 <span>•</span>
-                <span className="text-emerald-300 font-bold uppercase">LAST KNOWN POSITION</span>
+                <span className="text-emerald-700 font-bold uppercase">LAST KNOWN POSITION</span>
                 <span>•</span>
-                <span>{detectionResult.camera || 'CAMERA 01'}</span>
+                <span className="text-slate-700 font-semibold">{detectionResult.camera || 'CAMERA 01'}</span>
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-between flex-wrap gap-2 text-rose-400 font-mono text-xs">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
+            <div className="p-3 bg-rose-50/80 border border-rose-200 rounded-2xl flex items-center justify-between flex-wrap gap-2 text-rose-800 font-mono text-xs">
+              <div className="flex items-center gap-2.5">
+                <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0" />
                 <div>
-                  <strong className="font-bold text-sm tracking-wide uppercase text-rose-300 block">
+                  <strong className="font-bold text-sm tracking-wide uppercase text-rose-900 block">
                     NOT DETECTED
                   </strong>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[11px] text-slate-600">
                     No matching {targetClass.toLowerCase()} was found in the uploaded video.
                   </span>
                 </div>
               </div>
-              <span className="px-2.5 py-1 rounded-lg bg-rose-950/60 border border-rose-500/40 text-rose-300 text-[10px] font-bold uppercase tracking-wider">
+              <span className="px-2.5 py-1 rounded-lg bg-rose-100 border border-rose-300 text-rose-800 text-[10px] font-bold uppercase tracking-wider">
                 0 MATCHES
               </span>
             </div>
@@ -838,15 +915,15 @@ export const CinematicResultsView: React.FC = () => {
         </div>
 
         {/* 3. Tab Switcher: Target Matches vs Full Detection Inventory */}
-        <div className="px-5 sm:px-6 pt-3 flex items-center justify-between border-b border-white/10 bg-slate-900/30">
+        <div className="px-5 sm:px-6 pt-3 flex items-center justify-between border-b border-slate-200/80 bg-slate-50/60">
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setActiveTab('MATCHES')}
               className={`px-3.5 py-2 text-xs font-mono font-bold tracking-wide transition-all border-b-2 cursor-pointer ${
                 activeTab === 'MATCHES'
-                  ? 'border-blue-500 text-blue-400'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'border-[#4361ee] text-[#4361ee]'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
               Target Matches ({matchingTargets.length})
@@ -856,8 +933,8 @@ export const CinematicResultsView: React.FC = () => {
               onClick={() => setActiveTab('INVENTORY')}
               className={`px-3.5 py-2 text-xs font-mono font-bold tracking-wide transition-all border-b-2 flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'INVENTORY'
-                  ? 'border-blue-500 text-blue-400'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'border-[#4361ee] text-[#4361ee]'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
               <Layers className="w-3.5 h-3.5" />
@@ -870,7 +947,7 @@ export const CinematicResultsView: React.FC = () => {
               type="button"
               id="btn-view-last-seen-frame-top"
               onClick={() => openEvidenceModal(matchingTargets[0] || {})}
-              className="text-[11px] text-blue-400 hover:text-blue-300 font-mono flex items-center gap-1.5 pb-1 cursor-pointer transition-colors"
+              className="text-[11px] text-[#4361ee] hover:text-blue-700 font-mono flex items-center gap-1.5 pb-1 cursor-pointer transition-colors"
             >
               <Camera className="w-3.5 h-3.5" />
               <span className="font-bold">VIEW LAST SEEN FRAME</span>
@@ -888,18 +965,18 @@ export const CinematicResultsView: React.FC = () => {
                   {/* Matching Items Table */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <div className="text-[11px] font-mono tracking-widest text-emerald-400 font-extrabold uppercase flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                      <div className="text-[11px] font-mono tracking-widest text-emerald-700 font-extrabold uppercase flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
                         <span>LAST KNOWN TARGET POSITION</span>
                       </div>
-                      <span className="text-[10px] font-mono text-slate-400 uppercase">
+                      <span className="text-[10px] font-mono text-slate-500 uppercase">
                         Sorted by Last Seen Timestamp Descending
                       </span>
                     </div>
 
-                    <div className="overflow-x-auto rounded-2xl border border-white/10 bg-black/30 shadow-inner">
+                    <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs">
                       <table className="w-full text-left text-xs font-mono">
-                        <thead className="bg-white/5 text-slate-400 uppercase text-[10px] tracking-wider border-b border-white/10">
+                        <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-200">
                           <tr>
                             <th className="py-3 px-4">#</th>
                             <th className="py-3 px-4">Object</th>
@@ -911,29 +988,29 @@ export const CinematicResultsView: React.FC = () => {
                             <th className="py-3 px-4 text-right">Action</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5 text-slate-200">
+                        <tbody className="divide-y divide-slate-100 text-slate-700">
                           {matchingTargets.map((item, idx) => (
-                            <tr key={idx} className="bg-emerald-950/20 hover:bg-emerald-950/30 transition-colors">
-                              <td className="py-3 px-4 font-bold text-white">{idx + 1}</td>
-                              <td className="py-3 px-4 font-bold text-emerald-300 capitalize flex items-center gap-1.5">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <tr key={idx} className="bg-emerald-50/40 hover:bg-emerald-50/70 transition-colors">
+                              <td className="py-3 px-4 font-bold text-slate-900">{idx + 1}</td>
+                              <td className="py-3 px-4 font-bold text-emerald-800 capitalize flex items-center gap-1.5">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                                 <span>{item.className}</span>
                               </td>
                               <td className="py-3 px-4">
                                 {getColorBadge(item.dominantColor || targetColor)}
                               </td>
                               <td className="py-3 px-4">
-                                <span className="font-bold text-emerald-400">
+                                <span className="font-bold text-emerald-600">
                                   {item.confidence.toFixed(1)}%
                                 </span>
                               </td>
-                              <td className="py-3 px-4 text-blue-300 font-semibold">
+                              <td className="py-3 px-4 text-blue-600 font-semibold">
                                 #{item.trackId}
                               </td>
-                              <td className="py-3 px-4 text-white font-bold font-mono">
+                              <td className="py-3 px-4 text-slate-900 font-bold font-mono">
                                 {item.lastSeenFormatted}
                               </td>
-                              <td className="py-3 px-4 text-slate-400 truncate max-w-[140px]">
+                              <td className="py-3 px-4 text-slate-500 truncate max-w-[140px]">
                                 {videoName}
                               </td>
                               <td className="py-3 px-4 text-right">
@@ -955,7 +1032,7 @@ export const CinematicResultsView: React.FC = () => {
                                     videoPath: item.videoPath,
                                     bbox: item.bbox,
                                   })}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold tracking-wider hover:bg-emerald-500/30 transition-all cursor-pointer uppercase shadow-sm"
+                                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-bold tracking-wider hover:bg-emerald-200 transition-all cursor-pointer uppercase shadow-xs"
                                 >
                                   <Camera className="w-3 h-3" />
                                   <span>VIEW LAST SEEN FRAME</span>
@@ -970,9 +1047,9 @@ export const CinematicResultsView: React.FC = () => {
 
                   {/* Evidence Crop Card */}
                   {topAnnotatedUrl && (
-                    <div className="p-4 bg-black/40 rounded-2xl border border-white/10 flex flex-col sm:flex-row items-center gap-4">
+                    <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/90 flex flex-col sm:flex-row items-center gap-4">
                       <div 
-                        className="relative w-full sm:w-56 h-36 rounded-xl border border-white/15 overflow-hidden cursor-pointer group bg-slate-900 shrink-0"
+                        className="relative w-full sm:w-56 h-36 rounded-xl border border-slate-300 overflow-hidden cursor-pointer group bg-slate-950 shrink-0 shadow-xs"
                         onClick={() => openEvidenceModal(matchingTargets[0] || {})}
                       >
                         <img
@@ -986,8 +1063,8 @@ export const CinematicResultsView: React.FC = () => {
                             }
                           }}
                         />
-                        <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                          <span className="px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-md border border-white/20 text-[10px] font-mono font-bold text-white flex items-center gap-1.5 opacity-90 group-hover:opacity-100">
+                        <div className="absolute inset-0 bg-slate-900/30 group-hover:bg-slate-900/10 transition-colors flex items-center justify-center">
+                          <span className="px-2.5 py-1 rounded-lg bg-slate-900/80 backdrop-blur-md border border-white/20 text-[10px] font-mono font-bold text-white flex items-center gap-1.5 opacity-90 group-hover:opacity-100">
                             <Maximize2 className="w-3 h-3 text-blue-400" />
                             <span>ENLARGE</span>
                           </span>
@@ -995,28 +1072,28 @@ export const CinematicResultsView: React.FC = () => {
                       </div>
 
                       <div className="space-y-2 text-xs font-mono text-left w-full">
-                        <div className="text-[11px] text-emerald-400 uppercase tracking-wider font-extrabold flex items-center justify-between">
+                        <div className="text-[11px] text-emerald-700 uppercase tracking-wider font-extrabold flex items-center justify-between">
                           <span>LAST SEEN FRAME EVIDENCE</span>
-                          <span className="text-slate-400 text-[10px] font-normal">Surveillance resolution (OpenCV)</span>
+                          <span className="text-slate-500 text-[10px] font-normal">Surveillance resolution (OpenCV)</span>
                         </div>
-                        <p className="text-slate-300 leading-relaxed text-[11px]">
+                        <p className="text-slate-600 leading-relaxed text-[11px]">
                           Authentic frame from uploaded surveillance footage corresponding to the target's final confirmed observation. Optical bounding box verified via YOLOv8 and ByteTrack tracker.
                         </p>
-                        <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-400 pt-1 border-t border-white/5">
-                          <span>Target: <strong className="text-white capitalize">{detectionResult?.objectName || targetClass}</strong></span>
+                        <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-600 pt-1 border-t border-slate-200">
+                          <span>Target: <strong className="text-slate-900 capitalize">{detectionResult?.objectName || targetClass}</strong></span>
                           <span>•</span>
-                          <span>Confidence: <strong className="text-emerald-400">{displayConfidence.toFixed(1)}%</strong></span>
+                          <span>Confidence: <strong className="text-emerald-600 font-bold">{displayConfidence.toFixed(1)}%</strong></span>
                           <span>•</span>
-                          <span>Track: <strong className="text-white">#{detectionResult?.trackId || 'T1'}</strong></span>
+                          <span>Track: <strong className="text-slate-900">#{detectionResult?.trackId || 'T1'}</strong></span>
                           <span>•</span>
-                          <span>Last Seen: <strong className="text-white font-bold">{detectionResult?.lastSeenTimestamp || detectionResult?.timestamp || '00:03'}</strong></span>
+                          <span>Last Seen: <strong className="text-slate-900 font-bold">{detectionResult?.lastSeenTimestamp || detectionResult?.timestamp || '00:03'}</strong></span>
                         </div>
                         <div className="pt-1">
                           <button
                             type="button"
                             id="btn-view-last-seen-frame-enlarged"
                             onClick={() => openEvidenceModal(matchingTargets[0] || {})}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-400/40 text-xs font-mono font-bold transition-all cursor-pointer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#4361ee] border border-blue-200 text-xs font-mono font-bold transition-all cursor-pointer shadow-xs"
                           >
                             <Maximize2 className="w-3 h-3" />
                             <span>VIEW LAST SEEN FRAME (ENLARGED)</span>
@@ -1027,16 +1104,16 @@ export const CinematicResultsView: React.FC = () => {
                   )}
                 </div>
               ) : (
-                <div className="py-12 px-4 text-center space-y-3 bg-black/20 rounded-2xl border border-white/5 font-mono">
-                  <AlertTriangle className="w-8 h-8 text-rose-400 mx-auto opacity-75" />
-                  <div className="text-sm font-bold text-rose-400 uppercase tracking-wide">
+                <div className="py-12 px-4 text-center space-y-3 bg-slate-50/70 rounded-2xl border border-slate-200 font-mono">
+                  <AlertTriangle className="w-8 h-8 text-rose-500 mx-auto opacity-75" />
+                  <div className="text-sm font-bold text-rose-700 uppercase tracking-wide">
                     NOT DETECTED
                   </div>
-                  <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
+                  <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
                     No matching {targetClass.toLowerCase()} was found in the uploaded video.
                   </p>
                   <p className="text-[11px] text-slate-500">
-                    The video was analyzed sequentially through all frames. No object matching <strong className="text-white">"{targetClass}"</strong> {targetColor ? `with color "${targetColor}"` : ''} was observed.
+                    The video was analyzed sequentially through all frames. No object matching <strong className="text-slate-850">"{targetClass}"</strong> {targetColor ? `with color "${targetColor}"` : ''} was observed.
                   </p>
                 </div>
               )}
@@ -1045,15 +1122,15 @@ export const CinematicResultsView: React.FC = () => {
 
           {activeTab === 'INVENTORY' && (
             <div className="space-y-3">
-              <div className="text-xs font-mono text-slate-400 flex items-center justify-between">
+              <div className="text-xs font-mono text-slate-500 flex items-center justify-between">
                 <span>All objects discovered during automated surveillance analysis:</span>
-                <span className="text-blue-400 font-bold">{allDetectedTracks.length} distinct track items</span>
+                <span className="text-[#4361ee] font-bold">{allDetectedTracks.length} distinct track items</span>
               </div>
 
               {allDetectedTracks.length > 0 ? (
-                <div className="overflow-x-auto rounded-2xl border border-white/10 bg-black/30 shadow-inner">
+                <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs">
                   <table className="w-full text-left text-xs font-mono">
-                    <thead className="bg-white/5 text-slate-400 uppercase text-[10px] tracking-wider border-b border-white/10">
+                    <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-200">
                       <tr>
                         <th className="py-3 px-4">#</th>
                         <th className="py-3 px-4">Discovered Object</th>
@@ -1064,7 +1141,7 @@ export const CinematicResultsView: React.FC = () => {
                         <th className="py-3 px-4">Match Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5 text-slate-200">
+                    <tbody className="divide-y divide-slate-100 text-slate-700">
                       {allDetectedTracks.map((trk: any, idx) => {
                         const trkClass = trk.className || trk.CLASS_NAME || 'Object';
                         const isMatch = targetClass && trkClass.toLowerCase() === targetClass.toLowerCase();
@@ -1074,30 +1151,30 @@ export const CinematicResultsView: React.FC = () => {
                         const trkColor = trk.dominantColor || trk.DOMINANT_COLOR || (trk.secondaryColors?.[0]) || (trk.SECONDARY_COLORS?.[0]);
 
                         return (
-                          <tr key={idx} className={isMatch ? 'bg-emerald-950/20 font-bold' : 'hover:bg-white/5 transition-colors'}>
-                            <td className="py-2.5 px-4 text-slate-400">{idx + 1}</td>
-                            <td className="py-2.5 px-4 font-bold text-white capitalize">
+                          <tr key={idx} className={isMatch ? 'bg-emerald-50/50 font-semibold' : 'hover:bg-slate-50/80 transition-colors'}>
+                            <td className="py-2.5 px-4 text-slate-500">{idx + 1}</td>
+                            <td className="py-2.5 px-4 font-bold text-slate-900 capitalize">
                               {trkClass}
                             </td>
                             <td className="py-2.5 px-4">
                               {getColorBadge(trkColor)}
                             </td>
-                            <td className="py-2.5 px-4 text-emerald-400 font-semibold">
+                            <td className="py-2.5 px-4 text-emerald-600 font-semibold">
                               {trkConf ? `${(trkConf > 1 ? trkConf : trkConf * 100).toFixed(1)}%` : '92.0%'}
                             </td>
-                            <td className="py-2.5 px-4 text-blue-300">
+                            <td className="py-2.5 px-4 text-blue-600">
                               #{trkTrackId || idx + 1}
                             </td>
-                            <td className="py-2.5 px-4 text-slate-300">
+                            <td className="py-2.5 px-4 text-slate-600">
                               {formatTimestamp(trkTimeMs)}
                             </td>
                             <td className="py-2.5 px-4">
                               {isMatch ? (
-                                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-300 font-bold uppercase">
-                                  <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Target Match
+                                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 font-bold uppercase">
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Target Match
                                 </span>
                               ) : (
-                                <span className="text-[10px] text-slate-500 uppercase">
+                                <span className="text-[10px] text-slate-400 uppercase">
                                   Other Entity
                                 </span>
                               )}
@@ -1119,14 +1196,14 @@ export const CinematicResultsView: React.FC = () => {
         </div>
 
         {/* 5. Footer Action Controls */}
-        <div className="p-4 sm:p-5 border-t border-white/10 bg-slate-900/60 flex flex-wrap items-center justify-between gap-3">
+        <div className="p-4 sm:p-5 border-t border-slate-200/80 bg-slate-50/80 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => {
                 searchAnotherObject(true);
               }}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs font-mono flex items-center gap-2 shadow-md transition-all active:scale-95 cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-[#4361ee] hover:bg-blue-600 text-white font-bold text-xs font-mono flex items-center gap-2 shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Search Another Object</span>
@@ -1137,7 +1214,7 @@ export const CinematicResultsView: React.FC = () => {
               onClick={() => {
                 searchAnotherObject(false);
               }}
-              className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 text-xs font-mono flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+              className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-mono flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-xs"
             >
               <Upload className="w-3.5 h-3.5" />
               <span>Upload New Video</span>
@@ -1151,7 +1228,7 @@ export const CinematicResultsView: React.FC = () => {
                 setActiveFeedTab('cctv');
                 setStage('HOME');
               }}
-              className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
             >
               <LayoutGrid className="w-3.5 h-3.5" />
               <span>CCTV Grid</span>
@@ -1163,7 +1240,7 @@ export const CinematicResultsView: React.FC = () => {
                 setActiveFeedTab('logs');
                 setStage('HOME');
               }}
-              className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
             >
               <Database className="w-3.5 h-3.5" />
               <span>Audit Logs</span>
@@ -1175,7 +1252,7 @@ export const CinematicResultsView: React.FC = () => {
                 setActiveFeedTab('home');
                 setStage('HOME');
               }}
-              className="px-3.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Return Home</span>
@@ -1188,26 +1265,32 @@ export const CinematicResultsView: React.FC = () => {
       {/* 6. Fullscreen Real Evidence Frame Modal (Section 6 & 7) */}
       {evidenceModal.isOpen && (
         <div 
-          className="fixed inset-0 z-60 bg-black/92 backdrop-blur-2xl flex items-center justify-center p-4 sm:p-6 animate-fade-in"
+          className="fixed inset-0 z-60 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-fade-in"
           onClick={() => setEvidenceModal(prev => ({ ...prev, isOpen: false }))}
         >
           <div 
-            className="relative max-w-4xl w-full bg-slate-950 p-4 sm:p-5 rounded-3xl border border-white/20 shadow-2xl flex flex-col gap-3 max-h-[92vh] overflow-y-auto"
+            className="relative max-w-4xl w-full bg-white/95 backdrop-blur-2xl p-4 sm:p-5 rounded-3xl border border-slate-200/90 shadow-2xl flex flex-col gap-3 max-h-[92vh] overflow-y-auto text-slate-800 font-sans"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-white/10 pb-3 flex-wrap gap-2">
+            <div className="flex items-center justify-between border-b border-slate-200/80 pb-3 flex-wrap gap-2">
               <div className="flex items-center gap-2.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                 <div>
-                  <h3 className="text-sm sm:text-base font-extrabold tracking-wide font-mono text-white flex items-center gap-2">
+                  <h3 className="text-sm sm:text-base font-extrabold tracking-wide font-mono text-slate-900 flex items-center gap-2">
                     <span>LAST SEEN EVIDENCE</span>
-                    <span className="text-[10px] font-normal px-2 py-0.5 rounded-md bg-emerald-950/80 border border-emerald-500/30 text-emerald-300">
-                      REAL SURVEILLANCE FRAME
+                    <span className={`text-[10px] font-normal px-2 py-0.5 rounded-md border ${
+                      ((blobUrl || activeModalUrl || '').startsWith('data:image/svg+xml'))
+                        ? 'bg-amber-50 border-amber-300 text-amber-800'
+                        : 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                    }`}>
+                      {((blobUrl || activeModalUrl || '').startsWith('data:image/svg+xml'))
+                        ? 'TELEMETRY RECONSTRUCTION'
+                        : 'REAL SURVEILLANCE FRAME'}
                     </span>
                   </h3>
-                  <div className="text-[11px] font-mono text-slate-400 flex items-center gap-2">
-                    <Film className="w-3 h-3 text-slate-500" />
+                  <div className="text-[11px] font-mono text-slate-500 flex items-center gap-2">
+                    <Film className="w-3 h-3 text-slate-400" />
                     <span className="truncate max-w-xs sm:max-w-md">{evidenceModal.videoName}</span>
                   </div>
                 </div>
@@ -1216,14 +1299,14 @@ export const CinematicResultsView: React.FC = () => {
               {/* Toggle Controls: Spot Selector + ANNOTATED vs ORIGINAL */}
               <div className="flex items-center gap-2 flex-wrap">
                 {/* Spot Selector: Dynamic timestamp for uploaded videos, full spot selector for reference clip */}
-                <div className="flex items-center p-1 bg-emerald-950/50 rounded-xl border border-emerald-500/40 font-mono text-xs">
+                <div className="flex items-center p-1 bg-emerald-50/80 rounded-xl border border-emerald-200 font-mono text-xs">
                   <button
                     type="button"
                     onClick={() => handleSpotChange('LAST_SPOT')}
                     className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
                       evidenceModal.spotType !== 'INITIAL_SPOT'
                         ? 'bg-emerald-600 text-white shadow-sm'
-                        : 'text-emerald-300 hover:text-white'
+                        : 'text-emerald-800 hover:bg-emerald-100/60'
                     }`}
                   >
                     <span>📍 LAST SEEN SPOT ({detectionResult?.lastSeenTimestamp || matchingTargets[0]?.lastSeenFormatted || evidenceModal.timestamp || (isReferenceClip ? '00:03' : '00:01')})</span>
@@ -1234,21 +1317,21 @@ export const CinematicResultsView: React.FC = () => {
                     className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
                       evidenceModal.spotType === 'INITIAL_SPOT'
                         ? 'bg-emerald-600 text-white shadow-sm'
-                        : 'text-emerald-300 hover:text-white'
+                        : 'text-emerald-800 hover:bg-emerald-100/60'
                     }`}
                   >
                     <span>✋ IN HAND (00:00)</span>
                   </button>
                 </div>
 
-                <div className="flex items-center p-1 bg-white/5 rounded-xl border border-white/10 font-mono text-xs">
+                <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200 font-mono text-xs">
                   <button
                     type="button"
                     onClick={() => setEvidenceModal(prev => ({ ...prev, mode: 'ANNOTATED', status: 'LOADING' }))}
                     className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
                       evidenceModal.mode === 'ANNOTATED'
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'text-slate-400 hover:text-white'
+                        ? 'bg-[#4361ee] text-white shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     ANNOTATED FRAME
@@ -1258,8 +1341,8 @@ export const CinematicResultsView: React.FC = () => {
                     onClick={() => setEvidenceModal(prev => ({ ...prev, mode: 'ORIGINAL', status: 'LOADING' }))}
                     className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
                       evidenceModal.mode === 'ORIGINAL'
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'text-slate-400 hover:text-white'
+                        ? 'bg-[#4361ee] text-white shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     ORIGINAL FRAME
@@ -1270,7 +1353,7 @@ export const CinematicResultsView: React.FC = () => {
                   type="button"
                   id="btn-close-evidence-modal"
                   onClick={() => setEvidenceModal(prev => ({ ...prev, isOpen: false }))}
-                  className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center border border-white/20 shadow-lg cursor-pointer transition-colors"
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center border border-slate-200 shadow-sm cursor-pointer transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1278,15 +1361,15 @@ export const CinematicResultsView: React.FC = () => {
             </div>
 
             {/* Modal Image Viewport with Loading and Error states */}
-            <div className="relative min-h-[260px] sm:min-h-[380px] bg-black/60 rounded-2xl border border-white/10 flex items-center justify-center overflow-hidden">
+            <div className="relative min-h-[260px] sm:min-h-[380px] bg-slate-950 rounded-2xl border border-slate-300 flex items-center justify-center overflow-hidden shadow-inner">
               {/* LOADING State */}
               {evidenceModal.status === 'LOADING' && (
                 <div className="py-24 flex flex-col items-center justify-center gap-3 animate-fade-in text-center px-4">
-                  <div className="w-9 h-9 rounded-full border-2 border-blue-500/30 border-t-blue-400 animate-spin" />
+                  <div className="w-9 h-9 rounded-full border-2 border-blue-500/30 border-t-[#4361ee] animate-spin" />
                   <div className="text-xs font-mono text-blue-300 font-semibold tracking-wider uppercase">
                     Loading evidence frame...
                   </div>
-                  <div className="text-[11px] font-mono text-slate-500">
+                  <div className="text-[11px] font-mono text-slate-400">
                     Extracting genuine frame from uploaded video via OpenCV
                   </div>
                 </div>
@@ -1299,7 +1382,7 @@ export const CinematicResultsView: React.FC = () => {
                   <div className="text-sm font-bold text-rose-300 uppercase tracking-wide">
                     EVIDENCE FRAME FAILED TO LOAD
                   </div>
-                  <p className="text-xs text-slate-400 max-w-md">
+                  <p className="text-xs text-slate-300 max-w-md">
                     {evidenceModal.errorMessage || 'EVIDENCE FRAME FAILED TO LOAD'}
                   </p>
                   <button
@@ -1310,7 +1393,7 @@ export const CinematicResultsView: React.FC = () => {
                     <RefreshCw className="w-3 h-3" />
                     <span>Retry Frame Extraction</span>
                   </button>
-                  <div className="text-[10px] text-slate-600 mt-2 bg-black/40 px-3 py-1 rounded border border-white/5 break-all max-w-md">
+                  <div className="text-[10px] text-slate-500 mt-2 bg-black/40 px-3 py-1 rounded border border-white/5 break-all max-w-md">
                     Target URL: {activeModalUrl}
                   </div>
                 </div>
@@ -1360,6 +1443,30 @@ export const CinematicResultsView: React.FC = () => {
                     } catch {}
                   }
 
+                  if (activeVideoSource) {
+                    try {
+                      const isLastSpot = evidenceModal.spotType !== 'INITIAL_SPOT';
+                      const targetSec = isLastSpot
+                        ? (detectionResult?.lastSeenTimestampMs ? detectionResult.lastSeenTimestampMs / 1000 : (matchingTargets[0]?.lastSeenMs ? matchingTargets[0].lastSeenMs / 1000 : (evidenceModal.timestamp ? parseTimeStringToSeconds(evidenceModal.timestamp) : 3.0)))
+                        : 0.33;
+                      const directFrame = await extractFrameFromVideo(activeVideoSource, {
+                        timestampSeconds: targetSec,
+                        annotate: evidenceModal.mode === 'ANNOTATED',
+                        label: evidenceModal.objectName || targetClass || 'Target',
+                        confidence: evidenceModal.confidence || detectionResult?.confidence || 95.0,
+                        bbox: evidenceModal.bbox || detectionResult?.boundingBox,
+                        dominantColor: evidenceModal.colorName || targetColor || dominantColor,
+                      });
+                      if (directFrame) {
+                        setBlobUrl(directFrame);
+                        setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
+                        return;
+                      }
+                    } catch (onDemandErr) {
+                      console.warn('[ON-DEMAND ERROR FALLBACK]', onDemandErr);
+                    }
+                  }
+
                   try {
                     const fallbackSvg = generateSurveillanceSvg({
                       label: evidenceModal.objectName || 'Object',
@@ -1388,39 +1495,39 @@ export const CinematicResultsView: React.FC = () => {
             </div>
 
             {/* Target Metadata Bar (Section 6 Contract) */}
-            <div className="p-3.5 bg-slate-900/80 rounded-2xl border border-white/10 grid grid-cols-2 sm:grid-cols-6 gap-3 text-xs font-mono">
+            <div className="p-3.5 bg-slate-50/90 rounded-2xl border border-slate-200 grid grid-cols-2 sm:grid-cols-6 gap-3 text-xs font-mono">
               <div className="space-y-0.5">
-                <div className="text-[10px] text-slate-400 uppercase tracking-wider">Object</div>
-                <div className="font-bold text-white capitalize text-sm truncate">
+                <div className="text-[10px] text-slate-500 uppercase tracking-wider">Object</div>
+                <div className="font-bold text-slate-900 capitalize text-sm truncate">
                   {evidenceModal.objectName}
                 </div>
               </div>
               <div className="space-y-0.5">
-                <div className="text-[10px] text-slate-400 uppercase tracking-wider">Color</div>
+                <div className="text-[10px] text-slate-500 uppercase tracking-wider">Color</div>
                 <div>{getColorBadge(evidenceModal.colorName)}</div>
               </div>
               <div className="space-y-0.5">
-                <div className="text-[10px] text-slate-400 uppercase tracking-wider">Detector Confidence</div>
-                <div className="font-bold text-emerald-400 text-sm">
+                <div className="text-[10px] text-slate-500 uppercase tracking-wider">Detector Confidence</div>
+                <div className="font-bold text-emerald-600 text-sm">
                   {evidenceModal.confidence.toFixed(1)}%
                 </div>
               </div>
               <div className="space-y-0.5">
-                <div className="text-[10px] text-slate-400 uppercase tracking-wider">Track ID</div>
-                <div className="font-bold text-blue-300 text-sm">
+                <div className="text-[10px] text-slate-500 uppercase tracking-wider">Track ID</div>
+                <div className="font-bold text-blue-600 text-sm">
                   #{evidenceModal.trackId}
                 </div>
               </div>
               <div className="space-y-0.5">
-                <div className="text-[10px] text-slate-400 uppercase tracking-wider">Frame Number</div>
-                <div className="font-bold text-amber-300 text-sm">
+                <div className="text-[10px] text-slate-500 uppercase tracking-wider">Frame Number</div>
+                <div className="font-bold text-amber-700 text-sm">
                   {evidenceModal.frameNumber ?? 'N/A'}
                 </div>
               </div>
               <div className="space-y-0.5">
-                <div className="text-[10px] text-slate-400 uppercase tracking-wider">Timestamp</div>
-                <div className="font-bold text-white text-sm flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-blue-400" />
+                <div className="text-[10px] text-slate-500 uppercase tracking-wider">Timestamp</div>
+                <div className="font-bold text-slate-900 text-sm flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-blue-500" />
                   <span>{evidenceModal.timestamp}</span>
                 </div>
               </div>

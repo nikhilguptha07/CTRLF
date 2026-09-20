@@ -140,16 +140,17 @@ export class EvidenceController {
       }
 
       // 4. Fallback: Ultra-High-Fidelity Surveillance Vector Frame
-      const { generateSurveillanceSvg } = await import('../utils/surveillanceSvgGenerator');
+      const resolvedSourceName = resolvedVideo.path ? path.basename(resolvedVideo.path) : 'Surveillance Feed';
       const svg = generateSurveillanceSvg({
         label,
         confidence,
-        trackId,
-        dominantColor,
+        trackId: trackId || 1,
+        dominantColor: dominantColor || 'Silver',
         frameNumber: frameNumber ?? 10,
         timestampMs: timestampMs ?? 333,
         annotate: !isOriginal,
-        sourceName: 'WhatsApp Video 2026-09-03 at 8.46.51 PM.mp4',
+        sourceName: resolvedSourceName,
+        cameraName: (resolvedSourceName.toLowerCase().includes('whatsapp') ? 'MOBILE SURVEILLANCE FEED' : 'CAM-01 (ACTIVE FEED)'),
         evidenceId: rawEvidenceId,
       });
 

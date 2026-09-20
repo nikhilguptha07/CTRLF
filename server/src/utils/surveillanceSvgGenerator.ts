@@ -13,6 +13,7 @@ export interface SurveillanceFrameOptions {
   timestampMs?: number | string | null;
   annotate?: boolean;
   sourceName?: string | null;
+  cameraName?: string | null;
   evidenceId?: string | null;
   sessionId?: string | null;
 }
@@ -21,11 +22,12 @@ export function generateSurveillanceSvg(options: SurveillanceFrameOptions): stri
   const label = (options.label || 'Target Object').toUpperCase();
   const confidence = Number(options.confidence || 94.8);
   const trackId = options.trackId != null ? options.trackId : 1;
-  const dominantColor = (options.dominantColor || 'Black').toUpperCase();
+  const dominantColor = (options.dominantColor || 'Silver').toUpperCase();
   const frameNumber = options.frameNumber != null ? Number(options.frameNumber) : 10;
   const timestampMs = options.timestampMs != null ? Number(options.timestampMs) : 333;
   const annotate = options.annotate !== false;
-  const sourceName = options.sourceName || 'WhatsApp Video 2026-09-03 at 8.46.51 PM.mp4';
+  const sourceName = options.sourceName || 'Surveillance Feed Archive';
+  const cameraName = options.cameraName || (sourceName.toLowerCase().includes('whatsapp') ? 'MOBILE SURVEILLANCE FEED' : 'CAM-01 (ACTIVE FEED)');
   const evidenceId = options.evidenceId || `EV-${Date.now().toString(36).toUpperCase()}`;
 
   // Time formatting
@@ -55,6 +57,7 @@ export function generateSurveillanceSvg(options: SurveillanceFrameOptions): stri
 
   // Draw object based on label
   const isBottle = label.includes('BOTTLE');
+  const isLaptop = label.includes('LAPTOP') || label.includes('COMPUTER') || label.includes('MACBOOK') || label.includes('NOTEBOOK') || label.includes('PC');
   const isBag = label.includes('BAG') || label.includes('BACKPACK');
   const isPhone = label.includes('PHONE') || label.includes('MOBILE');
   const isKeys = label.includes('KEY');
@@ -80,6 +83,21 @@ export function generateSurveillanceSvg(options: SurveillanceFrameOptions): stri
         <line x1="618" y1="430" x2="662" y2="430" stroke="${objectColorStroke}" stroke-width="1.5" opacity="0.6"/>
         <!-- Specular Highlight -->
         <path d="M 624 365 L 622 470" stroke="#ffffff" stroke-width="2" opacity="0.4" stroke-linecap="round"/>
+      </g>
+    `;
+  } else if (isLaptop) {
+    objectGraphic = `
+      <!-- Sleek Modern Laptop -->
+      <g id="surveillance-laptop">
+        <ellipse cx="640" cy="505" rx="85" ry="16" fill="#020617" opacity="0.8" />
+        <polygon points="560,340 720,340 730,455 550,455" fill="${objectColorFill}" stroke="${objectColorStroke}" stroke-width="2.5" />
+        <polygon points="568,348 712,348 722,447 558,447" fill="#0369a1" fill-opacity="0.3" stroke="#38bdf8" stroke-width="1.5" />
+        <line x1="575" y1="365" x2="635" y2="365" stroke="#38bdf8" stroke-width="2" opacity="0.7"/>
+        <line x1="575" y1="380" x2="615" y2="380" stroke="#94a3b8" stroke-width="1.5" opacity="0.5"/>
+        <rect x="585" y="452" width="110" height="7" rx="2" fill="#334155" stroke="#475569" stroke-width="1"/>
+        <polygon points="550,455 730,455 755,502 525,502" fill="${objectColorFill}" stroke="${objectColorStroke}" stroke-width="2.5" />
+        <polygon points="565,460 715,460 730,488 550,488" fill="#0f172a" stroke="#334155" stroke-width="1" />
+        <rect x="620" y="490" width="40" height="10" rx="1.5" fill="#1e293b" stroke="${objectColorStroke}" stroke-width="1"/>
       </g>
     `;
   } else if (isBag) {
@@ -217,7 +235,7 @@ export function generateSurveillanceSvg(options: SurveillanceFrameOptions): stri
       ● REC [LIVE RECORDING]
     </text>
     <text x="48" y="74" fill="#cbd5e1" font-size="12" font-weight="600">
-      CAM-04 (SECTOR-B VAULT) • ${sourceName.toUpperCase()}
+      ${cameraName.toUpperCase()} • ${sourceName.toUpperCase()}
     </text>
 
     <!-- Top-Right System Telemetry -->

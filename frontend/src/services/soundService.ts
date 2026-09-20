@@ -236,6 +236,10 @@ class SoundService {
     }
   }
 
+  public playRadarPing() {
+    this.playScanPulse();
+  }
+
   // 5. Detection Success Chime (affirmative high-tech harmonic lock)
   public playDetected() {
     this.initContext();

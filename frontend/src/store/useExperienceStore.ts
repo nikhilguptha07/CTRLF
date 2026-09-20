@@ -118,6 +118,8 @@ interface ExperienceState {
   soundEnabled: boolean;
   activeFeedTab: FeedTab;
   volume: number;
+  detectionSensitivity: number;
+  securityActive: boolean;
 
   // Uploaded Video State
   uploadedVideoRecord: any | null;
@@ -149,6 +151,9 @@ interface ExperienceState {
   setDemoMode: (enabled: boolean) => void;
   toggleSound: () => void;
   setVolume: (vol: number) => void;
+  setDetectionSensitivity: (sensitivity: number) => void;
+  setSecurityActive: (active: boolean) => void;
+  replayIntro: () => void;
   setActiveFeedTab: (tab: FeedTab) => void;
   setOrchestratorCameraStatus: (cameraId: string, update: Partial<CameraWorkerStatus>) => void;
 
@@ -216,8 +221,19 @@ searchExperienceController.registerCallbacks({
   },
 });
 
+const loadPersistedSettings = () => {
+  try {
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem('ctrlf_settings') : null;
+    if (raw) return JSON.parse(raw);
+  } catch {
+    // fallback
+  }
+  return { volume: 0.7, soundEnabled: true, detectionSensitivity: 90, securityActive: true };
+};
+const initialSettings = loadPersistedSettings();
+
 export const useExperienceStore = create<ExperienceState>((set, get) => ({
-  stage: 'HOME',
+  stage: (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('ctrlf_intro_seen') === 'true') ? 'HOME' : 'INTRO',
   searchQuery: '',
   activeSessionId: null,
   detectionResult: null,
@@ -240,9 +256,11 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
     progressDetails: null,
   },
   demoMode: false,
-  soundEnabled: true,
+  soundEnabled: initialSettings.soundEnabled ?? true,
   activeFeedTab: 'home',
-  volume: 0.7,
+  volume: initialSettings.volume ?? 0.7,
+  detectionSensitivity: initialSettings.detectionSensitivity ?? 90,
+  securityActive: initialSettings.securityActive ?? true,
 
   // Authentication State (Oracle 21c XE)
   currentUser: (() => {
@@ -363,12 +381,44 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
 
   toggleSound: () => {
     const nextMuted = soundService.toggleMute();
-    set({ soundEnabled: !nextMuted });
+    const nextEnabled = !nextMuted;
+    set({ soundEnabled: nextEnabled });
+    try {
+      const current = loadPersistedSettings();
+      localStorage.setItem('ctrlf_settings', JSON.stringify({ ...current, soundEnabled: nextEnabled }));
+    } catch {}
   },
 
   setVolume: (vol) => {
     soundService.setVolume(vol);
     set({ volume: vol });
+    try {
+      const current = loadPersistedSettings();
+      localStorage.setItem('ctrlf_settings', JSON.stringify({ ...current, volume: vol }));
+    } catch {}
+  },
+
+  setDetectionSensitivity: (detectionSensitivity) => {
+    set({ detectionSensitivity });
+    try {
+      const current = loadPersistedSettings();
+      localStorage.setItem('ctrlf_settings', JSON.stringify({ ...current, detectionSensitivity }));
+    } catch {}
+  },
+
+  setSecurityActive: (securityActive) => {
+    set({ securityActive });
+    try {
+      const current = loadPersistedSettings();
+      localStorage.setItem('ctrlf_settings', JSON.stringify({ ...current, securityActive }));
+    } catch {}
+  },
+
+  replayIntro: () => {
+    try {
+      sessionStorage.removeItem('ctrlf_intro_seen');
+    } catch {}
+    set({ stage: 'INTRO', activeFeedTab: 'home' });
   },
 
   setActiveFeedTab: (activeFeedTab) => {
@@ -757,6 +807,13 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
               annotate: false,
             });
 
+            const matchingTargetTrack = effectiveTracks.find((t: any) =>
+              matchesQuery(t.className || t.CLASS_NAME || '', effectiveLabel || targetClass || activeQuery)
+            );
+            const unifiedTrackId = matchingTargetTrack?.trackId != null
+              ? Number(matchingTargetTrack.trackId)
+              : (resolvedTrackId ? Number(resolvedTrackId) : 1);
+
             evidenceRecords.unshift(
               {
                 id: `ev-client-last-${session.sessionId}`,
@@ -767,7 +824,7 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
                 originalImagePath: clientOriginalLastUrl,
                 selectionPolicy: 'last_known_position',
                 confidence: effectiveConfidence,
-                trackId: Number(resolvedTrackId) || 1,
+                trackId: unifiedTrackId,
               },
               {
                 id: `ev-client-init-${session.sessionId}`,
@@ -778,7 +835,7 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
                 originalImagePath: clientOriginalInitUrl,
                 selectionPolicy: 'initial_contact',
                 confidence: effectiveConfidence,
-                trackId: Number(resolvedTrackId) || 1,
+                trackId: unifiedTrackId,
               }
             );
             topEvidence = clientAnnotatedLastUrl;
@@ -796,6 +853,13 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
         const resolvedVideoId = source === 'VIDEO' ? (sourceId || (completedSession as any).sourceId || (completedSession as any).videoId || null) : null;
         const resolvedVideoPath = (completedSession as any).videoPath || (completedSession as any).video?.storagePath || (completedSession.detection as any)?.videoPath || extraOptions?.videoFilename || null;
 
+        const matchingTargetTrack = effectiveTracks.find((t: any) =>
+          matchesQuery(t.className || t.CLASS_NAME || '', effectiveLabel || targetClass || activeQuery)
+        );
+        const finalTrackId = matchingTargetTrack?.trackId != null
+          ? matchingTargetTrack.trackId
+          : (resolvedTrackId != null ? resolvedTrackId : 1);
+
         const detResult: DetectionResult = {
           objectName: effectiveLabel,
           confidence: effectiveConfidence,
@@ -806,7 +870,7 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
           dominantColor: effectiveColor,
           colorConfidence,
           secondaryColors,
-          trackId: resolvedTrackId,
+          trackId: finalTrackId,
           frameNumber: effectiveLastSeenFrame,
           lastSeenTimestamp: lastSeenFormatted,
           lastSeenTimestampMs: effectiveLastSeenMs,
@@ -818,7 +882,7 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
           videoId: resolvedVideoId,
           videoPath: resolvedVideoPath,
           evidenceUrl: topEvidence,
-          originalUrl: `/api/search/${session.sessionId}/evidence/frame?type=original`,
+          originalUrl: topEvidence ? topEvidence : `/api/search/${session.sessionId}/evidence/frame?type=original`,
         };
 
         console.log('[EVIDENCE DEBUG - DETECTION RECORD]', {

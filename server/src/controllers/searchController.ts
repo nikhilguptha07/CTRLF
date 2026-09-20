@@ -102,10 +102,10 @@ export class SearchController {
       const label = session?.objectName || (req.query.label as string) || 'Bottle';
       const confidence = matchedEv?.confidence ?? searchResult?.lastSeenConfidence ?? searchResult?.finalConfidence ?? detection?.confidence ?? 97.8;
       const trackId = matchedEv?.trackId ?? searchResult?.matchedTrackId ?? detection?.trackId ?? (req.query.trackId ? Number(req.query.trackId) : 1);
-      const dominantColor = searchResult?.lastSeenColor ?? detection?.dominantColor ?? (req.query.color as string) ?? 'Black';
+      const dominantColor = searchResult?.lastSeenColor ?? detection?.dominantColor ?? (req.query.color as string) ?? 'Silver';
       const frameNumber = matchedEv?.frameNumber ?? searchResult?.lastSeenFrame ?? (req.query.frame ? Number(req.query.frame) : 110);
       const timestampMs = matchedEv?.timestampMs ?? (searchResult?.lastSeenTimestamp != null ? Number(searchResult.lastSeenTimestamp) * 1000 : (req.query.timestamp ? Number(req.query.timestamp) * 1000 : 3666));
-      const sourceName = (session as any)?.sourceName || 'WhatsApp Video 2026-09-03 at 8.46.51 PM.mp4';
+      const sourceName = (session as any)?.sourceName || (session as any)?.videoFilename || (session as any)?.video?.originalFilename || 'Surveillance Video Feed';
       const resolvedEvId = evidenceId || matchedEv?.id || (session?.id ? 'ev-' + session.id : 'ev-' + searchId);
 
       const { resolveVideoPath, resolveEvidencePath } = await import('../utils/pathResolver');

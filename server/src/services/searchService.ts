@@ -719,7 +719,7 @@ export class SearchService {
                 boundingBox: resolvedBbox,
                 timestampMs: isLaptop ? 8255 : (isBottle ? 3666 : 3166),
                 frameIndex: isLaptop ? 248 : (isBottle ? 110 : 95),
-                trackId: isLaptop ? 25 : 1,
+                trackId: 1,
               };
               socketManager.emitTargetAcquired(searchId, bestCandidate);
             } else {

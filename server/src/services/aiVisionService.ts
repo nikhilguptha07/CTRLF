@@ -641,7 +641,7 @@ export class MockVisionProvider implements VisionProvider {
       boundingBox: defaultBbox,
       timestampMs: fallbackTimestampMs,
       frameIndex: fallbackFrameIndex,
-      trackId: isLaptop ? 25 : 1,
+      trackId: 1,
     };
 
     const trackBbox = isBottle
@@ -659,7 +659,7 @@ export class MockVisionProvider implements VisionProvider {
       targetFound: !isTargetAbsent,
       bestDetection: isTargetAbsent ? null : candidate,
       lastTargetObservation: isTargetAbsent ? null : candidate,
-      matchedTrackId: isTargetAbsent ? null : (isLaptop ? 25 : 1),
+      matchedTrackId: isTargetAbsent ? null : 1,
       detectionsCount: isTargetAbsent ? 0 : 72,
       tracksCount: isTargetAbsent ? 0 : 1,
       evidenceFrames: [],
@@ -672,7 +672,7 @@ export class MockVisionProvider implements VisionProvider {
               timestamp_s: Math.round((fallbackTimestampMs / 1000) * 100) / 100,
               timestamp_ms: fallbackTimestampMs,
               confidence: 97.8,
-              track_id: isLaptop ? 25 : 1,
+              track_id: 1,
               class_name: resolvedLabel,
               original_path: videoPath,
               annotated_path: null,
@@ -683,7 +683,7 @@ export class MockVisionProvider implements VisionProvider {
         ? []
         : [
             {
-              trackId: isLaptop ? 25 : 1,
+              trackId: 1,
               className: resolvedLabel,
               confidence: 97.8,
               dominantColor: resolvedColor,
@@ -701,7 +701,7 @@ export class MockVisionProvider implements VisionProvider {
         ? []
         : [
             {
-              trackId: isLaptop ? 25 : 1,
+              trackId: 1,
               className: resolvedLabel,
               confidence: 97.8,
               dominantColor: resolvedColor,
@@ -829,15 +829,17 @@ sys.stdout.buffer.write(buf.tobytes())
     }
 
     const { generateSurveillanceSvg } = await import('../utils/surveillanceSvgGenerator');
+    const resolvedSourceName = params.sourceName || (videoPath ? path.basename(videoPath) : (params.originalFilename || 'Surveillance Feed'));
     const svg = generateSurveillanceSvg({
       label,
       confidence: conf || 94.8,
       trackId: params.trackId || 1,
-      dominantColor: params.dominantColor || 'Black',
+      dominantColor: params.dominantColor || 'Silver',
       frameNumber: frameNum,
       timestampMs: params.timestampMs || 333,
       annotate,
-      sourceName: 'WhatsApp Video 2026-09-03 at 8.46.51 PM.mp4',
+      sourceName: resolvedSourceName,
+      cameraName: params.cameraName || (resolvedSourceName.toLowerCase().includes('whatsapp') ? 'MOBILE SURVEILLANCE FEED' : 'CAM-01 (ACTIVE FEED)'),
     });
 
     return {
