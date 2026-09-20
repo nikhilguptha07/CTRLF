@@ -44,6 +44,8 @@ export const AdminDatabaseTab: React.FC<AdminDatabaseTabProps> = ({ onInspectTab
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showPurgeModal, setShowPurgeModal] = useState(false);
+  const [purgeMode, setPurgeMode] = useState<'OPERATIONAL' | 'COMPLETE'>('OPERATIONAL');
+  const [tableToPurge, setTableToPurge] = useState<string | null>(null);
   const [isPurging, setIsPurging] = useState(false);
   const [purgeSuccessMessage, setPurgeSuccessMessage] = useState<string | null>(null);
 
@@ -68,12 +70,32 @@ export const AdminDatabaseTab: React.FC<AdminDatabaseTabProps> = ({ onInspectTab
     setIsPurging(true);
     setPurgeSuccessMessage(null);
     try {
-      const res = await apiClient.clearDatabase();
-      setPurgeSuccessMessage(`Database purged cleanly. ${res.recordsRemoved} operational records removed.`);
+      const res = await apiClient.clearDatabase(purgeMode);
+      setPurgeSuccessMessage(
+        purgeMode === 'COMPLETE'
+          ? `Complete factory reset successful. ${res.recordsRemoved} records removed. Initial administrative configuration restored.`
+          : `Operational database purged cleanly. ${res.recordsRemoved} operational records removed.`
+      );
       setShowPurgeModal(false);
       await fetchDatabaseInfo();
     } catch (err: any) {
       alert(`Purge failed: ${err?.message || err}`);
+    } finally {
+      setIsPurging(false);
+    }
+  };
+
+  const handleClearTable = async () => {
+    if (!tableToPurge) return;
+    setIsPurging(true);
+    setPurgeSuccessMessage(null);
+    try {
+      const res = await apiClient.clearAdminTable(tableToPurge);
+      setPurgeSuccessMessage(`Table ${res.tableName} purged successfully (${res.recordsRemoved} rows removed).`);
+      setTableToPurge(null);
+      await fetchDatabaseInfo();
+    } catch (err: any) {
+      alert(`Failed to clear table ${tableToPurge}: ${err?.message || err}`);
     } finally {
       setIsPurging(false);
     }
@@ -153,7 +175,7 @@ export const AdminDatabaseTab: React.FC<AdminDatabaseTabProps> = ({ onInspectTab
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2.5">
             <button
               type="button"
               onClick={fetchDatabaseInfo}
@@ -165,11 +187,28 @@ export const AdminDatabaseTab: React.FC<AdminDatabaseTabProps> = ({ onInspectTab
 
             <button
               type="button"
-              onClick={() => setShowPurgeModal(true)}
-              className="px-3.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              onClick={() => {
+                setPurgeMode('OPERATIONAL');
+                setShowPurgeModal(true);
+              }}
+              className="px-3.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              title="Purge search sessions, detections, tracks, and audit logs while preserving users & cameras"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-amber-600" />
+              <span>Purge Operational Data</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setPurgeMode('COMPLETE');
+                setShowPurgeModal(true);
+              }}
+              className="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+              title="Completely wipe all tables clean and restore initial admin account"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span>Purge Operational Data</span>
+              <span>Factory Reset Database</span>
             </button>
           </div>
         </div>
@@ -243,7 +282,7 @@ export const AdminDatabaseTab: React.FC<AdminDatabaseTabProps> = ({ onInspectTab
               Approved Application Schema Tables ({metadata.tables.length})
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Click any table to inspect live records in the Table Explorer.
+              Click any table to inspect live records or click the trash icon to purge table data.
             </p>
           </div>
         </div>
@@ -253,14 +292,16 @@ export const AdminDatabaseTab: React.FC<AdminDatabaseTabProps> = ({ onInspectTab
             <div
               key={tbl.name}
               onClick={() => onInspectTable(tbl.name)}
-              className="group p-4 rounded-2xl bg-slate-50 border border-slate-200/70 hover:border-indigo-400 hover:bg-indigo-50/20 transition-all cursor-pointer flex items-center justify-between"
+              className="group p-4 rounded-2xl bg-slate-50 border border-slate-200/70 hover:border-indigo-400 hover:bg-indigo-50/20 transition-all cursor-pointer flex items-center justify-between gap-3"
             >
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-mono font-extrabold text-xs text-slate-900 group-hover:text-indigo-600 transition-colors">
                     {tbl.name}
                   </span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700 font-mono">
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
+                    tbl.recordCount > 0 ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-slate-200 text-slate-600'
+                  }`}>
                     {tbl.recordCount} rows
                   </span>
                 </div>
@@ -269,28 +310,45 @@ export const AdminDatabaseTab: React.FC<AdminDatabaseTabProps> = ({ onInspectTab
                 </p>
               </div>
 
-              <span className="text-xs font-bold text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                Explore &rarr;
-              </span>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setTableToPurge(tbl.name);
+                  }}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                  title={`Clear all rows in table ${tbl.name}`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+                <span className="text-xs font-bold text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                  Explore &rarr;
+                </span>
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Confirmation Modal for Purge */}
+      {/* Confirmation Modal for Database Purge / Factory Reset */}
       {showPurgeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in font-sans">
           <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto">
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mx-auto ${
+              purgeMode === 'COMPLETE' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'
+            }`}>
               <AlertTriangle className="w-6 h-6" />
             </div>
 
             <div className="text-center space-y-1">
               <h3 className="text-base font-bold text-slate-900">
-                Confirm Purge of Operational Data?
+                {purgeMode === 'COMPLETE' ? 'Confirm Factory Database Reset?' : 'Confirm Operational Data Purge?'}
               </h3>
               <p className="text-xs text-slate-500 leading-relaxed">
-                This administrative action clears test search sessions, detection records, and video artifacts. Core accounts and registered cameras will be preserved.
+                {purgeMode === 'COMPLETE'
+                  ? 'This action will completely wipe ALL tables in the database down to 0 rows. Default administrator accounts will be freshly restored. This cannot be undone.'
+                  : 'This administrative action clears all historical search sessions, detection records, object tracks, and audit logs. User accounts and registered cameras are preserved.'}
               </p>
             </div>
 
@@ -307,10 +365,52 @@ export const AdminDatabaseTab: React.FC<AdminDatabaseTabProps> = ({ onInspectTab
                 type="button"
                 disabled={isPurging}
                 onClick={handlePurgeData}
+                className={`px-5 py-2 rounded-xl text-white text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer ${
+                  purgeMode === 'COMPLETE' ? 'bg-red-600 hover:bg-red-700' : 'bg-amber-600 hover:bg-amber-700'
+                }`}
+              >
+                {isPurging && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                <span>{purgeMode === 'COMPLETE' ? 'Confirm Factory Reset' : 'Confirm Operational Purge'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal for Individual Table Purge */}
+      {tableToPurge && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-fade-in font-sans">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto">
+              <Trash2 className="w-6 h-6" />
+            </div>
+
+            <div className="text-center space-y-1">
+              <h3 className="text-base font-bold text-slate-900">
+                Purge Table: <span className="font-mono text-red-600">{tableToPurge}</span>?
+              </h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Are you sure you want to delete all records from <strong className="text-slate-800 font-mono">{tableToPurge}</strong>? All row data in this table will be permanently removed.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                disabled={isPurging}
+                onClick={() => setTableToPurge(null)}
+                className="px-4 py-2 rounded-xl bg-slate-200 text-slate-800 text-xs font-bold hover:bg-slate-300 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isPurging}
+                onClick={handleClearTable}
                 className="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer"
               >
                 {isPurging && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-                <span>Confirm Purge</span>
+                <span>Confirm Purge Table</span>
               </button>
             </div>
           </div>

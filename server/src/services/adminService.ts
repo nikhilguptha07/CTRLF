@@ -8,6 +8,7 @@ import { searchRepository } from '../repositories/searchRepository';
 import { detectionRepository } from '../repositories/detectionRepository';
 import { auditRepository } from '../repositories/auditRepository';
 import { auditService } from './auditService';
+import { authService } from './authService';
 import { AppError } from '../middleware/errorHandler';
 import { User, UserRole } from '../types/user';
 import { Camera } from '../types/camera';
@@ -747,6 +748,258 @@ export class AdminService {
       limit: safeLimit,
       totalPages: Math.ceil(total / safeLimit) || 1,
     };
+  }
+
+  /**
+   * Purge all records from an approved table
+   */
+  async clearTable(tableName: string, user?: { userId?: string | number; email?: string }): Promise<{ tableName: string; recordsRemoved: number }> {
+    const tableUpper = tableName.toUpperCase();
+    if (!APPROVED_TABLES.includes(tableUpper as any)) {
+      throw new AppError('RESTRICTED_TABLE', `Access to table '${tableName}' is restricted or table does not exist`, 400);
+    }
+
+    let recordsRemoved = 0;
+
+    if (db.isMock()) {
+      const inMem = (db as any).getInMemoryStore?.() || {};
+      const key = tableUpper.toLowerCase();
+      if (inMem[key]) {
+        recordsRemoved = inMem[key].length;
+        inMem[key] = [];
+      } else if (tableUpper === 'VIDEOS' && inMem.videos) {
+        recordsRemoved = inMem.videos.length;
+        inMem.videos = [];
+      } else if (tableUpper === 'DETECTIONS' && inMem.detections) {
+        recordsRemoved = inMem.detections.length;
+        inMem.detections = [];
+      }
+    } else {
+      try {
+        const res = await db.execute(`DELETE FROM ${tableUpper}`);
+        recordsRemoved = res.rowsAffected || 0;
+        await db.execute('COMMIT');
+      } catch (err: any) {
+        throw new AppError('PURGE_ERROR', `Failed to clear table ${tableUpper}: ${err.message}`, 500);
+      }
+    }
+
+    if (tableUpper === 'USERS') {
+      // Re-seed default admin to prevent system lockout
+      await authService.seedDefaultUsers();
+    }
+
+    await auditService.record({
+      userId: user?.userId ? String(user.userId) : undefined,
+      action: 'TABLE_PURGED_BY_ADMIN',
+      resourceType: 'DATABASE_TABLE',
+      resourceId: tableUpper,
+      status: 'SUCCESS',
+      details: {
+        adminEmail: user?.email,
+        table: tableUpper,
+        recordsRemoved,
+        timestamp: new Date().toISOString(),
+      },
+    });
+
+    return { tableName: tableUpper, recordsRemoved };
+  }
+
+  /**
+   * Delete a single record from an approved table by primary key
+   */
+  async deleteTableRow(
+    tableName: string,
+    recordId: string | number,
+    user?: { userId?: string | number; email?: string }
+  ): Promise<{ success: boolean; tableName: string; recordId: string | number }> {
+    const tableUpper = tableName.toUpperCase();
+    if (!APPROVED_TABLES.includes(tableUpper as any)) {
+      throw new AppError('RESTRICTED_TABLE', `Access to table '${tableName}' is restricted or table does not exist`, 400);
+    }
+
+    if (tableUpper === 'USERS' && String(recordId) === String(user?.userId)) {
+      throw new AppError('CANNOT_DELETE_SELF', 'Administrators cannot delete their own active account', 400);
+    }
+
+    const pkCandidates = ['ID', 'USER_ID', 'CAMERA_ID', 'SEARCH_ID', 'DETECTION_ID', 'TRACK_ID', 'EVENT_ID'];
+
+    if (db.isMock()) {
+      const inMem = (db as any).getInMemoryStore?.() || {};
+      const key = tableUpper.toLowerCase();
+      const list = inMem[key] || [];
+      const idx = list.findIndex((row: any) =>
+        pkCandidates.some((pk) => row[pk] !== undefined && String(row[pk]) === String(recordId))
+      );
+      if (idx >= 0) {
+        list.splice(idx, 1);
+      }
+    } else {
+      let deleted = false;
+      for (const pk of pkCandidates) {
+        try {
+          const res = await db.execute(`DELETE FROM ${tableUpper} WHERE ${pk} = :id`, { id: String(recordId) });
+          if ((res.rowsAffected || 0) > 0) {
+            await db.execute('COMMIT');
+            deleted = true;
+            break;
+          }
+        } catch {
+          // Try next PK candidate
+        }
+      }
+    }
+
+    await auditService.record({
+      userId: user?.userId ? String(user.userId) : undefined,
+      action: 'RECORD_DELETED_BY_ADMIN',
+      resourceType: 'DATABASE_RECORD',
+      resourceId: `${tableUpper}:${recordId}`,
+      status: 'SUCCESS',
+      details: {
+        adminEmail: user?.email,
+        table: tableUpper,
+        recordId,
+        timestamp: new Date().toISOString(),
+      },
+    });
+
+    return { success: true, tableName: tableUpper, recordId };
+  }
+
+  /**
+   * Delete a search session and cascading entities
+   */
+  async deleteSearchSession(sessionId: string, user?: { userId?: string | number; email?: string }): Promise<{ success: boolean; sessionId: string }> {
+    if (db.isMock()) {
+      const inMem = (db as any).getInMemoryStore?.() || {};
+      if (inMem.search_sessions) {
+        inMem.search_sessions = inMem.search_sessions.filter((s: any) => s.ID !== sessionId && s.SEARCH_ID !== sessionId);
+      }
+      if (inMem.detections) {
+        inMem.detections = inMem.detections.filter((d: any) => d.SEARCH_SESSION_ID !== sessionId);
+      }
+      if (inMem.object_tracks) {
+        inMem.object_tracks = inMem.object_tracks.filter((t: any) => t.SEARCH_SESSION_ID !== sessionId);
+      }
+    } else {
+      try {
+        await db.execute(`DELETE FROM OBJECT_TRACKS WHERE SEARCH_SESSION_ID = :id`, { id: sessionId }).catch(() => {});
+        await db.execute(`DELETE FROM DETECTION_RESULTS WHERE SEARCH_SESSION_ID = :id`, { id: sessionId }).catch(() => {});
+        await db.execute(`DELETE FROM DETECTIONS WHERE SEARCH_SESSION_ID = :id`, { id: sessionId }).catch(() => {});
+        await db.execute(`DELETE FROM SEARCH_SESSIONS WHERE ID = :id OR SEARCH_ID = :id`, { id: sessionId });
+        await db.execute('COMMIT');
+      } catch (err: any) {
+        throw new AppError('DELETE_SESSION_ERROR', `Failed to delete search session: ${err.message}`, 500);
+      }
+    }
+
+    await auditService.record({
+      userId: user?.userId ? String(user.userId) : undefined,
+      action: 'SEARCH_SESSION_DELETED_BY_ADMIN',
+      resourceType: 'SEARCH_SESSION',
+      resourceId: sessionId,
+      status: 'SUCCESS',
+      details: { adminEmail: user?.email, sessionId },
+    });
+
+    return { success: true, sessionId };
+  }
+
+  /**
+   * Delete a detection record
+   */
+  async deleteDetection(detectionId: string | number, user?: { userId?: string | number; email?: string }): Promise<{ success: boolean; detectionId: string | number }> {
+    if (db.isMock()) {
+      const inMem = (db as any).getInMemoryStore?.() || {};
+      if (inMem.detections) {
+        inMem.detections = inMem.detections.filter((d: any) => String(d.ID) !== String(detectionId) && String(d.DETECTION_ID) !== String(detectionId));
+      }
+    } else {
+      try {
+        await db.execute(`DELETE FROM DETECTION_RESULTS WHERE ID = :id OR DETECTION_ID = :id`, { id: String(detectionId) }).catch(() => {});
+        await db.execute(`DELETE FROM DETECTIONS WHERE ID = :id OR DETECTION_ID = :id`, { id: String(detectionId) }).catch(() => {});
+        await db.execute('COMMIT');
+      } catch (err: any) {
+        throw new AppError('DELETE_DETECTION_ERROR', `Failed to delete detection: ${err.message}`, 500);
+      }
+    }
+
+    await auditService.record({
+      userId: user?.userId ? String(user.userId) : undefined,
+      action: 'DETECTION_DELETED_BY_ADMIN',
+      resourceType: 'DETECTION',
+      resourceId: String(detectionId),
+      status: 'SUCCESS',
+      details: { adminEmail: user?.email, detectionId },
+    });
+
+    return { success: true, detectionId };
+  }
+
+  /**
+   * Delete a camera
+   */
+  async deleteCamera(cameraId: string, user?: { userId?: string | number; email?: string }): Promise<{ success: boolean; cameraId: string }> {
+    if (db.isMock()) {
+      const inMem = (db as any).getInMemoryStore?.() || {};
+      if (inMem.cameras) {
+        inMem.cameras = inMem.cameras.filter((c: any) => c.ID !== cameraId && c.CAMERA_ID !== cameraId);
+      }
+    } else {
+      try {
+        await db.execute(`DELETE FROM CAMERAS WHERE ID = :id OR CAMERA_ID = :id`, { id: cameraId });
+        await db.execute('COMMIT');
+      } catch (err: any) {
+        throw new AppError('DELETE_CAMERA_ERROR', `Failed to delete camera: ${err.message}`, 500);
+      }
+    }
+
+    await auditService.record({
+      userId: user?.userId ? String(user.userId) : undefined,
+      action: 'CAMERA_DELETED_BY_ADMIN',
+      resourceType: 'CAMERA',
+      resourceId: cameraId,
+      status: 'SUCCESS',
+      details: { adminEmail: user?.email, cameraId },
+    });
+
+    return { success: true, cameraId };
+  }
+
+  /**
+   * Delete user
+   */
+  async deleteUser(userId: string, user?: { userId?: string | number; email?: string }): Promise<{ success: boolean; userId: string }> {
+    if (String(userId) === String(user?.userId)) {
+      throw new AppError('CANNOT_DELETE_SELF', 'Administrators cannot delete their own active account', 400);
+    }
+
+    if (db.isMock()) {
+      const inMem = (db as any).getInMemoryStore?.() || {};
+      if (inMem.users) {
+        inMem.users = inMem.users.filter((u: any) => u.ID !== userId && u.USER_ID !== userId);
+      }
+    } else {
+      try {
+        await db.execute(`DELETE FROM USERS WHERE ID = :id OR USER_ID = :id`, { id: userId });
+        await db.execute('COMMIT');
+      } catch (err: any) {
+        throw new AppError('DELETE_USER_ERROR', `Failed to delete user: ${err.message}`, 500);
+      }
+    }
+
+    await auditService.record({
+      userId: user?.userId ? String(user.userId) : undefined,
+      action: 'USER_DELETED_BY_ADMIN',
+      resourceType: 'USER',
+      resourceId: userId,
+      status: 'SUCCESS',
+      details: { adminEmail: user?.email, deletedUserId: userId },
+    });
+
+    return { success: true, userId };
   }
 }
 

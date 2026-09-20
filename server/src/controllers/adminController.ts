@@ -189,6 +189,66 @@ export class AdminController {
       next(err);
     }
   }
+
+  async clearTable(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { tableName } = req.params;
+      const result = await adminService.clearTable(tableName, req.user);
+      return sendSuccess(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async deleteTableRow(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { tableName, recordId } = req.params;
+      const result = await adminService.deleteTableRow(tableName, recordId, req.user);
+      return sendSuccess(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async deleteSearchSession(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const result = await adminService.deleteSearchSession(id, req.user);
+      return sendSuccess(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async deleteDetection(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const result = await adminService.deleteDetection(id, req.user);
+      return sendSuccess(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async deleteCamera(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const result = await adminService.deleteCamera(id, req.user);
+      return sendSuccess(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async deleteUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const result = await adminService.deleteUser(id, req.user);
+      return sendSuccess(res, result, 200);
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 export const adminController = new AdminController();

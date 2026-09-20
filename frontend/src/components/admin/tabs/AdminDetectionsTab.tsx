@@ -6,7 +6,8 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
-  Eye
+  Eye,
+  Trash2
 } from 'lucide-react';
 import { apiClient } from '../../../services/apiClient';
 import { AdminDetailModal } from '../AdminDetailModal';
@@ -40,6 +41,23 @@ export const AdminDetectionsTab: React.FC = () => {
 
   // Detail Modal
   const [selectedDetection, setSelectedDetection] = useState<AdminDetailItem | null>(null);
+  const [selectedDetectionId, setSelectedDetectionId] = useState<string | number | null>(null);
+  const [isDeletingDetection, setIsDeletingDetection] = useState(false);
+
+  const handleDeleteDetection = async (id: string | number) => {
+    if (!window.confirm(`Are you sure you want to delete detection record ${id}?`)) return;
+    setIsDeletingDetection(true);
+    try {
+      await apiClient.deleteAdminDetection(id);
+      setSelectedDetection(null);
+      setSelectedDetectionId(null);
+      await fetchDetections();
+    } catch (err: any) {
+      alert(`Failed to delete detection: ${err?.message || err}`);
+    } finally {
+      setIsDeletingDetection(false);
+    }
+  };
 
   const fetchDetections = async () => {
     setLoading(true);
@@ -66,6 +84,7 @@ export const AdminDetectionsTab: React.FC = () => {
   }, [page, cameraFilter]);
 
   const handleRowClick = (d: DetectionRecord) => {
+    setSelectedDetectionId(d.detectionId);
     setSelectedDetection({
       title: `Detection Record // ${d.object}`,
       subtitle: `Detection ID: #${d.detectionId}`,
@@ -200,14 +219,26 @@ export const AdminDetectionsTab: React.FC = () => {
                     <td className="py-3 px-4 font-mono text-[10px] text-slate-400">
                       {String(d.session).slice(0, 8)}...
                     </td>
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-3 px-4 text-right flex items-center justify-end gap-1.5">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteDetection(d.detectionId);
+                        }}
+                        className="p-1 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                        title="Delete detection record"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleRowClick(d);
                         }}
-                        className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-[11px] font-bold transition-all flex items-center gap-1 ml-auto cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
                       >
                         <Eye className="w-3 h-3" />
                         <span>Inspect</span>
@@ -250,8 +281,13 @@ export const AdminDetectionsTab: React.FC = () => {
       {/* Detail Modal */}
       <AdminDetailModal
         isOpen={Boolean(selectedDetection)}
-        onClose={() => setSelectedDetection(null)}
+        onClose={() => {
+          setSelectedDetection(null);
+          setSelectedDetectionId(null);
+        }}
         data={selectedDetection}
+        onDelete={() => selectedDetectionId && handleDeleteDetection(selectedDetectionId)}
+        isDeleting={isDeletingDetection}
       />
     </div>
   );

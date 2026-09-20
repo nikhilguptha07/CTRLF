@@ -5,7 +5,8 @@ import {
   RefreshCw, 
   AlertTriangle,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Trash2
 } from 'lucide-react';
 import { apiClient } from '../../../services/apiClient';
 import { AdminDetailModal } from '../AdminDetailModal';
@@ -38,6 +39,9 @@ export const AdminTableExplorerTab: React.FC<AdminTableExplorerTabProps> = ({ in
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isPurgingTable, setIsPurgingTable] = useState(false);
+  const [isDeletingRow, setIsDeletingRow] = useState(false);
+  const [selectedRowRecordId, setSelectedRowRecordId] = useState<string | number | null>(null);
 
   // Detail Modal for specific table row
   const [selectedRowDetail, setSelectedRowDetail] = useState<AdminDetailItem | null>(null);
@@ -78,7 +82,40 @@ export const AdminTableExplorerTab: React.FC<AdminTableExplorerTabProps> = ({ in
     fetchTableData();
   };
 
+  const handlePurgeCurrentTable = async () => {
+    if (!window.confirm(`Are you sure you want to permanently clear all records from table ${selectedTable}?`)) return;
+    setIsPurgingTable(true);
+    try {
+      const res = await apiClient.clearAdminTable(selectedTable);
+      alert(`Table ${selectedTable} cleared successfully (${res.recordsRemoved} rows removed).`);
+      await fetchTableData();
+    } catch (err: any) {
+      alert(`Failed to clear table: ${err?.message || err}`);
+    } finally {
+      setIsPurgingTable(false);
+    }
+  };
+
+  const handleDeleteCurrentRow = async () => {
+    if (!selectedRowRecordId) return;
+    if (!window.confirm(`Are you sure you want to delete record ${selectedRowRecordId} from ${selectedTable}?`)) return;
+    setIsDeletingRow(true);
+    try {
+      await apiClient.deleteAdminTableRow(selectedTable, selectedRowRecordId);
+      setSelectedRowDetail(null);
+      setSelectedRowRecordId(null);
+      await fetchTableData();
+    } catch (err: any) {
+      alert(`Failed to delete record: ${err?.message || err}`);
+    } finally {
+      setIsDeletingRow(false);
+    }
+  };
+
   const handleRowClick = (row: Record<string, any>) => {
+    const pk = row.ID ?? row.USER_ID ?? row.CAMERA_ID ?? row.SEARCH_ID ?? row.DETECTION_ID ?? row.TRACK_ID ?? row.EVENT_ID;
+    setSelectedRowRecordId(pk !== undefined && pk !== null ? String(pk) : null);
+
     const fields = columns.map((col) => {
       const val = row[col];
       let displayVal: string;
@@ -94,7 +131,7 @@ export const AdminTableExplorerTab: React.FC<AdminTableExplorerTabProps> = ({ in
 
     setSelectedRowDetail({
       title: `${selectedTable} Record`,
-      subtitle: `Primary Key / ID: ${row.ID || row.USER_ID || row.CAMERA_ID || row.SEARCH_ID || row.DETECTION_ID || 'Record'}`,
+      subtitle: `Primary Key / ID: ${pk || 'Record'}`,
       fields,
       rawJson: row,
     });
@@ -142,6 +179,17 @@ export const AdminTableExplorerTab: React.FC<AdminTableExplorerTabProps> = ({ in
 
             <button
               type="button"
+              onClick={handlePurgeCurrentTable}
+              disabled={isPurgingTable || total === 0}
+              title={`Purge all records from table ${selectedTable}`}
+              className="px-2.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>{isPurgingTable ? 'Purging...' : 'Purge Table'}</span>
+            </button>
+
+            <button
+              type="button"
               onClick={fetchTableData}
               title="Refresh Table Data"
               className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
@@ -174,50 +222,41 @@ export const AdminTableExplorerTab: React.FC<AdminTableExplorerTabProps> = ({ in
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/60 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider font-mono">
+                <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider font-mono">
                   {columns.map((col) => (
                     <th key={col} className="py-3 px-4 whitespace-nowrap">
                       {col}
                     </th>
                   ))}
-                  <th className="py-3 px-4 text-right">Action</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
-                {rows.map((row, rIdx) => (
-                  <tr 
-                    key={rIdx}
+              <tbody className="divide-y divide-slate-100">
+                {rows.map((row, idx) => (
+                  <tr
+                    key={idx}
                     onClick={() => handleRowClick(row)}
-                    className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
+                    className="hover:bg-indigo-50/20 transition-colors cursor-pointer group"
                   >
                     {columns.map((col) => {
                       const val = row[col];
-                      const displayVal = val !== null && typeof val === 'object' ? JSON.stringify(val) : String(val ?? '');
+                      const isNull = val === null || val === undefined;
+                      const str = isNull ? 'NULL' : typeof val === 'object' ? JSON.stringify(val) : String(val);
+
                       return (
-                        <td 
-                          key={col} 
-                          className="py-3 px-4 max-w-xs truncate text-slate-700"
-                          title={displayVal}
-                        >
-                          {val === null || val === undefined ? (
-                            <span className="text-slate-400 italic">NULL</span>
+                        <td key={col} className="py-3 px-4 font-mono text-slate-700 whitespace-nowrap max-w-xs truncate">
+                          {isNull ? (
+                            <span className="text-slate-400 italic font-mono text-[10px]">NULL</span>
                           ) : (
-                            displayVal
+                            str
                           )}
                         </td>
                       );
                     })}
-                    <td className="py-3 px-4 text-right whitespace-nowrap">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRowClick(row);
-                        }}
-                        className="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-indigo-600 text-[10px] font-bold cursor-pointer"
-                      >
-                        Inspect
-                      </button>
+                    <td className="py-3 px-4 text-right">
+                      <span className="text-xs font-bold text-indigo-600 group-hover:underline">
+                        Inspect &rarr;
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -226,9 +265,12 @@ export const AdminTableExplorerTab: React.FC<AdminTableExplorerTabProps> = ({ in
           </div>
         )}
 
-        {/* Pagination Bar */}
-        <div className="p-3.5 px-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <span>Table <strong>{selectedTable}</strong>: {total} records</span>
+        {/* Pagination Controls */}
+        <div className="p-3.5 bg-slate-50 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-500">
+          <span>
+            Showing <strong className="text-slate-800 font-mono">{rows.length}</strong> of{' '}
+            <strong className="text-slate-800 font-mono">{total}</strong> records
+          </span>
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -256,8 +298,13 @@ export const AdminTableExplorerTab: React.FC<AdminTableExplorerTabProps> = ({ in
       {/* Detail Modal */}
       <AdminDetailModal
         isOpen={Boolean(selectedRowDetail)}
-        onClose={() => setSelectedRowDetail(null)}
+        onClose={() => {
+          setSelectedRowDetail(null);
+          setSelectedRowRecordId(null);
+        }}
         data={selectedRowDetail}
+        onDelete={handleDeleteCurrentRow}
+        isDeleting={isDeletingRow}
       />
     </div>
   );

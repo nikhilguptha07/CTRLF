@@ -290,14 +290,81 @@ class ApiClient {
     return json.data;
   }
 
-  async clearDatabase(): Promise<{ message: string; recordsRemoved: number; clearedTables: string[] }> {
+  async clearDatabase(mode: 'OPERATIONAL' | 'COMPLETE' = 'OPERATIONAL'): Promise<{ message: string; recordsRemoved: number; clearedTables: string[]; mode?: string }> {
     const res = await this.request('/api/admin/clear-database', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode }),
     });
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.error?.message || json.message || 'Failed to clear database');
+    }
+    return json.data;
+  }
+
+  async clearAdminTable(tableName: string): Promise<{ tableName: string; recordsRemoved: number }> {
+    const res = await this.request(`/api/admin/tables/${encodeURIComponent(tableName)}/clear`, {
+      method: 'POST',
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.error?.message || json.message || `Failed to clear table ${tableName}`);
+    }
+    return json.data;
+  }
+
+  async deleteAdminTableRow(tableName: string, recordId: string | number): Promise<{ success: boolean; tableName: string; recordId: any }> {
+    const res = await this.request(`/api/admin/tables/${encodeURIComponent(tableName)}/${encodeURIComponent(recordId)}`, {
+      method: 'DELETE',
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.error?.message || json.message || `Failed to delete record from ${tableName}`);
+    }
+    return json.data;
+  }
+
+  async deleteAdminUser(id: string): Promise<any> {
+    const res = await this.request(`/api/admin/users/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.error?.message || json.message || `Failed to delete user (${res.status})`);
+    }
+    return json.data;
+  }
+
+  async deleteAdminCamera(id: string): Promise<any> {
+    const res = await this.request(`/api/admin/cameras/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.error?.message || json.message || `Failed to delete camera (${res.status})`);
+    }
+    return json.data;
+  }
+
+  async deleteAdminSearchSession(id: string): Promise<any> {
+    const res = await this.request(`/api/admin/search-sessions/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.error?.message || json.message || `Failed to delete search session (${res.status})`);
+    }
+    return json.data;
+  }
+
+  async deleteAdminDetection(id: string | number): Promise<any> {
+    const res = await this.request(`/api/admin/detections/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.error?.message || json.message || `Failed to delete detection (${res.status})`);
     }
     return json.data;
   }

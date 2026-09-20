@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Eye, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { X, Eye, Image as ImageIcon, AlertCircle, Trash2 } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 
 export interface AdminDetailItem {
@@ -21,12 +21,16 @@ interface AdminDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   data: AdminDetailItem | null;
+  onDelete?: () => void;
+  isDeleting?: boolean;
 }
 
 export const AdminDetailModal: React.FC<AdminDetailModalProps> = ({
   isOpen,
   onClose,
   data,
+  onDelete,
+  isDeleting = false,
 }) => {
   const [showEvidenceViewer, setShowEvidenceViewer] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -187,7 +191,21 @@ export const AdminDetailModal: React.FC<AdminDetailModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 px-6 bg-slate-50 border-t border-slate-200/80 flex justify-end shrink-0">
+        <div className="p-4 px-6 bg-slate-50 border-t border-slate-200/80 flex items-center justify-between shrink-0">
+          <div>
+            {onDelete && (
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={onDelete}
+                className="px-3.5 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 disabled:opacity-50"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{isDeleting ? 'Deleting...' : 'Delete Record'}</span>
+              </button>
+            )}
+          </div>
+
           <button
             type="button"
             onClick={onClose}

@@ -8,7 +8,8 @@ import {
   AlertTriangle,
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Trash2
 } from 'lucide-react';
 import { apiClient } from '../../../services/apiClient';
 
@@ -116,6 +117,16 @@ export const AdminUsersTab: React.FC = () => {
       await fetchUsers();
     } catch (err: any) {
       alert(`Status update failed: ${err?.message || err}`);
+    }
+  };
+
+  const handleDeleteUser = async (user: UserRecord) => {
+    if (!window.confirm(`Are you sure you want to permanently delete user ${user.email}? This action cannot be undone.`)) return;
+    try {
+      await apiClient.deleteAdminUser(user.id);
+      await fetchUsers();
+    } catch (err: any) {
+      alert(`Failed to delete user: ${err?.message || err}`);
     }
   };
 
@@ -263,11 +274,19 @@ export const AdminUsersTab: React.FC = () => {
                         onClick={() => handleToggleStatus(u)}
                         className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer ${
                           u.isActive
-                            ? 'bg-red-50 hover:bg-red-100 text-red-700'
+                            ? 'bg-amber-50 hover:bg-amber-100 text-amber-700'
                             : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700'
                         }`}
                       >
                         {u.isActive ? 'Disable' : 'Enable'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteUser(u)}
+                        className="p-1 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer inline-flex items-center"
+                        title="Delete user"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </td>
                   </tr>

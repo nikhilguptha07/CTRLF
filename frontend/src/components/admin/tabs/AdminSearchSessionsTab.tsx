@@ -4,7 +4,8 @@ import {
   RefreshCw, 
   AlertTriangle,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Trash2
 } from 'lucide-react';
 import { apiClient } from '../../../services/apiClient';
 import { AdminDetailModal } from '../AdminDetailModal';
@@ -36,6 +37,23 @@ export const AdminSearchSessionsTab: React.FC = () => {
 
   // Detail modal state
   const [selectedSessionDetail, setSelectedSessionDetail] = useState<AdminDetailItem | null>(null);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [isDeletingSession, setIsDeletingSession] = useState(false);
+
+  const handleDeleteSession = async (sessionId: string) => {
+    if (!window.confirm(`Are you sure you want to delete search session ${sessionId}? This will also delete all related detections and tracks.`)) return;
+    setIsDeletingSession(true);
+    try {
+      await apiClient.deleteAdminSearchSession(sessionId);
+      setSelectedSessionDetail(null);
+      setSelectedSessionId(null);
+      await fetchSessions();
+    } catch (err: any) {
+      alert(`Failed to delete session: ${err?.message || err}`);
+    } finally {
+      setIsDeletingSession(false);
+    }
+  };
 
   const fetchSessions = async () => {
     setLoading(true);
@@ -63,6 +81,7 @@ export const AdminSearchSessionsTab: React.FC = () => {
   }, [page, statusFilter, sourceFilter]);
 
   const handleRowClick = async (session: SessionRecord) => {
+    setSelectedSessionId(session.id);
     try {
       const detail = await apiClient.getAdminSearchSessionDetail(session.id);
       const targetObj = detail.target;
@@ -230,7 +249,18 @@ export const AdminSearchSessionsTab: React.FC = () => {
                     <td className="py-3 px-4 text-slate-500 text-[11px] font-mono">
                       {s.completedAt ? new Date(s.completedAt).toLocaleTimeString() : 'In Progress'}
                     </td>
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-3 px-4 text-right space-x-2 flex items-center justify-end">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteSession(s.id);
+                        }}
+                        className="p-1 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                        title="Delete search session"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                       <span className="text-xs font-semibold text-indigo-600 group-hover:underline">
                         View &rarr;
                       </span>
@@ -272,8 +302,13 @@ export const AdminSearchSessionsTab: React.FC = () => {
       {/* Detail Modal */}
       <AdminDetailModal
         isOpen={Boolean(selectedSessionDetail)}
-        onClose={() => setSelectedSessionDetail(null)}
+        onClose={() => {
+          setSelectedSessionDetail(null);
+          setSelectedSessionId(null);
+        }}
         data={selectedSessionDetail}
+        onDelete={() => selectedSessionId && handleDeleteSession(selectedSessionId)}
+        isDeleting={isDeletingSession}
       />
     </div>
   );
