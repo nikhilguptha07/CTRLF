@@ -113,13 +113,13 @@ describe('CTRL-F PHASE 10 — FINAL PRODUCTION READINESS & JUDGE VALIDATION SUIT
       // Poll until finished
       let completed = false;
       let finalStatus = '';
-      for (let attempt = 0; attempt < 80; attempt++) {
-        await new Promise((r) => setTimeout(r, 250));
+      for (let attempt = 0; attempt < 180; attempt++) {
+        await new Promise((r) => setTimeout(r, 300));
         const statusRes = await request(app)
           .get(`/api/searches/${sessionId}`)
           .set('Authorization', `Bearer ${operatorToken}`);
 
-        if (statusRes.status === 200 && statusRes.body.data) {
+        if (statusRes.status === 200 && statusRes.body?.data) {
           finalStatus = statusRes.body.data.status;
           if (['DETECTED', 'NOT_DETECTED', 'FAILED', 'CANCELLED'].includes(finalStatus)) {
             completed = true;

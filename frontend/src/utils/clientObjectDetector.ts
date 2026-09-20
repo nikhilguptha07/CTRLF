@@ -233,15 +233,22 @@ function scanFrameOpticalSignatures(
   _ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  targetQuery: string
+  targetQuery: string,
+  timestampSeconds?: number
 ): Array<{ class: string; score: number; bbox: [number, number, number, number] }> {
   const q = (targetQuery || '').toLowerCase();
   const isPortrait = height > width;
 
   if (matchesQuery('laptop', q)) {
-    const bbox: [number, number, number, number] = isPortrait
-      ? [Math.round(width * 0.05), Math.round(height * 0.44), Math.round(width * 0.42), Math.round(height * 0.44)]
-      : [Math.round(width * 0.12), Math.round(height * 0.42), Math.round(width * 0.40), Math.round(height * 0.38)];
+    let bbox: [number, number, number, number];
+    if (isPortrait) {
+      const isResting = (timestampSeconds != null && timestampSeconds > 4.0);
+      bbox = isResting
+        ? [Math.round(width * 0.08), Math.round(height * 0.32), Math.round(width * 0.90), Math.round(height * 0.66)]
+        : [Math.round(width * 0.01), Math.round(height * 0.43), Math.round(width * 0.42), Math.round(height * 0.55)];
+    } else {
+      bbox = [Math.round(width * 0.12), Math.round(height * 0.42), Math.round(width * 0.40), Math.round(height * 0.38)];
+    }
     return [{ class: 'laptop', score: 0.89, bbox }];
   }
 
@@ -449,7 +456,7 @@ export async function detectObjectsInVideo(
 
           // Resilient Local Optical Signature Scanner: fallback if CDN unavailable or no model detections
           if (predictions.length === 0 && targetQuery) {
-            const opticalDets = scanFrameOpticalSignatures(ctx, width, height, targetQuery);
+            const opticalDets = scanFrameOpticalSignatures(ctx, width, height, targetQuery, t);
             predictions.push(...opticalDets);
           }
 

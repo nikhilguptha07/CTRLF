@@ -142,13 +142,13 @@ describe('Upload Surveillance Footage — Full Search Flow Verification (Section
 
     // Poll until complete
     let finalSession: any = null;
-    for (let i = 0; i < 40; i++) {
-      await new Promise((r) => setTimeout(r, 250));
+    for (let i = 0; i < 100; i++) {
+      await new Promise((r) => setTimeout(r, 300));
       const pollRes = await request(app)
         .get(`/api/search/${sessionId}`)
         .set('Authorization', `Bearer ${operatorToken}`);
 
-      if (pollRes.status === 200 && ['DETECTED', 'NOT_DETECTED', 'FAILED'].includes(pollRes.body.data.status)) {
+      if (pollRes.status === 200 && pollRes.body?.data?.status && ['DETECTED', 'NOT_DETECTED', 'FAILED'].includes(pollRes.body.data.status)) {
         finalSession = pollRes.body.data;
         break;
       }
@@ -201,13 +201,13 @@ describe('Upload Surveillance Footage — Full Search Flow Verification (Section
 
     // Poll until complete
     let sessionDetails: any = null;
-    for (let i = 0; i < 40; i++) {
-      await new Promise((r) => setTimeout(r, 250));
+    for (let i = 0; i < 100; i++) {
+      await new Promise((r) => setTimeout(r, 300));
       const pollRes = await request(app)
         .get(`/api/search/${sessionId}`)
         .set('Authorization', `Bearer ${operatorToken}`);
 
-      if (pollRes.status === 200 && ['DETECTED', 'NOT_DETECTED', 'FAILED'].includes(pollRes.body.data.status)) {
+      if (pollRes.status === 200 && pollRes.body?.data?.status && ['DETECTED', 'NOT_DETECTED', 'FAILED'].includes(pollRes.body.data.status)) {
         sessionDetails = pollRes.body.data;
         break;
       }

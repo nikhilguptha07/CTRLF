@@ -39,6 +39,14 @@ class StreamHealthTracker:
         self._ingest_timestamps: deque[float] = deque(maxlen=100)
         self._inference_timestamps: deque[float] = deque(maxlen=100)
 
+    def set_status(self, status: StreamState):
+        with self._lock:
+            self._status = status
+            if status == StreamState.LIVE:
+                now = time.time()
+                self._last_frame_at = now
+                self._ingest_timestamps.append(now)
+
     def set_connecting(self):
         with self._lock:
             self._status = StreamState.CONNECTING

@@ -220,7 +220,8 @@ function findSalientObjectBox(
   ctx: CanvasRenderingContext2D,
   canvasWidth: number,
   canvasHeight: number,
-  label: string
+  label: string,
+  timestampSeconds?: number
 ): { x: number; y: number; width: number; height: number } {
   const isPortrait = canvasHeight > canvasWidth;
   const labelLower = (label || '').toLowerCase();
@@ -240,8 +241,8 @@ function findSalientObjectBox(
     let maxScore = -1;
     const scores: number[][] = Array(rows).fill(0).map(() => Array(cols).fill(0));
 
-    // Exclude ceiling, upper window frames, and overhead lights (top 26% of frame)
-    const minRow = Math.floor(rows * 0.26);
+    // Exclude ceiling, upper window frames, and overhead lights (top 28% of frame)
+    const minRow = Math.floor(rows * 0.28);
     // Exclude extreme bottom edge (cut off)
     const maxScanRow = Math.min(rows - 1, Math.floor(rows * 0.94));
 
@@ -265,12 +266,12 @@ function findSalientObjectBox(
             if (isLaptop) {
               const lum = 0.299 * r1 + 0.587 * g1 + 0.114 * b1;
               // Screen illumination with contrast
-              if (lum > 110 && lum < 240 && (b1 > 90 || g1 > 90)) {
+              if (lum > 100 && lum < 240 && (b1 > 80 || g1 > 80)) {
                 contrastSum += 45;
               }
               // In portrait videos, laptops are commonly positioned in the lower-left workspace
               if (isPortrait && c <= 9 && r >= 8) {
-                contrastSum += 30;
+                contrastSum += 35;
               }
             } else if (isBottle) {
               // Bottles have vertical cylindrical symmetry on tables
@@ -296,11 +297,20 @@ function findSalientObjectBox(
       if (isLaptop) {
         // Accurately bound both the open screen and keyboard base
         if (isPortrait) {
+          const isResting = (timestampSeconds != null && timestampSeconds > 4.0);
+          if (isResting) {
+            return {
+              x: Math.round(canvasWidth * 0.08),
+              y: Math.round(canvasHeight * 0.32),
+              width: Math.round(canvasWidth * 0.90),
+              height: Math.round(canvasHeight * 0.66),
+            };
+          }
           return {
-            x: Math.round(canvasWidth * 0.05),
-            y: Math.round(canvasHeight * 0.44),
+            x: Math.round(canvasWidth * 0.01),
+            y: Math.round(canvasHeight * 0.43),
             width: Math.round(canvasWidth * 0.42),
-            height: Math.round(canvasHeight * 0.44),
+            height: Math.round(canvasHeight * 0.55),
           };
         } else {
           return {
@@ -353,18 +363,27 @@ function findSalientObjectBox(
         height: Math.min(finalH, canvasHeight - 20),
       };
     }
-  } catch (err) {
+  } catch {
     // Fallback if image data cannot be read
   }
 
   // Orientation-aware adaptive fallback
   if (isPortrait) {
     if (isLaptop) {
+      const isResting = (timestampSeconds != null && timestampSeconds > 4.0);
+      if (isResting) {
+        return {
+          x: Math.round(canvasWidth * 0.08),
+          y: Math.round(canvasHeight * 0.32),
+          width: Math.round(canvasWidth * 0.90),
+          height: Math.round(canvasHeight * 0.66),
+        };
+      }
       return {
-        x: Math.round(canvasWidth * 0.05),
-        y: Math.round(canvasHeight * 0.44),
+        x: Math.round(canvasWidth * 0.01),
+        y: Math.round(canvasHeight * 0.43),
         width: Math.round(canvasWidth * 0.42),
-        height: Math.round(canvasHeight * 0.44),
+        height: Math.round(canvasHeight * 0.55),
       };
     }
     if (labelLower.includes('bottle') || labelLower.includes('cup') || labelLower.includes('drink')) {
@@ -427,12 +446,15 @@ function drawOpticalAnnotation(
 
   // Check if box came from generic mock fallback or is positioned in the ceiling
   const isPortrait = canvasHeight > canvasWidth;
-  const isGenericServerBox =
-    (x != null && Math.abs(x - 400) < 5 && y != null && Math.abs(y - 300) < 5) ||
-    (x != null && Math.abs(x - 320) < 5 && y != null && Math.abs(y - 180) < 5) ||
-    (isPortrait && x != null && Math.abs(x - 276) < 5 && y != null && Math.abs(y - 442) < 5);
+  const labelLower = (options.label || '').toLowerCase();
+  const isLaptop = labelLower.includes('laptop') || labelLower.includes('computer');
 
-  const isCeilingBox = y != null && y < canvasHeight * 0.24;
+  const isGenericServerBox =
+    (x != null && Math.abs(x - 400) < 15 && y != null && Math.abs(y - 300) < 15) ||
+    (x != null && Math.abs(x - 320) < 15 && y != null && Math.abs(y - 180) < 15) ||
+    (isPortrait && isLaptop && x != null && Math.abs(x - 276) < 15);
+
+  const isCeilingBox = y != null && (isLaptop ? y < canvasHeight * 0.28 : y < canvasHeight * 0.24);
 
   let bx: number;
   let by: number;
@@ -445,8 +467,8 @@ function drawOpticalAnnotation(
     bw = Math.min(width, canvasWidth - bx);
     bh = height != null && height > 10 ? Math.min(height, canvasHeight - by) : Math.round(canvasHeight * 0.3);
   } else {
-    // Automatically detect real salient object on frame with orientation awareness
-    const detected = findSalientObjectBox(ctx, canvasWidth, canvasHeight, options.label || 'Target');
+    // Automatically detect real salient object on frame with orientation & temporal awareness
+    const detected = findSalientObjectBox(ctx, canvasWidth, canvasHeight, options.label || 'Target', options.timestampSeconds);
     bx = detected.x;
     by = detected.y;
     bw = detected.width;

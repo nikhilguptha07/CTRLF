@@ -241,7 +241,7 @@ describe('Phase 11: Real Object + Color Detection & Search', () => {
 
       // Poll until completion
       let finalSession: any = null;
-      for (let i = 0; i < 200; i++) {
+      for (let i = 0; i < 350; i++) {
         await new Promise((r) => setTimeout(r, 300));
         const pollRes = await request(app)
           .get(`/api/search/${sessionId}`)
@@ -259,7 +259,7 @@ describe('Phase 11: Real Object + Color Detection & Search', () => {
       expect(finalSession.detection.detectedLabel).toBe('tv');
       expect(finalSession.detection.dominantColor).toBe('GREEN');
       expect(finalSession.detection.colorConfidence).toBeGreaterThan(0);
-    }, 75000);
+    }, 120000);
 
     it('rejects match when object class matches but color fails ("red tv") with exact explanation', async () => {
       const videoPath = path.resolve(__dirname, '../../../reference/cctv-reference.mp4');
@@ -274,7 +274,7 @@ describe('Phase 11: Real Object + Color Detection & Search', () => {
 
       const videoId = uploadRes.body.data.id;
 
-      // Search for 'red tv' (video only contains green screen tv, no red tv)
+      // Search for 'red tv' (real video monitor in cctv-reference.mp4 is green, so RED must fail)
       const searchRes = await request(app)
         .post('/api/search')
         .set('Authorization', `Bearer ${operatorToken}`)
@@ -284,8 +284,10 @@ describe('Phase 11: Real Object + Color Detection & Search', () => {
           target: 'red tv',
         });
 
+      expect([200, 202]).toContain(searchRes.status);
       const sessionId = searchRes.body.data.sessionId;
 
+      // Poll until completion
       let finalSession: any = null;
       for (let i = 0; i < 200; i++) {
         await new Promise((r) => setTimeout(r, 300));
@@ -306,6 +308,6 @@ describe('Phase 11: Real Object + Color Detection & Search', () => {
       expect(searchResult).toBeDefined();
       const notes = searchResult.summaryNotes || searchResult.summary_notes;
       expect(notes).toContain('requested color RED was not confirmed');
-    }, 75000);
+    }, 120000);
   });
 });

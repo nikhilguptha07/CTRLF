@@ -268,8 +268,8 @@ export const CinematicResultsView: React.FC = () => {
   const handleSpotChange = (spot: 'LAST_SPOT' | 'INITIAL_SPOT') => {
     setBlobUrl(null);
     if (spot === 'LAST_SPOT') {
-      const lastAnn = clientExtractedUrls.lastAnnotated || topAnnotatedUrl || `/api/search/${sessionId}/evidence/frame?type=annotated&spot=last_spot`;
-      const lastOrig = clientExtractedUrls.lastOriginal || topOriginalUrl || `/api/search/${sessionId}/evidence/frame?type=original&spot=last_spot`;
+      const lastAnn = topAnnotatedUrl || clientExtractedUrls.lastAnnotated || `/api/search/${sessionId}/evidence/frame?type=annotated&spot=last_spot`;
+      const lastOrig = topOriginalUrl || clientExtractedUrls.lastOriginal || `/api/search/${sessionId}/evidence/frame?type=original&spot=last_spot`;
 
       const lastSeenMs = detectionResult?.lastSeenTimestampMs;
       const computedFrame = detectionResult?.lastSeenFrame ?? (lastSeenMs != null ? Math.round(lastSeenMs / 33.33) : (isReferenceClip && targetClass.toLowerCase().includes('bottle') ? 110 : 30));
@@ -352,18 +352,20 @@ export const CinematicResultsView: React.FC = () => {
     let ann = params.annotatedUrl || primaryTarget?.annotatedUrl;
     let orig = params.originalUrl || primaryTarget?.originalUrl;
 
-    if (isLastSpot && clientExtractedUrls.lastAnnotated) {
-      ann = clientExtractedUrls.lastAnnotated;
-      orig = clientExtractedUrls.lastOriginal || ann;
-    } else if (!isLastSpot && clientExtractedUrls.initialAnnotated) {
-      ann = clientExtractedUrls.initialAnnotated;
-      orig = clientExtractedUrls.initialOriginal || ann;
-    } else if (isReferenceClip && targetClass.toLowerCase().includes('bottle')) {
-      ann = isLastSpot ? '/evidence/frame_last_spot_annotated.jpg' : '/evidence/frame_10_annotated.jpg';
-      orig = isLastSpot ? '/evidence/frame_last_spot_orig.jpg' : '/evidence/frame_10_orig.jpg';
-    } else if (!ann) {
-      ann = topAnnotatedUrl;
-      orig = topOriginalUrl;
+    if (!ann) {
+      if (isLastSpot && clientExtractedUrls.lastAnnotated) {
+        ann = clientExtractedUrls.lastAnnotated;
+        orig = clientExtractedUrls.lastOriginal || ann;
+      } else if (!isLastSpot && clientExtractedUrls.initialAnnotated) {
+        ann = clientExtractedUrls.initialAnnotated;
+        orig = clientExtractedUrls.initialOriginal || ann;
+      } else if (isReferenceClip && targetClass.toLowerCase().includes('bottle')) {
+        ann = isLastSpot ? '/evidence/frame_last_spot_annotated.jpg' : '/evidence/frame_10_annotated.jpg';
+        orig = isLastSpot ? '/evidence/frame_last_spot_orig.jpg' : '/evidence/frame_10_orig.jpg';
+      } else {
+        ann = topAnnotatedUrl;
+        orig = topOriginalUrl;
+      }
     }
 
     // STEP 1 & STEP 7 REQUIRED CONSOLE LOG

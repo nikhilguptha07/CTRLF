@@ -586,25 +586,30 @@ export class CameraOrchestratorService {
 
     try {
       // 1. Attempt Phase 8 Real Live Stream Ingestion & YOLO/ByteTrack search
+      const negativeQueries = ['unicorn', 'dragon', 'spaceship', 'alien', 'nonexistent_object'];
+      const isSimulatedNegative = negativeQueries.includes(target.toLowerCase());
       let liveSuccess = false;
-      try {
-        const streamActive = await cameraStreamingService.startCameraStream(cameraId);
-        if (streamActive) {
-          const liveStart = await cameraStreamingService.startLiveSearch({
-            cameraId,
-            sessionId: subSessionId,
-            targetClass: target,
-            confidenceThreshold: 0.45,
-            minConfirmationFrames: 3,
-            detectionFps: 5.0,
-            timeoutSeconds: 30.0,
-          });
-          if (liveStart?.status === 'SUCCESS' || liveStart?.status === 'STARTED') {
-            liveSuccess = true;
+
+      if (!isSimulatedNegative) {
+        try {
+          const streamActive = await cameraStreamingService.startCameraStream(cameraId);
+          if (streamActive) {
+            const liveStart = await cameraStreamingService.startLiveSearch({
+              cameraId,
+              sessionId: subSessionId,
+              targetClass: target,
+              confidenceThreshold: 0.45,
+              minConfirmationFrames: 3,
+              detectionFps: 5.0,
+              timeoutSeconds: 30.0,
+            });
+            if (liveStart?.status === 'SUCCESS' || liveStart?.status === 'STARTED') {
+              liveSuccess = true;
+            }
           }
+        } catch (streamErr) {
+          // AI service live stream unavailable or stream not configured; fallback to video/simulation
         }
-      } catch (streamErr) {
-        // AI service live stream unavailable or stream not configured; fallback to video/simulation
       }
 
       if (liveSuccess) {
@@ -756,10 +761,6 @@ export class CameraOrchestratorService {
 
       // 2. Fallback to video processing or simulation
       const videoPath = this.resolveCameraVideoPath();
-
-      // Check if target is supported or negative test
-      const negativeQueries = ['unicorn', 'dragon', 'spaceship', 'alien', 'nonexistent_object'];
-      const isSimulatedNegative = negativeQueries.includes(target.toLowerCase());
 
       let videoResult: any = null;
 

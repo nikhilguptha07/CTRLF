@@ -183,12 +183,12 @@ class VideoProcessor:
 
             # Configurable frame sampling
             # For short videos (<= 15s or <= 450 frames) or early portion (<= 3.5s): process every frame without skipping
-            is_short_video = (total_frames <= 450) or (duration_s <= 15.0)
+            # Configurable frame sampling
             frame_interval = request.frame_interval or settings.FRAME_INTERVAL
-            if is_short_video or (request.sample_fps and request.sample_fps >= 25.0):
-                frame_interval = 1
-            elif request.sample_fps and request.sample_fps > 0:
+            if request.sample_fps and request.sample_fps > 0:
                 frame_interval = max(1, int(round(native_fps / request.sample_fps)))
+            elif (request.sample_fps and request.sample_fps >= 25.0):
+                frame_interval = 1
 
             max_frames = request.max_frames or 600
 
@@ -229,7 +229,7 @@ class VideoProcessor:
                 if not ret or frame is None:
                     break
 
-                should_process = (frame_idx % frame_interval == 0) or ((frame_idx / native_fps) <= 3.5)
+                should_process = (frame_idx % frame_interval == 0)
                 if should_process:
                     timestamp_s = frame_idx / native_fps
 

@@ -30,7 +30,29 @@ async function bootstrap() {
       logger.warn('Job recovery scan encountered non-fatal error; continuing startup', { error: err?.message || err });
     }
 
-    // 4. Start HTTP & WebSocket Server
+    // 4. Auto-verify and activate Python AI Vision Service daemon if offline
+    try {
+      const res = await fetch('http://localhost:8000/health', { signal: AbortSignal.timeout(1500) }).catch(() => null);
+      if (res && res.ok) {
+        logger.info('Python AI Vision Service is active on http://localhost:8000');
+      } else {
+        const path = await import('path');
+        const { spawn } = await import('child_process');
+        const aiDir = path.resolve(__dirname, '../../ai-service');
+        logger.info('Launching Python AI Vision Service daemon...', { aiDir });
+        const pyProc = spawn('python', ['run.py'], {
+          cwd: aiDir,
+          env: { ...process.env, KMP_DUPLICATE_LIB_OK: 'TRUE' },
+          detached: true,
+          stdio: 'ignore',
+        });
+        pyProc.unref();
+      }
+    } catch (aiErr: any) {
+      logger.warn('AI service auto-launch check passed with non-fatal status', { error: aiErr?.message || aiErr });
+    }
+
+    // 5. Start HTTP & WebSocket Server
     server.listen(env.PORT, () => {
       logger.info(`CONTROL F Backend Server listening on port ${env.PORT}`, {
         env: env.NODE_ENV,

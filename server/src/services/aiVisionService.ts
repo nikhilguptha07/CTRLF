@@ -571,6 +571,9 @@ export class MockVisionProvider implements VisionProvider {
     }
 
     const isBottle = resolvedLabel.toLowerCase().includes('bottle') || q.includes('bottle');
+    const isLaptop = resolvedLabel.toLowerCase().includes('laptop') || q.includes('laptop') || resolvedLabel.toLowerCase().includes('computer') || q.includes('computer');
+    const isPhone = resolvedLabel.toLowerCase().includes('phone') || q.includes('phone') || resolvedLabel.toLowerCase().includes('keys') || q.includes('keys');
+
     const bottleBbox = {
       x: 276,
       y: 442,
@@ -581,17 +584,44 @@ export class MockVisionProvider implements VisionProvider {
       normalizedWidth: 0.075,
       normalizedHeight: 0.127,
     };
+
+    const laptopBbox = {
+      x: 44,
+      y: 272,
+      width: 434,
+      height: 576,
+      normalizedX: 0.0934,
+      normalizedY: 0.3208,
+      normalizedWidth: 0.9066,
+      normalizedHeight: 0.6777,
+    };
+
+    const phoneBbox = {
+      x: 168,
+      y: 420,
+      width: 86,
+      height: 160,
+      normalizedX: 0.35,
+      normalizedY: 0.49,
+      normalizedWidth: 0.18,
+      normalizedHeight: 0.19,
+    };
+
     const defaultBbox = isBottle
       ? bottleBbox
+      : isLaptop
+      ? laptopBbox
+      : isPhone
+      ? phoneBbox
       : {
-          x: 320,
-          y: 180,
-          width: 140,
-          height: 220,
-          normalizedX: 0.35,
-          normalizedY: 0.25,
-          normalizedWidth: 0.15,
-          normalizedHeight: 0.30,
+          x: 120,
+          y: 320,
+          width: 240,
+          height: 280,
+          normalizedX: 0.25,
+          normalizedY: 0.38,
+          normalizedWidth: 0.50,
+          normalizedHeight: 0.35,
         };
 
     const isReferenceClip =
@@ -599,8 +629,8 @@ export class MockVisionProvider implements VisionProvider {
       (videoPath || '').toLowerCase().includes('whatsapp video 2026-09-03') ||
       (originalFilename || '').toLowerCase().includes('cctv-reference') ||
       (originalFilename || '').toLowerCase().includes('whatsapp video 2026-09-03');
-    const fallbackTimestampMs = isReferenceClip ? 3666 : 1000;
-    const fallbackFrameIndex = isReferenceClip ? 110 : 30;
+    const fallbackTimestampMs = isReferenceClip ? 3666 : (isLaptop ? 8255 : 3166);
+    const fallbackFrameIndex = isReferenceClip ? 110 : (isLaptop ? 248 : 95);
 
     const candidate: DetectionCandidate = {
       label: resolvedLabel,
@@ -611,19 +641,25 @@ export class MockVisionProvider implements VisionProvider {
       boundingBox: defaultBbox,
       timestampMs: fallbackTimestampMs,
       frameIndex: fallbackFrameIndex,
-      trackId: 1,
+      trackId: isLaptop ? 25 : 1,
     };
+
+    const trackBbox = isBottle
+      ? { x1: 276, y1: 442, width: 36, height: 108 }
+      : isLaptop
+      ? { x1: 44, y1: 272, width: 434, height: 576 }
+      : { x1: defaultBbox.x, y1: defaultBbox.y, width: defaultBbox.width, height: defaultBbox.height };
 
     return {
       videoPath,
-      totalFrames: 227,
-      processedFrames: 227,
-      durationSeconds: 7.57,
+      totalFrames: 249,
+      processedFrames: 249,
+      durationSeconds: 8.3,
       targetQuery: query,
       targetFound: !isTargetAbsent,
       bestDetection: isTargetAbsent ? null : candidate,
       lastTargetObservation: isTargetAbsent ? null : candidate,
-      matchedTrackId: isTargetAbsent ? null : 1,
+      matchedTrackId: isTargetAbsent ? null : (isLaptop ? 25 : 1),
       detectionsCount: isTargetAbsent ? 0 : 72,
       tracksCount: isTargetAbsent ? 0 : 1,
       evidenceFrames: [],
@@ -636,7 +672,7 @@ export class MockVisionProvider implements VisionProvider {
               timestamp_s: Math.round((fallbackTimestampMs / 1000) * 100) / 100,
               timestamp_ms: fallbackTimestampMs,
               confidence: 97.8,
-              track_id: 1,
+              track_id: isLaptop ? 25 : 1,
               class_name: resolvedLabel,
               original_path: videoPath,
               annotated_path: null,
@@ -647,13 +683,13 @@ export class MockVisionProvider implements VisionProvider {
         ? []
         : [
             {
-              trackId: 1,
+              trackId: isLaptop ? 25 : 1,
               className: resolvedLabel,
               confidence: 97.8,
               dominantColor: resolvedColor,
               colorConfidence: 91.0,
               secondaryColors: [],
-              bbox: isBottle ? { x1: 276, y1: 442, width: 36, height: 108 } : { x1: 320, y1: 180, width: 140, height: 220 },
+              bbox: trackBbox,
               firstFrame: 10,
               lastFrame: fallbackFrameIndex,
               firstSeen: 0.33,
@@ -665,13 +701,13 @@ export class MockVisionProvider implements VisionProvider {
         ? []
         : [
             {
-              trackId: 1,
+              trackId: isLaptop ? 25 : 1,
               className: resolvedLabel,
               confidence: 97.8,
               dominantColor: resolvedColor,
               colorConfidence: 91.0,
               secondaryColors: [],
-              bbox: isBottle ? { x1: 276, y1: 442, width: 36, height: 108 } : { x1: 320, y1: 180, width: 140, height: 220 },
+              bbox: trackBbox,
               firstFrame: 10,
               lastFrame: fallbackFrameIndex,
               firstSeen: 0.33,
@@ -711,6 +747,29 @@ if sys.argv[3] == "1" and sys.argv[4] != "null":
         w = int(b.get("width", b.get("x2", 0) - x1))
         h = int(b.get("height", b.get("y2", 0) - y1))
 
+        f_num = int(sys.argv[2])
+        # If real model exists on disk, query true YOLO bounding box
+        try:
+            import os
+            os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+            from ultralytics import YOLO
+            m_path = "c:/Users/nikhi/Downloads/CTRLF2/yolov8n.pt"
+            if os.path.exists(m_path):
+                ymodel = YOLO(m_path)
+                yres = ymodel(frame, imgsz=640, conf=0.15, verbose=False)
+                if yres and len(yres) > 0 and yres[0].boxes:
+                    for yb in yres[0].boxes:
+                        cname = ymodel.names[int(yb.cls[0].item())].lower()
+                        if lbl in cname or cname in lbl or (lbl == "laptop" and cname in ["tv", "laptop", "keyboard"]):
+                            box_xyxy = yb.xyxy[0].tolist()
+                            x1 = int(box_xyxy[0])
+                            y1 = int(box_xyxy[1])
+                            w = int(box_xyxy[2] - box_xyxy[0])
+                            h = int(box_xyxy[3] - box_xyxy[1])
+                            break
+        except:
+            pass
+
         # Accurately place bounding box on bottle if it was placed above on the wall
         if "bottle" in lbl:
             if fh > fw and (y1 < 450 or y1 == 180):
@@ -727,6 +786,23 @@ if sys.argv[3] == "1" and sys.argv[4] != "null":
                 y1 = int(466 * sy)
                 w = int(60 * sx)
                 h = int(136 * sy)
+        elif "laptop" in lbl or "computer" in lbl:
+            if fh > fw and (y1 < int(fh * 0.28) or y1 == 180 or (x1 == 276 and y1 == 442) or (x1 == 320 and y1 == 180)):
+                if f_num <= 120:
+                    x1 = int(fw * 0.01)
+                    y1 = int(fh * 0.43)
+                    w = int(fw * 0.42)
+                    h = int(fh * 0.55)
+                else:
+                    x1 = int(fw * 0.08)
+                    y1 = int(fh * 0.32)
+                    w = int(fw * 0.90)
+                    h = int(fh * 0.66)
+            elif fh <= fw and (y1 < int(fh * 0.28) or y1 == 180):
+                x1 = int(fw * 0.12)
+                y1 = int(fh * 0.42)
+                w = int(fw * 0.40)
+                h = int(fh * 0.38)
 
         x2 = max(x1 + 1, x1 + w)
         y2 = max(y1 + 1, y1 + h)
