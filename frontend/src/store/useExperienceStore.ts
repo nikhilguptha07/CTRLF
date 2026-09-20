@@ -326,9 +326,8 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
 
   setRotationProgress: (scanAngleDeg, scanProgress, rotationComplete) => {
     // Only trigger React state updates on completion or significant milestone steps
-    const currentAngle = get().scanAngleDeg;
     const isCompleteChanged = get().rotationComplete !== rotationComplete;
-    if (rotationComplete || isCompleteChanged || Math.abs(scanAngleDeg - currentAngle) >= 15) {
+    if (rotationComplete || isCompleteChanged) {
       set({ scanAngleDeg, scanProgress, rotationComplete });
     }
     searchExperienceController.notifyRotationProgress(scanAngleDeg, rotationComplete);
@@ -602,8 +601,14 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
             : null) ||
           completedSession.detection?.boundingBox;
 
+        const isGenericServerMock = hasUserUploadedVideo && (
+          (rawBbox?.x === 276 && rawBbox?.y === 442) ||
+          (rawBbox?.x === 320 && rawBbox?.y === 180) ||
+          (rawBbox?.x === 400 && rawBbox?.y === 300)
+        );
+
         const tableBottleBbox = { x: 276, y: 442, width: 36, height: 108 };
-        const lastBbox = rawBbox || (isReferenceClip && isBottleTarget ? tableBottleBbox : null);
+        const lastBbox = isGenericServerMock ? null : (rawBbox || (isReferenceClip && isBottleTarget ? tableBottleBbox : null));
 
         const rawLastConf = (lastTargetObs?.confidence && lastTargetObs.confidence > 0)
           ? lastTargetObs.confidence

@@ -76,9 +76,9 @@ interface DetectionSceneProps {
 const ScanningHUD: React.FC<{
   targetClass: string;
   targetColor?: string | null;
-  progressDetails?: any;
-}> = React.memo(({ targetClass, targetColor, progressDetails }) => {
+}> = React.memo(({ targetClass, targetColor }) => {
   const textRef = useRef<HTMLSpanElement>(null);
+  const progressDetails = useExperienceStore((s) => s.progressDetails);
 
   useEffect(() => {
     const handleAngle = (e: any) => {
@@ -115,17 +115,14 @@ const ScanningHUD: React.FC<{
 });
 
 export const DetectionScene: React.FC<DetectionSceneProps> = ({ timelineTime }) => {
-  const { 
-    stage, 
-    setStage, 
-    setActiveFeedTab,
-    searchQuery, 
-    searchSession,
-    showResultsView,
-    setShowResultsView,
-    setRotationProgress,
-    progressDetails,
-  } = useExperienceStore();
+  const stage = useExperienceStore((s) => s.stage);
+  const setStage = useExperienceStore((s) => s.setStage);
+  const setActiveFeedTab = useExperienceStore((s) => s.setActiveFeedTab);
+  const searchQuery = useExperienceStore((s) => s.searchQuery);
+  const searchSession = useExperienceStore((s) => s.searchSession);
+  const showResultsView = useExperienceStore((s) => s.showResultsView);
+  const setShowResultsView = useExperienceStore((s) => s.setShowResultsView);
+  const setRotationProgress = useExperienceStore((s) => s.setRotationProgress);
 
   const { camera, lighting, postProcessing } = referenceCalibration;
 
@@ -384,7 +381,6 @@ export const DetectionScene: React.FC<DetectionSceneProps> = ({ timelineTime }) 
         <ScanningHUD
           targetClass={targetClass}
           targetColor={targetColor}
-          progressDetails={progressDetails}
         />
       )}
 

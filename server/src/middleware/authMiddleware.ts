@@ -27,7 +27,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
   }
 
   if (!token) {
-    if (req.headers['x-direct-admin'] === 'true' || req.originalUrl?.includes('/admin') || req.baseUrl?.includes('/admin')) {
+    if (req.headers['x-direct-admin'] === 'true') {
       req.user = {
         userId: 'admin-01',
         email: 'admin@ctrlf.local',
@@ -44,7 +44,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
     req.user = decoded;
     next();
   } catch (err) {
-    if (req.headers['x-direct-admin'] === 'true' || req.originalUrl?.includes('/admin') || req.baseUrl?.includes('/admin')) {
+    if (req.headers['x-direct-admin'] === 'true') {
       req.user = {
         userId: 'admin-01',
         email: 'admin@ctrlf.local',
