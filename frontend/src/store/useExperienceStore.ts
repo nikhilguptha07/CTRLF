@@ -646,9 +646,7 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
         const isReferenceClip = Boolean(
           sourceId === 'cctv-reference' ||
           (extraOptions?.videoFilename || '').toLowerCase().includes('cctv-reference') ||
-          (extraOptions?.videoFilename || '').toLowerCase().includes('whatsapp video 2026-09-03') ||
-          (currentUploadedRec?.originalFilename || '').toLowerCase().includes('cctv-reference') ||
-          (currentUploadedRec?.originalFilename || '').toLowerCase().includes('whatsapp video 2026-09-03')
+          (currentUploadedRec?.originalFilename || '').toLowerCase().includes('cctv-reference')
         );
 
         const rawBbox = lastTargetObs?.boundingBox ||
@@ -681,7 +679,6 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
           completedSession.result?.lastSeenColor ||
           completedSession.detection.dominantColor || null;
 
-        // For user-uploaded videos: perform real client-side AI object detection across the uploaded video
         // For user-uploaded videos: perform real client-side AI object detection across the uploaded video
         let targetActuallyFound = completedSession.status === 'DETECTED';
         let effectiveLastSeenMs = isReferenceClip ? (rawLastSeenMs != null ? rawLastSeenMs : (isBottleTarget ? 3666 : 3000)) : (rawLastSeenMs != null ? rawLastSeenMs : null);
@@ -722,11 +719,10 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
                 effectiveColor = matchingTrack.dominantColor || effectiveColor;
                 effectiveLabel = matchingTrack.className;
               } else {
-                targetActuallyFound = completedSession.status === 'DETECTED';
+                targetActuallyFound = false;
               }
             } else {
-              // Never demote a backend/session verified detection to NOT_DETECTED
-              targetActuallyFound = completedSession.status === 'DETECTED';
+              targetActuallyFound = !isGenericServerMock && completedSession.status === 'DETECTED';
             }
 
             if (scan.allTracks.length > 0) {

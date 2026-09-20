@@ -626,9 +626,7 @@ export class MockVisionProvider implements VisionProvider {
 
     const isReferenceClip =
       (videoPath || '').toLowerCase().includes('cctv-reference') ||
-      (videoPath || '').toLowerCase().includes('whatsapp video 2026-09-03') ||
-      (originalFilename || '').toLowerCase().includes('cctv-reference') ||
-      (originalFilename || '').toLowerCase().includes('whatsapp video 2026-09-03');
+      (originalFilename || '').toLowerCase().includes('cctv-reference');
     const fallbackTimestampMs = isReferenceClip ? 3666 : (isLaptop ? 8255 : 3166);
     const fallbackFrameIndex = isReferenceClip ? 110 : (isLaptop ? 248 : 95);
 

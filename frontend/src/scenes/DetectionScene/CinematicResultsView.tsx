@@ -138,9 +138,7 @@ export const CinematicResultsView: React.FC = () => {
   const isReferenceClip = Boolean(
     (searchSession as any)?.sourceId === 'cctv-reference' ||
     videoName.toLowerCase().includes('cctv-reference') ||
-    videoName.toLowerCase().includes('whatsapp video 2026-09-03') ||
-    (uploadedRec?.originalFilename || '').toLowerCase().includes('cctv-reference') ||
-    (uploadedRec?.originalFilename || '').toLowerCase().includes('whatsapp video 2026-09-03')
+    (uploadedRec?.originalFilename || '').toLowerCase().includes('cctv-reference')
   );
   const sessionId = searchSession.sessionId || (searchSession as any).id || (detectionResult as any)?.searchId;
 
