@@ -8,6 +8,7 @@ import { detectionRepository } from '../repositories/detectionRepository';
 import { searchRepository } from '../repositories/searchRepository';
 import { videoRepository } from '../repositories/videoRepository';
 import { aiVisionService } from '../services/aiVisionService';
+import { generateSurveillanceSvg } from '../utils/surveillanceSvgGenerator';
 
 export class EvidenceController {
   async getEvidence(req: Request, res: Response, next: NextFunction) {
