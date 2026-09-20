@@ -52,21 +52,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
 
   if (!isOpen) return null;
 
-  const handleQuickFill = (roleType: 'admin' | 'operator' | 'user' | 'nikhil') => {
-    setMode('login');
+  const handleQuickFill = (roleType: 'admin' | 'operator' | 'user') => {
     setErrorMessage(null);
-    if (roleType === 'nikhil') {
-      setIdentifier('nikhilguptha07@gmail.com');
-      setPassword('Password123!');
-    } else if (roleType === 'admin') {
-      setIdentifier('admin@ctrlf.local');
-      setPassword('Password123!');
-    } else if (roleType === 'operator') {
-      setIdentifier('operator1');
-      setPassword('Password123!');
+    if (mode === 'register') {
+      if (roleType === 'admin') {
+        setUsername('admin');
+        setEmail('admin@ctrlf.local');
+        setFullName('Security Administrator');
+        setRole('ADMIN');
+        setPassword('Password123!');
+      } else if (roleType === 'operator') {
+        setUsername('operator1');
+        setEmail('operator@ctrlf.local');
+        setFullName('Operations Specialist');
+        setRole('OPERATOR');
+        setPassword('Password123!');
+      } else {
+        setUsername('user1');
+        setEmail('user@ctrlf.local');
+        setFullName('Standard User');
+        setRole('USER');
+        setPassword('Password123!');
+      }
     } else {
-      setIdentifier('user@ctrlf.local');
-      setPassword('Password123!');
+      if (roleType === 'admin') {
+        setIdentifier('admin@ctrlf.local');
+        setPassword('Password123!');
+      } else if (roleType === 'operator') {
+        setIdentifier('operator1');
+        setPassword('Password123!');
+      } else {
+        setIdentifier('user@ctrlf.local');
+        setPassword('Password123!');
+      }
     }
   };
 
@@ -405,14 +423,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode = 'log
             Quick Test Fill:
           </span>
           <div className="flex gap-1.5 flex-wrap">
-            <button
-              type="button"
-              onClick={() => handleQuickFill('nikhil')}
-              className="px-2.5 py-1 rounded-lg bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-semibold text-[11px] transition-colors shadow-2xs cursor-pointer"
-              title="Nikhil (Admin)"
-            >
-              Nikhil (Admin)
-            </button>
             <button
               type="button"
               onClick={() => handleQuickFill('admin')}

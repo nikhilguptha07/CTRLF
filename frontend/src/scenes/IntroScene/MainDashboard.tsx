@@ -205,7 +205,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ onConnectLiveClick
             </span>
           </div>
           <div className="text-base font-extrabold text-slate-900 tracking-tight truncate">
-            {isAuthenticated && currentUser ? (currentUser.username || 'nikhil') : 'Sign In Required'}
+            {isAuthenticated && currentUser ? (currentUser.username || currentUser.fullName || 'Operator') : 'Sign In Required'}
           </div>
           <div className="text-[10px] text-slate-400 font-medium truncate mt-0.5">
             {isAuthenticated ? 'RBAC Session Active' : 'Public Telemetry'}

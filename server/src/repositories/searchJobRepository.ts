@@ -59,15 +59,16 @@ export class SearchJobRepository {
   async create(job: Omit<SearchJobRecord, 'createdAt'>): Promise<SearchJobRecord> {
     const sql = `
       INSERT INTO SEARCH_JOBS (
-        id, session_id, camera_id, job_status, started_at, ended_at,
+        id, search_id, session_id, camera_id, job_status, started_at, ended_at,
         frames_processed, last_frame_at, error_message
       ) VALUES (
-        :id, :sessionId, :cameraId, :jobStatus, :startedAt, :endedAt,
+        :id, :searchId, :sessionId, :cameraId, :jobStatus, :startedAt, :endedAt,
         :framesProcessed, :lastFrameAt, :errorMessage
       )
     `;
     await db.execute(sql, {
       id: job.id,
+      searchId: job.sessionId,
       sessionId: job.sessionId,
       cameraId: job.cameraId,
       jobStatus: job.jobStatus,

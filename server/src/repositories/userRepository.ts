@@ -97,9 +97,6 @@ export class UserRepository {
       'operator': 'operator@ctrlf.local',
       'admin': 'admin@ctrlf.local',
       'user': 'user@ctrlf.local',
-      'nikhil': 'nikhilguptha07@gmail.com',
-      'nikhilguptha': 'nikhilguptha07@gmail.com',
-      'nikhilguptha07': 'nikhilguptha07@gmail.com',
     };
     if (aliases[clean]) {
       const byAlias = await this.findByEmail(aliases[clean]);

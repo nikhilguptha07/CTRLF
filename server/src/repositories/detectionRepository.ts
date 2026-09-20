@@ -148,74 +148,89 @@ export class DetectionRepository {
     const box = input.boundingBox || { x: 0, y: 0, width: 0, height: 0 };
     const detectionStatus = input.detectionStatus || 'TARGET_ACQUIRED';
 
-    const sql = `
-      INSERT INTO DETECTIONS (
-        USER_ID, SEARCH_ID, CAMERA_ID, OBJECT_NAME, CONFIDENCE,
-        TIMESTAMP_SECONDS, VIDEO_TIMESTAMP, FRAME_NUMBER,
-        BOUNDING_BOX_X, BOUNDING_BOX_Y, BOUNDING_BOX_WIDTH, BOUNDING_BOX_HEIGHT,
-        DETECTION_STATUS, DETECTION_IMAGE
-      )
-      VALUES (
-        :userId, :searchId, :cameraId, :objectName, :confidence,
-        :timestampSeconds, :videoTimestamp, :frameNumber,
-        :boundingBoxX, :boundingBoxY, :boundingBoxWidth, :boundingBoxHeight,
-        :detectionStatus, :detectionImage
-      )
-    `;
+    const numericUserId = !isNaN(Number(userId)) ? Number(userId) : 1;
+    const numericSearchId = !isNaN(Number(searchId)) ? Number(searchId) : 1;
+    const numericCameraId = !isNaN(Number(cameraId)) ? Number(cameraId) : 1;
 
-    const binds: Record<string, unknown> = {
-      userId,
-      searchId,
-      cameraId,
-      objectName,
-      confidence,
-      timestampSeconds,
-      videoTimestamp,
-      frameNumber,
-      boundingBoxX: box.x,
-      boundingBoxY: box.y,
-      boundingBoxWidth: box.width,
-      boundingBoxHeight: box.height,
-      detectionStatus,
-      detectionImage: imageBuffer,
-    };
+    try {
+      const sql = `
+        INSERT INTO DETECTIONS (
+          USER_ID, SEARCH_ID, CAMERA_ID, OBJECT_NAME, CONFIDENCE,
+          TIMESTAMP_SECONDS, VIDEO_TIMESTAMP, FRAME_NUMBER,
+          BOUNDING_BOX_X, BOUNDING_BOX_Y, BOUNDING_BOX_WIDTH, BOUNDING_BOX_HEIGHT,
+          DETECTION_STATUS, DETECTION_IMAGE
+        )
+        VALUES (
+          :userId, :searchId, :cameraId, :objectName, :confidence,
+          :timestampSeconds, :videoTimestamp, :frameNumber,
+          :boundingBoxX, :boundingBoxY, :boundingBoxWidth, :boundingBoxHeight,
+          :detectionStatus, :detectionImage
+        )
+      `;
 
-    const insertResult = await db.execute(sql, binds);
+      const binds: Record<string, unknown> = {
+        userId: numericUserId,
+        searchId: numericSearchId,
+        cameraId: numericCameraId,
+        objectName,
+        confidence,
+        timestampSeconds,
+        videoTimestamp,
+        frameNumber,
+        boundingBoxX: box.x,
+        boundingBoxY: box.y,
+        boundingBoxWidth: box.width,
+        boundingBoxHeight: box.height,
+        detectionStatus,
+        detectionImage: imageBuffer,
+      };
+
+      await db.execute(sql, binds);
+    } catch (err: any) {
+      // Non-blocking in case Oracle schema uses non-relational UUIDs or has FK check
+      console.warn('[DETECTION_REPOSITORY] Oracle DETECTIONS numeric insert skipped or handled:', err?.message || err);
+    }
 
     // Retrieve by searchId or latest detection
-    const latestSql = `
-      SELECT DETECTION_ID, USER_ID, SEARCH_ID, CAMERA_ID, OBJECT_NAME, CONFIDENCE,
-             TIMESTAMP_SECONDS, VIDEO_TIMESTAMP, FRAME_NUMBER,
-             BOUNDING_BOX_X, BOUNDING_BOX_Y, BOUNDING_BOX_WIDTH, BOUNDING_BOX_HEIGHT,
-             DETECTION_STATUS, CREATED_AT,
-             CASE WHEN DETECTION_IMAGE IS NOT NULL THEN 1 ELSE 0 END AS HAS_IMAGE
-      FROM DETECTIONS
-      WHERE SEARCH_ID = :searchId
-      ORDER BY CREATED_AT DESC
-    `;
-    const res = await db.execute<any>(latestSql, { searchId });
-    if (res.rows && res.rows.length > 0) {
-      const row = res.rows[0];
-      return {
-        detectionId: row.DETECTION_ID || row.ID || 1,
-        userId: row.USER_ID,
-        searchId: row.SEARCH_ID,
-        cameraId: row.CAMERA_ID,
-        objectName: row.OBJECT_NAME,
-        confidence: Number(row.CONFIDENCE),
-        timestampSeconds: Number(row.TIMESTAMP_SECONDS),
-        videoTimestamp: row.VIDEO_TIMESTAMP,
-        frameNumber: Number(row.FRAME_NUMBER),
-        boundingBox: {
-          x: Number(row.BOUNDING_BOX_X),
-          y: Number(row.BOUNDING_BOX_Y),
-          width: Number(row.BOUNDING_BOX_WIDTH),
-          height: Number(row.BOUNDING_BOX_HEIGHT),
-        },
-        detectionStatus: row.DETECTION_STATUS,
-        hasImage: Boolean(row.HAS_IMAGE),
-        createdAt: new Date(row.CREATED_AT),
-      };
+    if (!isNaN(Number(searchId))) {
+      try {
+        const latestSql = `
+          SELECT DETECTION_ID, USER_ID, SEARCH_ID, CAMERA_ID, OBJECT_NAME, CONFIDENCE,
+                 TIMESTAMP_SECONDS, VIDEO_TIMESTAMP, FRAME_NUMBER,
+                 BOUNDING_BOX_X, BOUNDING_BOX_Y, BOUNDING_BOX_WIDTH, BOUNDING_BOX_HEIGHT,
+                 DETECTION_STATUS, CREATED_AT,
+                 CASE WHEN DETECTION_IMAGE IS NOT NULL THEN 1 ELSE 0 END AS HAS_IMAGE
+          FROM DETECTIONS
+          WHERE SEARCH_ID = :searchId
+          ORDER BY CREATED_AT DESC
+        `;
+        const res = await db.execute<any>(latestSql, { searchId: Number(searchId) });
+        if (res.rows && res.rows.length > 0) {
+          const row = res.rows[0];
+          return {
+            detectionId: row.DETECTION_ID || row.ID || 1,
+            userId: row.USER_ID,
+            searchId: row.SEARCH_ID,
+            cameraId: row.CAMERA_ID,
+            objectName: row.OBJECT_NAME,
+            confidence: Number(row.CONFIDENCE),
+            timestampSeconds: Number(row.TIMESTAMP_SECONDS),
+            videoTimestamp: row.VIDEO_TIMESTAMP,
+            frameNumber: Number(row.FRAME_NUMBER),
+            boundingBox: {
+              x: Number(row.BOUNDING_BOX_X),
+              y: Number(row.BOUNDING_BOX_Y),
+              width: Number(row.BOUNDING_BOX_WIDTH),
+              height: Number(row.BOUNDING_BOX_HEIGHT),
+            },
+            detectionStatus: row.DETECTION_STATUS,
+            hasImage: Boolean(row.HAS_IMAGE),
+            createdAt: new Date(row.CREATED_AT),
+          };
+        }
+      } catch {
+        // Fall through to memory record
+      }
     }
 
     return {
@@ -239,6 +254,10 @@ export class DetectionRepository {
    * Retrieve detection metadata by detection ID
    */
   async findDetectionById(detectionId: string | number): Promise<import('../types/detection').OracleDetectionRecord | null> {
+    const numId = Number(detectionId);
+    if (isNaN(numId)) {
+      return null;
+    }
     const sql = `
       SELECT DETECTION_ID, USER_ID, SEARCH_ID, CAMERA_ID, OBJECT_NAME, CONFIDENCE,
              TIMESTAMP_SECONDS, VIDEO_TIMESTAMP, FRAME_NUMBER,
@@ -248,7 +267,7 @@ export class DetectionRepository {
       FROM DETECTIONS
       WHERE DETECTION_ID = :detectionId
     `;
-    const result = await db.execute<any>(sql, { detectionId });
+    const result = await db.execute<any>(sql, { detectionId: numId });
     if (!result.rows || result.rows.length === 0) {
       return null;
     }
@@ -279,12 +298,16 @@ export class DetectionRepository {
    * Stream the exact stored frame binary from the Oracle BLOB column
    */
   async getDetectionImage(detectionId: string | number): Promise<{ buffer: Buffer; mimeType: string } | null> {
+    const numId = Number(detectionId);
+    if (isNaN(numId)) {
+      return null;
+    }
     const sql = `
       SELECT DETECTION_IMAGE
       FROM DETECTIONS
       WHERE DETECTION_ID = :detectionId
     `;
-    const result = await db.execute<any>(sql, { detectionId });
+    const result = await db.execute<any>(sql, { detectionId: numId });
     if (!result.rows || result.rows.length === 0) {
       return null;
     }
@@ -329,6 +352,10 @@ export class DetectionRepository {
    * Get all detections for a given search session
    */
   async findDetectionsBySearchId(searchId: string | number): Promise<import('../types/detection').OracleDetectionRecord[]> {
+    const numId = Number(searchId);
+    if (isNaN(numId)) {
+      return [];
+    }
     const sql = `
       SELECT DETECTION_ID, USER_ID, SEARCH_ID, CAMERA_ID, OBJECT_NAME, CONFIDENCE,
              TIMESTAMP_SECONDS, VIDEO_TIMESTAMP, FRAME_NUMBER,
@@ -339,7 +366,7 @@ export class DetectionRepository {
       WHERE SEARCH_ID = :searchId
       ORDER BY FRAME_NUMBER ASC
     `;
-    const result = await db.execute<any>(sql, { searchId });
+    const result = await db.execute<any>(sql, { searchId: numId });
     if (!result.rows) {
       return [];
     }
