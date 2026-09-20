@@ -24,8 +24,6 @@ export default function App() {
     showOracleModal,
     setShowOracleModal,
     setActiveFeedTab,
-    currentUser,
-    isAuthenticated,
     setCurrentUser,
     checkAuth
   } = useExperienceStore();
@@ -192,21 +190,6 @@ export default function App() {
       });
     }
   }, [isDetectionView]);
-
-  // Automatically ensure admin authorization when navigating to admin routes
-  useEffect(() => {
-    if (isAdminRoute && (!isAuthenticated || currentUser?.role !== 'ADMIN')) {
-      setCurrentUser({
-        id: 'admin-01',
-        username: 'admin',
-        email: 'admin@ctrlf.local',
-        fullName: 'System Administrator',
-        role: 'ADMIN',
-        isActive: true,
-        permissions: ['ADMIN', 'OPERATOR', 'EVIDENCE_VIEW', 'MANAGE_CAMERAS', 'MANAGE_USERS', 'MANAGE_SYSTEM'],
-      });
-    }
-  }, [isAdminRoute, isAuthenticated, currentUser, setCurrentUser]);
 
   if (isAdminRoute) {
     return (

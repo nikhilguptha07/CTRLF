@@ -11,13 +11,26 @@ import { AdminDetectionsTab } from './tabs/AdminDetectionsTab';
 import { AdminTracksTab } from './tabs/AdminTracksTab';
 import { AdminAuditLogsTab } from './tabs/AdminAuditLogsTab';
 import { AdminTableExplorerTab } from './tabs/AdminTableExplorerTab';
+import { AdminAccessDenied } from './AdminAccessDenied';
 import { apiClient } from '../../services/apiClient';
+import { useExperienceStore } from '../../store/useExperienceStore';
 
 interface AdminConsoleProps {
   onReturnToDashboard: () => void;
 }
 
 export const AdminConsole: React.FC<AdminConsoleProps> = ({ onReturnToDashboard }) => {
+  const { currentUser, isAuthenticated, setShowAuthModal } = useExperienceStore();
+
+  if (!isAuthenticated || currentUser?.role !== 'ADMIN') {
+    return (
+      <AdminAccessDenied
+        onReturnToDashboard={onReturnToDashboard}
+        onOpenLogin={() => setShowAuthModal(true)}
+      />
+    );
+  }
+
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [selectedExplorerTable, setSelectedExplorerTable] = useState('USERS');
   const [dbStatus, setDbStatus] = useState('CONNECTED');

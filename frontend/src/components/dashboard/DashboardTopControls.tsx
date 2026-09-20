@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { useExperienceStore } from '../../store/useExperienceStore';
 import { useAdminRouter } from '../../hooks/useAdminRouter';
-import { apiClient } from '../../services/apiClient';
 
 export interface DashboardTopControlsProps {
   isPlayingDemo?: boolean;
@@ -36,8 +35,8 @@ export const DashboardTopControls: React.FC<DashboardTopControlsProps> = ({
     toggleSound,
     currentUser,
     isAuthenticated,
-    setCurrentUser,
     setShowAuthModal,
+    openAuthModal,
     setShowOracleModal,
     logout,
   } = useExperienceStore();
@@ -57,20 +56,8 @@ export const DashboardTopControls: React.FC<DashboardTopControlsProps> = ({
 
   const handleOpenAdminConsole = () => {
     if (!isAuthenticated || currentUser?.role !== 'ADMIN') {
-      setCurrentUser({
-        id: 'admin-01',
-        username: 'admin',
-        email: 'admin@ctrlf.local',
-        fullName: 'System Administrator',
-        role: 'ADMIN',
-        isActive: true,
-        permissions: ['ADMIN', 'OPERATOR', 'EVIDENCE_VIEW', 'MANAGE_CAMERAS', 'MANAGE_USERS', 'MANAGE_SYSTEM'],
-      });
-      apiClient.login({
-        identifier: 'admin@ctrlf.local',
-        password: 'Password123!',
-        rememberMe: true,
-      }).catch(() => {});
+      openAuthModal('login');
+      return;
     }
     navigate('/admin');
   };

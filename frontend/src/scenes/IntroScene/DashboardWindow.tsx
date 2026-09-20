@@ -25,7 +25,6 @@ import { VideoUploadView } from '../../components/dashboard/VideoUploadView';
 import { SettingsView } from '../../components/dashboard/SettingsView';
 import { useExperienceStore } from '../../store/useExperienceStore';
 import { useAdminRouter } from '../../hooks/useAdminRouter';
-import { apiClient } from '../../services/apiClient';
 
 export const DashboardWindow: React.FC = () => {
   const { 
@@ -36,7 +35,6 @@ export const DashboardWindow: React.FC = () => {
     startSearchFlow,
     currentUser,
     isAuthenticated,
-    setCurrentUser,
     setShowAuthModal,
     openAuthModal,
     setShowOracleModal
@@ -48,20 +46,8 @@ export const DashboardWindow: React.FC = () => {
 
   const handleOpenAdminConsole = () => {
     if (!isAuthenticated || currentUser?.role !== 'ADMIN') {
-      setCurrentUser({
-        id: 'admin-01',
-        username: 'admin',
-        email: 'admin@ctrlf.local',
-        fullName: 'System Administrator',
-        role: 'ADMIN',
-        isActive: true,
-        permissions: ['ADMIN', 'OPERATOR', 'EVIDENCE_VIEW', 'MANAGE_CAMERAS', 'MANAGE_USERS', 'MANAGE_SYSTEM'],
-      });
-      apiClient.login({
-        identifier: 'admin@ctrlf.local',
-        password: 'Password123!',
-        rememberMe: true,
-      }).catch(() => {});
+      openAuthModal('login');
+      return;
     }
     navigate('/admin');
   };
