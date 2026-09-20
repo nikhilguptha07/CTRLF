@@ -13,6 +13,17 @@ export const SpatialHeatmap: React.FC = () => {
   } = useExperienceStore();
 
   const handleLaunch3DCamera = async () => {
+    let targetCamId = 'CAM_SPATIAL_04';
+    try {
+      const saved = localStorage.getItem('ctrlf_cctv_nodes');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.id) {
+          targetCamId = parsed[0].id;
+        }
+      }
+    } catch {}
+
     if (!activeMediaStream && typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
@@ -21,7 +32,7 @@ export const SpatialHeatmap: React.FC = () => {
         console.warn('[SpatialHeatmap] Camera permission deferred to 3D surveillance monitor:', err);
       }
     }
-    startSearchFlow(searchQuery || 'bottle', 'CAMERA');
+    startSearchFlow(searchQuery || 'bottle', 'CAMERA', targetCamId);
   };
 
   const zones = [

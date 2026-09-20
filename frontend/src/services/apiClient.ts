@@ -677,7 +677,8 @@ class ApiClient {
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.message || `Backend search initiation failed (${res.status})`);
+      const errorMsg = errData.error?.message || errData.message || `Backend search initiation failed (${res.status})`;
+      throw new Error(errorMsg);
     }
 
     const json = await res.json();
@@ -707,7 +708,8 @@ class ApiClient {
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.message || `Orchestrated search initiation failed (${res.status})`);
+      const errorMsg = errData.error?.message || errData.message || `Orchestrated search initiation failed (${res.status})`;
+      throw new Error(errorMsg);
     }
 
     const json = await res.json();
