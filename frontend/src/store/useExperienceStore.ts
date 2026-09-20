@@ -233,7 +233,7 @@ const loadPersistedSettings = () => {
 const initialSettings = loadPersistedSettings();
 
 export const useExperienceStore = create<ExperienceState>((set, get) => ({
-  stage: (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('ctrlf_intro_seen') === 'true') ? 'HOME' : 'INTRO',
+  stage: 'INTRO',
   searchQuery: '',
   activeSessionId: null,
   detectionResult: null,
