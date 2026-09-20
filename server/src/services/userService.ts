@@ -11,6 +11,7 @@ export class UserService {
 
     return {
       id: user.id,
+      username: user.username || user.email.split('@')[0],
       email: user.email,
       fullName: user.fullName,
       role: user.role,

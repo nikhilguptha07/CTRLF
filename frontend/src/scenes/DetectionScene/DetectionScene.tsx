@@ -1,4 +1,4 @@
-import React, { Suspense, useState, useMemo } from 'react';
+import React, { Suspense, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
@@ -72,6 +72,48 @@ interface DetectionSceneProps {
   timelineTime?: number;
 }
 
+// Dedicated lightweight sub-HUD that updates directly without re-rendering the 3D Canvas
+const ScanningHUD: React.FC<{
+  targetClass: string;
+  targetColor?: string | null;
+  progressDetails?: any;
+}> = React.memo(({ targetClass, targetColor, progressDetails }) => {
+  const textRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const handleAngle = (e: any) => {
+      if (textRef.current && e.detail) {
+        const { deg, sweep } = e.detail;
+        textRef.current.innerText = sweep > 1
+          ? `CAMERA 01 · 360° SCANNING · SWEEP ${sweep} · ${deg}° / 360°`
+          : `CAMERA 01 · 360° SCANNING · ${deg}° / 360°`;
+      }
+    };
+    window.addEventListener('ctrlf:cctv-angle', handleAngle);
+    return () => window.removeEventListener('ctrlf:cctv-angle', handleAngle);
+  }, []);
+
+  return (
+    <div className="absolute top-6 left-1/2 -translate-x-1/2 pointer-events-none z-30 flex flex-col items-center animate-fade-in">
+      <div className="bg-black/80 backdrop-blur-md border border-cyan-500/30 rounded-2xl px-6 py-2.5 shadow-2xl text-center">
+        <div className="flex items-center justify-center gap-2 text-xs font-mono text-[#38bdf8] font-bold tracking-wider">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#0284c7] border border-[#38bdf8] animate-pulse shadow-[0_0_8px_#38bdf8]" />
+          <span ref={textRef}>CAMERA 01 · 360° SCANNING · 0° / 360°</span>
+        </div>
+        <div className="text-[11px] font-mono text-slate-300 mt-0.5 tracking-wider">
+          SCANNING FOR: <span className="font-bold text-white uppercase">{targetClass}</span>
+          {targetColor ? <> • <span className="text-[#38bdf8] uppercase">{targetColor}</span></> : null}
+          {progressDetails?.processedFrames ? (
+            <span className="text-[#38bdf8] text-[10px] ml-2">
+              • ANALYZING ({progressDetails.processedFrames}/{progressDetails.totalFrames || '?'} frames)
+            </span>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+});
+
 export const DetectionScene: React.FC<DetectionSceneProps> = ({ timelineTime }) => {
   const { 
     stage, 
@@ -86,10 +128,6 @@ export const DetectionScene: React.FC<DetectionSceneProps> = ({ timelineTime }) 
   } = useExperienceStore();
 
   const { camera, lighting, postProcessing } = referenceCalibration;
-
-  // Local display angle and sweep count for the HUD text
-  const [displayDeg, setDisplayDeg] = useState<number>(0);
-  const [sweepCount, setSweepCount] = useState<number>(1);
 
   // Visual states
   const isSearching = stage === 'SEARCHING';
@@ -227,12 +265,13 @@ export const DetectionScene: React.FC<DetectionSceneProps> = ({ timelineTime }) 
     return { pan: referenceCalibration.scene4.pan, tilt: referenceCalibration.scene4.tilt };
   }, [timelineTime]);
 
-  const handleRotationProgress = (deg: number, isMinSatisfied: boolean, count: number) => {
+  const handleRotationProgress = useCallback((deg: number, isMinSatisfied: boolean, count: number) => {
     const rounded = Math.round(deg);
-    setDisplayDeg(rounded);
-    setSweepCount(count);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('ctrlf:cctv-angle', { detail: { deg: rounded, sweep: count } }));
+    }
     setRotationProgress(rounded, rounded / 360, isMinSatisfied);
-  };
+  }, [setRotationProgress]);
 
   const isAnalysisComplete =
     searchExperienceController.isAnalysisComplete() ||
@@ -245,7 +284,7 @@ export const DetectionScene: React.FC<DetectionSceneProps> = ({ timelineTime }) 
     <div className="relative w-full h-full bg-[#0d121a] overflow-hidden select-none font-sans">
       <Canvas
         camera={{ position: camera.position, fov: camera.fov }}
-        dpr={[1, 2]}
+        dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 1.5)]}
         gl={{
           antialias: true,
           alpha: false,
@@ -340,29 +379,13 @@ export const DetectionScene: React.FC<DetectionSceneProps> = ({ timelineTime }) 
           Only minimal status text: SCANNING / ANALYZING / TARGET ACQUIRED / NOT DETECTED
           ==================================================================== */}
       
-      {/* 1. Top Center Status Pill during SCANNING & ANALYZING */}
+      {/* 1. Top Center Status Pill during SCANNING & ANALYZING (Decoupled from 3D Render) */}
       {isSearching && (
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 pointer-events-none z-30 flex flex-col items-center animate-fade-in">
-          <div className="bg-black/80 backdrop-blur-md border border-cyan-500/30 rounded-2xl px-6 py-2.5 shadow-2xl text-center">
-            <div className="flex items-center justify-center gap-2 text-xs font-mono text-[#38bdf8] font-bold tracking-wider">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#0284c7] border border-[#38bdf8] animate-pulse shadow-[0_0_8px_#38bdf8]" />
-              <span>
-                {sweepCount > 1
-                  ? `CAMERA 01 · 360° SCANNING · SWEEP ${sweepCount} · ${displayDeg}° / 360°`
-                  : `CAMERA 01 · 360° SCANNING · ${displayDeg}° / 360°`}
-              </span>
-            </div>
-            <div className="text-[11px] font-mono text-slate-300 mt-0.5 tracking-wider">
-              SCANNING FOR: <span className="font-bold text-white uppercase">{targetClass}</span>
-              {targetColor ? <> • <span className="text-[#38bdf8] uppercase">{targetColor}</span></> : null}
-              {progressDetails?.processedFrames ? (
-                <span className="text-[#38bdf8] text-[10px] ml-2">
-                  • ANALYZING ({progressDetails.processedFrames}/{progressDetails.totalFrames || '?'} frames)
-                </span>
-              ) : null}
-            </div>
-          </div>
-        </div>
+        <ScanningHUD
+          targetClass={targetClass}
+          targetColor={targetColor}
+          progressDetails={progressDetails}
+        />
       )}
 
       {/* 2. IN-SCENE TARGET ACQUIRED HUD (Green Mode - Requirement 6) */}

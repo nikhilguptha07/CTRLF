@@ -366,20 +366,22 @@ export const DashboardWindow: React.FC = () => {
                 </button>
 
                 {/* Admin Console */}
-                {isAuthenticated && currentUser?.role === 'ADMIN' && (
-                  <button
-                    type="button"
-                    onClick={() => navigate('/admin')}
-                    className="bubble-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer bg-indigo-50/90 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 shadow-2xs font-semibold mt-1"
-                    title="Open Dedicated Admin Console"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Shield className="w-3.5 h-3.5 shrink-0 text-indigo-600" />
-                      <span className="truncate">Admin Console</span>
-                    </div>
-                    <ChevronRight className="w-3 h-3 text-indigo-400" />
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => navigate('/admin')}
+                  className={`bubble-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer shadow-2xs font-semibold mt-1 ${
+                    isAuthenticated && currentUser?.role === 'ADMIN'
+                      ? 'bg-indigo-50/90 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80'
+                      : 'bg-slate-100/80 hover:bg-white text-slate-700 border border-slate-200/80'
+                  }`}
+                  title="Open Dedicated System Admin Console (/admin)"
+                >
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-3.5 h-3.5 shrink-0 text-indigo-600" />
+                    <span className="truncate">Admin Console</span>
+                  </div>
+                  <ChevronRight className="w-3 h-3 text-indigo-400" />
+                </button>
               </nav>
             </div>
           </div>

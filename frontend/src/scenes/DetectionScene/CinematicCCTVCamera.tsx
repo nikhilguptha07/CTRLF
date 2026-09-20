@@ -185,7 +185,7 @@ export const CinematicCCTVCamera: React.FC<CinematicCCTVCameraProps> = ({
         if (isMinSatisfiedNow && !minRotationSatisfiedRef.current) {
           minRotationSatisfiedRef.current = true;
           onRotationProgress?.(360, true, sweepCount);
-        } else if (Math.abs(currentBearingDeg - lastReportedDegRef.current) >= 4) {
+        } else if (Math.abs(currentBearingDeg - lastReportedDegRef.current) >= 6) {
           lastReportedDegRef.current = currentBearingDeg;
           onRotationProgress?.(currentBearingDeg, isMinSatisfiedNow, sweepCount);
         }

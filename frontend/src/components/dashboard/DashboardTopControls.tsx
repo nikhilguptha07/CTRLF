@@ -8,9 +8,11 @@ import {
   Volume2, 
   VolumeX, 
   Play, 
-  Pause
+  Pause,
+  Shield
 } from 'lucide-react';
 import { useExperienceStore } from '../../store/useExperienceStore';
+import { useAdminRouter } from '../../hooks/useAdminRouter';
 
 export interface DashboardTopControlsProps {
   isPlayingDemo?: boolean;
@@ -49,6 +51,8 @@ export const DashboardTopControls: React.FC<DashboardTopControlsProps> = ({
     return null;
   }
 
+  const { navigate } = useAdminRouter();
+
   const handleOracleClick = () => {
     if (onOpenOracleStatus) {
       onOpenOracleStatus();
@@ -63,7 +67,35 @@ export const DashboardTopControls: React.FC<DashboardTopControlsProps> = ({
       id="dashboard-top-controls"
       className="fixed top-2.5 right-3 sm:top-3 sm:right-5 z-50 flex items-center gap-2 sm:gap-2.5 flex-wrap justify-end max-w-[calc(100vw-1.5rem)] pointer-events-auto transition-all duration-200 animate-fade-in font-sans"
     >
-      {/* 1. Oracle 21c XE Operational Status Indicator */}
+      {/* 1. Admin Console Button */}
+      <button 
+        type="button"
+        id="top-control-admin"
+        onClick={() => navigate('/admin')}
+        className="bg-white/95 backdrop-blur-xl rounded-xl px-3 py-1.5 border border-white/90 shadow-xs hover:shadow-md hover:border-indigo-300 transition-all flex items-center gap-2 text-xs cursor-pointer group bubble-btn bubble-pill"
+        title="Open Dedicated Admin Console (/admin)"
+        style={{
+          boxShadow: '0 4px 15px -3px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(255, 255, 255, 0.9) inset',
+        }}
+      >
+        <div className="w-4.5 h-4.5 rounded-lg bg-indigo-50 text-[#4361ee] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+          <Shield className="w-3.5 h-3.5" />
+        </div>
+        <span className="text-[11px] font-bold text-slate-800 tracking-tight hidden sm:inline">
+          ADMIN CONSOLE
+        </span>
+        {isAuthenticated && currentUser?.role === 'ADMIN' ? (
+          <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded-md border border-indigo-200/60 hidden md:inline">
+            ROOT
+          </span>
+        ) : (
+          <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.2 rounded-md border border-slate-200 hidden md:inline">
+            ACCESS
+          </span>
+        )}
+      </button>
+
+      {/* 2. Oracle 21c XE Operational Status Indicator */}
       <button 
         type="button"
         id="top-control-oracle"

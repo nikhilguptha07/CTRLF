@@ -631,49 +631,49 @@ export const CinematicResultsView: React.FC = () => {
                 const sec = isLast
                   ? (detectionResult?.lastSeenTimestampMs ? detectionResult.lastSeenTimestampMs / 1000 : 3.0)
                   : 0.33;
-                const directFrame = await extractFrameFromVideo(userSrc, {
-                  timestampSeconds: sec,
-                  annotate: evidenceModal.mode === 'ANNOTATED',
-                  label: evidenceModal.objectName || targetClass || 'Target',
-                  confidence: evidenceModal.confidence || 95.0,
-                  bbox: detectionResult?.boundingBox,
-                });
-                if (directFrame) {
-                  setBlobUrl(directFrame);
-                  setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
-                  return;
-                }
-              } catch (onDemandErr) {
-                console.warn('[ON-DEMAND FRAME EXTRACTION ERROR]', onDemandErr);
-              }
-            }
-          }
-
-          // Check if we have a dynamic client-extracted frame
-          const activeClientUrl = evidenceModal.mode === 'ORIGINAL'
-            ? (evidenceModal.spotType === 'INITIAL_SPOT' ? clientExtractedUrls.initialOriginal : clientExtractedUrls.lastOriginal)
-            : (evidenceModal.spotType === 'INITIAL_SPOT' ? clientExtractedUrls.initialAnnotated : clientExtractedUrls.lastAnnotated);
-
-          if (activeClientUrl) {
-            setBlobUrl(activeClientUrl);
-            setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
-            return;
-          }
-
-          if (activeVideoSource) {
-            try {
-              const isLastSpot = evidenceModal.spotType !== 'INITIAL_SPOT';
-              const targetSec = isLastSpot
-                ? (detectionResult?.lastSeenTimestampMs ? detectionResult.lastSeenTimestampMs / 1000 : 3.0)
-                : 0.33;
-              const directFrame = await extractFrameFromVideo(activeVideoSource, {
-                timestampSeconds: targetSec,
+              const directFrame = await extractFrameFromVideo(userSrc, {
+                timestampSeconds: sec,
                 annotate: evidenceModal.mode === 'ANNOTATED',
                 label: evidenceModal.objectName || targetClass || 'Target',
                 confidence: evidenceModal.confidence || 95.0,
-                bbox: detectionResult?.boundingBox,
-                dominantColor: targetColor || dominantColor,
+                bbox: evidenceModal.bbox || detectionResult?.boundingBox,
               });
+              if (directFrame) {
+                setBlobUrl(directFrame);
+                setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
+                return;
+              }
+            } catch (onDemandErr) {
+              console.warn('[ON-DEMAND FRAME EXTRACTION ERROR]', onDemandErr);
+            }
+          }
+        }
+
+        // Check if we have a dynamic client-extracted frame
+        const activeClientUrl = evidenceModal.mode === 'ORIGINAL'
+          ? (evidenceModal.spotType === 'INITIAL_SPOT' ? clientExtractedUrls.initialOriginal : clientExtractedUrls.lastOriginal)
+          : (evidenceModal.spotType === 'INITIAL_SPOT' ? clientExtractedUrls.initialAnnotated : clientExtractedUrls.lastAnnotated);
+
+        if (activeClientUrl) {
+          setBlobUrl(activeClientUrl);
+          setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
+          return;
+        }
+
+        if (activeVideoSource) {
+          try {
+            const isLastSpot = evidenceModal.spotType !== 'INITIAL_SPOT';
+            const targetSec = isLastSpot
+              ? (detectionResult?.lastSeenTimestampMs ? detectionResult.lastSeenTimestampMs / 1000 : 3.0)
+              : 0.33;
+            const directFrame = await extractFrameFromVideo(activeVideoSource, {
+              timestampSeconds: targetSec,
+              annotate: evidenceModal.mode === 'ANNOTATED',
+              label: evidenceModal.objectName || targetClass || 'Target',
+              confidence: evidenceModal.confidence || 95.0,
+              bbox: evidenceModal.bbox || detectionResult?.boundingBox,
+              dominantColor: targetColor || dominantColor,
+            });
               if (directFrame) {
                 setBlobUrl(directFrame);
                 setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));

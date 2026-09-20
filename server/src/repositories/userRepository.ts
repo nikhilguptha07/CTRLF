@@ -20,26 +20,36 @@ interface UserRow {
 }
 
 export class UserRepository {
-  private mapRowToUser(row: UserRow): User {
-    const id = String(row.USER_ID ?? row.ID);
-    const lastLogin = row.LAST_LOGIN || row.LAST_LOGIN_AT;
-    const email = row.EMAIL;
-    const username = row.USERNAME || email.split('@')[0];
+  private mapRowToUser(row: any): User {
+    const id = String(row.USER_ID ?? row.user_id ?? row.ID ?? row.id);
+    const lastLogin = row.LAST_LOGIN || row.last_login || row.LAST_LOGIN_AT || row.last_login_at;
+    const email = String(row.EMAIL || row.email || '');
+    const username = row.USERNAME || row.username || (email ? email.split('@')[0] : 'user');
+    const passwordHash = row.PASSWORD_HASH || row.password_hash || '';
+    const fullName = row.FULL_NAME || row.full_name || username || 'User';
+    const role = (row.ROLE || row.role || 'USER') as User['role'];
+    const refreshTokenHash = row.REFRESH_TOKEN_HASH || row.refresh_token_hash || null;
+    const isActiveRaw = row.IS_ACTIVE !== undefined ? row.IS_ACTIVE : row.is_active;
+    const isActive = isActiveRaw === undefined ? true : (isActiveRaw === 1 || isActiveRaw === true || isActiveRaw === '1');
+    const failedAttempts = Number(row.FAILED_LOGIN_ATTEMPTS ?? row.failed_login_attempts ?? 0);
+    const lockedUntil = row.LOCKED_UNTIL || row.locked_until;
+    const createdAt = row.CREATED_AT || row.created_at || new Date();
+    const updatedAt = row.UPDATED_AT || row.updated_at || new Date();
 
     return {
       id,
       username,
       email,
-      passwordHash: row.PASSWORD_HASH,
-      fullName: row.FULL_NAME || username || 'User',
-      role: row.ROLE as User['role'],
-      refreshTokenHash: row.REFRESH_TOKEN_HASH || null,
-      isActive: row.IS_ACTIVE === undefined ? true : (row.IS_ACTIVE === 1 || row.IS_ACTIVE === true),
+      passwordHash,
+      fullName,
+      role,
+      refreshTokenHash,
+      isActive,
       lastLoginAt: lastLogin ? new Date(lastLogin) : null,
-      failedLoginAttempts: Number(row.FAILED_LOGIN_ATTEMPTS || 0),
-      lockedUntil: row.LOCKED_UNTIL ? new Date(row.LOCKED_UNTIL) : null,
-      createdAt: new Date(row.CREATED_AT),
-      updatedAt: new Date(row.UPDATED_AT),
+      failedLoginAttempts: failedAttempts,
+      lockedUntil: lockedUntil ? new Date(lockedUntil) : null,
+      createdAt: new Date(createdAt),
+      updatedAt: new Date(updatedAt),
     };
   }
 

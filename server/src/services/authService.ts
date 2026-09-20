@@ -315,10 +315,13 @@ export class AuthService {
    * Pre-seeds authoritative users for testing & development if USERS table is empty
    */
   async seedDefaultUsers(): Promise<void> {
-    if (process.env.SEED_DEFAULT_USERS !== 'true' && process.env.NODE_ENV !== 'test') {
-      logger.info('Default user seeding is disabled (SEED_DEFAULT_USERS is not set). Database starts empty.');
+    const totalUsers = await userRepository.countTotal();
+    // Pre-seed default authoritative accounts if the database has 0 users or when explicitly enabled
+    if (totalUsers > 0 && process.env.SEED_DEFAULT_USERS !== 'true' && process.env.NODE_ENV !== 'test') {
+      logger.info(`Database has ${totalUsers} registered users. Skipping default seeding.`);
       return;
     }
+    logger.info('Verifying and seeding default authoritative accounts...');
     const fallbackUser = await userRepository.findById('1');
     if (!fallbackUser) {
       const hash = await bcrypt.hash('SystemPass123!', SALT_ROUNDS);

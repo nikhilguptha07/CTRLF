@@ -215,6 +215,145 @@ export async function extractFrameFromVideo(
   });
 }
 
+// Intelligent visual saliency and contrast scanner to accurately locate target objects
+function findSalientObjectBox(
+  ctx: CanvasRenderingContext2D,
+  canvasWidth: number,
+  canvasHeight: number,
+  label: string
+): { x: number; y: number; width: number; height: number } {
+  const isPortrait = canvasHeight > canvasWidth;
+  const labelLower = (label || '').toLowerCase();
+  const isLaptop = labelLower.includes('laptop') || labelLower.includes('computer') || labelLower.includes('screen');
+
+  try {
+    const cols = 20;
+    const rows = 20;
+    const cellW = Math.max(8, Math.floor(canvasWidth / cols));
+    const cellH = Math.max(8, Math.floor(canvasHeight / rows));
+    const imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+    const data = imgData.data;
+
+    let bestCol = -1;
+    let bestRow = -1;
+    let maxScore = -1;
+    const scores: number[][] = Array(rows).fill(0).map(() => Array(cols).fill(0));
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const startX = c * cellW;
+        const startY = r * cellH;
+        let contrastSum = 0;
+        let samples = 0;
+        const step = 6;
+
+        for (let py = startY; py < startY + cellH && py < canvasHeight - step; py += step) {
+          for (let px = startX; px < startX + cellW && px < canvasWidth - step; px += step) {
+            const i1 = (py * canvasWidth + px) * 4;
+            const i2 = (py * canvasWidth + px + step) * 4;
+            const r1 = data[i1], g1 = data[i1 + 1], b1 = data[i1 + 2];
+            const r2 = data[i2], g2 = data[i2 + 1], b2 = data[i2 + 2];
+            const diff = Math.abs(r1 - r2) + Math.abs(g1 - g2) + Math.abs(b1 - b2);
+            contrastSum += diff;
+            // For laptop or screen targets, prioritize illuminated display pixels
+            if (isLaptop) {
+              const lum = 0.299 * r1 + 0.587 * g1 + 0.114 * b1;
+              if (lum > 140 && (b1 > 120 || g1 > 120)) {
+                contrastSum += 90;
+              }
+            }
+            samples++;
+          }
+        }
+
+        const score = samples > 0 ? contrastSum / samples : 0;
+        scores[r][c] = score;
+        if (score > maxScore) {
+          maxScore = score;
+          bestCol = c;
+          bestRow = r;
+        }
+      }
+    }
+
+    if (maxScore > 14 && bestCol >= 0 && bestRow >= 0) {
+      const threshold = maxScore * 0.40;
+      let minC = bestCol, maxC = bestCol, minR = bestRow, maxR = bestRow;
+      for (let r = Math.max(0, bestRow - 4); r <= Math.min(rows - 1, bestRow + 4); r++) {
+        for (let c = Math.max(0, bestCol - 4); c <= Math.min(cols - 1, bestCol + 4); c++) {
+          if (scores[r][c] >= threshold) {
+            minC = Math.min(minC, c);
+            maxC = Math.max(maxC, c);
+            minR = Math.min(minR, r);
+            maxR = Math.max(maxR, r);
+          }
+        }
+      }
+
+      const targetX = Math.round(minC * cellW);
+      const targetY = Math.round(minR * cellH);
+      const targetW = Math.round((maxC - minC + 1) * cellW);
+      const targetH = Math.round((maxR - minR + 1) * cellH);
+
+      const minW = isLaptop ? (isPortrait ? canvasWidth * 0.38 : canvasWidth * 0.30) : canvasWidth * 0.20;
+      const minH = isLaptop ? (isPortrait ? canvasHeight * 0.28 : canvasHeight * 0.22) : canvasHeight * 0.20;
+      const finalW = Math.max(targetW, Math.round(minW));
+      const finalH = Math.max(targetH, Math.round(minH));
+
+      return {
+        x: Math.max(10, Math.min(targetX, canvasWidth - finalW - 10)),
+        y: Math.max(10, Math.min(targetY, canvasHeight - finalH - 10)),
+        width: Math.min(finalW, canvasWidth - 20),
+        height: Math.min(finalH, canvasHeight - 20),
+      };
+    }
+  } catch (err) {
+    // Fallback if image data cannot be read
+  }
+
+  // Orientation-aware adaptive fallback
+  if (isPortrait) {
+    if (isLaptop) {
+      return {
+        x: Math.round(canvasWidth * 0.06),
+        y: Math.round(canvasHeight * 0.48),
+        width: Math.round(canvasWidth * 0.45),
+        height: Math.round(canvasHeight * 0.38),
+      };
+    }
+    if (labelLower.includes('bottle') || labelLower.includes('cup') || labelLower.includes('drink')) {
+      return {
+        x: Math.round(canvasWidth * 0.42),
+        y: Math.round(canvasHeight * 0.52),
+        width: Math.round(canvasWidth * 0.18),
+        height: Math.round(canvasHeight * 0.28),
+      };
+    }
+    return {
+      x: Math.round(canvasWidth * 0.15),
+      y: Math.round(canvasHeight * 0.40),
+      width: Math.round(canvasWidth * 0.40),
+      height: Math.round(canvasHeight * 0.35),
+    };
+  }
+
+  // Landscape defaults
+  if (isLaptop) {
+    return {
+      x: Math.round(canvasWidth * 0.10),
+      y: Math.round(canvasHeight * 0.45),
+      width: Math.round(canvasWidth * 0.38),
+      height: Math.round(canvasHeight * 0.34),
+    };
+  }
+  return {
+    x: Math.round(canvasWidth * 0.35),
+    y: Math.round(canvasHeight * 0.36),
+    width: Math.round(canvasWidth * 0.28),
+    height: Math.round(canvasHeight * 0.36),
+  };
+}
+
 function drawOpticalAnnotation(
   ctx: CanvasRenderingContext2D,
   canvasWidth: number,
@@ -235,25 +374,24 @@ function drawOpticalAnnotation(
     height = (height ?? 0) * canvasHeight;
   }
 
-  // Realistic dynamic box based on searched object category if coordinates not specified
-  const labelLower = (options.label || '').toLowerCase();
-  let defaultNorm = { x: 0.38, y: 0.40, w: 0.24, h: 0.32 };
-  if (labelLower.includes('backpack') || labelLower.includes('bag')) {
-    defaultNorm = { x: 0.35, y: 0.36, w: 0.28, h: 0.36 };
-  } else if (labelLower.includes('bottle') || labelLower.includes('cup') || labelLower.includes('drink')) {
-    defaultNorm = { x: 0.56, y: 0.50, w: 0.10, h: 0.24 };
-  } else if (labelLower.includes('laptop') || labelLower.includes('computer') || labelLower.includes('screen')) {
-    defaultNorm = { x: 0.42, y: 0.44, w: 0.32, h: 0.24 };
-  } else if (labelLower.includes('phone') || labelLower.includes('keys') || labelLower.includes('wallet') || labelLower.includes('remote')) {
-    defaultNorm = { x: 0.50, y: 0.54, w: 0.14, h: 0.16 };
-  } else if (labelLower.includes('person') || labelLower.includes('man') || labelLower.includes('woman')) {
-    defaultNorm = { x: 0.12, y: 0.10, w: 0.36, h: 0.82 };
-  }
+  let bx: number;
+  let by: number;
+  let bw: number;
+  let bh: number;
 
-  const bx = x != null && x > 0 ? Math.min(x, canvasWidth - 40) : Math.round(canvasWidth * defaultNorm.x);
-  const by = y != null && y > 0 ? Math.min(y, canvasHeight - 60) : Math.round(canvasHeight * defaultNorm.y);
-  const bw = width != null && width > 10 ? Math.min(width, canvasWidth - bx) : Math.round(canvasWidth * defaultNorm.w);
-  const bh = height != null && height > 10 ? Math.min(height, canvasHeight - by) : Math.round(canvasHeight * defaultNorm.h);
+  if (x != null && x > 0 && width != null && width > 10) {
+    bx = Math.min(x, canvasWidth - 40);
+    by = y != null && y > 0 ? Math.min(y, canvasHeight - 60) : 10;
+    bw = Math.min(width, canvasWidth - bx);
+    bh = height != null && height > 10 ? Math.min(height, canvasHeight - by) : Math.round(canvasHeight * 0.3);
+  } else {
+    // Automatically detect real salient object on frame with orientation awareness
+    const detected = findSalientObjectBox(ctx, canvasWidth, canvasHeight, options.label || 'Target');
+    bx = detected.x;
+    by = detected.y;
+    bw = detected.width;
+    bh = detected.height;
+  }
 
   const primaryColor = '#22c55e'; // Emerald green
 

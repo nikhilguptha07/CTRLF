@@ -261,6 +261,10 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
     set({ currentUser, isAuthenticated: Boolean(currentUser) });
     if (currentUser) {
       localStorage.setItem('ctrlf_user', JSON.stringify(currentUser));
+      // Pre-warm and fetch user data in background
+      apiClient.getSearchHistory().catch(() => []);
+      apiClient.getAuditLogs().catch(() => []);
+      apiClient.getCameras().catch(() => []);
     } else {
       localStorage.removeItem('ctrlf_user');
       localStorage.removeItem('ctrlf_token');
@@ -286,8 +290,18 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
     }
     try {
       const user = await apiClient.getMe();
-      set({ currentUser: user, isAuthenticated: true });
-      localStorage.setItem('ctrlf_user', JSON.stringify(user));
+      if (user) {
+        set({ currentUser: user, isAuthenticated: true });
+        localStorage.setItem('ctrlf_user', JSON.stringify(user));
+        // Hydrate data for restored session
+        apiClient.getSearchHistory().catch(() => []);
+        apiClient.getAuditLogs().catch(() => []);
+        apiClient.getCameras().catch(() => []);
+      } else {
+        localStorage.removeItem('ctrlf_token');
+        localStorage.removeItem('ctrlf_user');
+        set({ currentUser: null, isAuthenticated: false });
+      }
     } catch {
       localStorage.removeItem('ctrlf_token');
       localStorage.removeItem('ctrlf_user');
@@ -311,7 +325,12 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
   showResultsView: false,
 
   setRotationProgress: (scanAngleDeg, scanProgress, rotationComplete) => {
-    set({ scanAngleDeg, scanProgress, rotationComplete });
+    // Only trigger React state updates on completion or significant milestone steps
+    const currentAngle = get().scanAngleDeg;
+    const isCompleteChanged = get().rotationComplete !== rotationComplete;
+    if (rotationComplete || isCompleteChanged || Math.abs(scanAngleDeg - currentAngle) >= 15) {
+      set({ scanAngleDeg, scanProgress, rotationComplete });
+    }
     searchExperienceController.notifyRotationProgress(scanAngleDeg, rotationComplete);
   },
 
