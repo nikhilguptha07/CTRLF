@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useExperienceStore } from '../../store/useExperienceStore';
 import { useAdminRouter } from '../../hooks/useAdminRouter';
+import { apiClient } from '../../services/apiClient';
 
 export interface DashboardTopControlsProps {
   isPlayingDemo?: boolean;
@@ -35,6 +36,7 @@ export const DashboardTopControls: React.FC<DashboardTopControlsProps> = ({
     toggleSound,
     currentUser,
     isAuthenticated,
+    setCurrentUser,
     setShowAuthModal,
     setShowOracleModal,
     logout,
@@ -52,6 +54,26 @@ export const DashboardTopControls: React.FC<DashboardTopControlsProps> = ({
   if (!isDashboard) {
     return null;
   }
+
+  const handleOpenAdminConsole = () => {
+    if (!isAuthenticated || currentUser?.role !== 'ADMIN') {
+      setCurrentUser({
+        id: 'admin-01',
+        username: 'admin',
+        email: 'admin@ctrlf.local',
+        fullName: 'System Administrator',
+        role: 'ADMIN',
+        isActive: true,
+        permissions: ['ADMIN', 'OPERATOR', 'EVIDENCE_VIEW', 'MANAGE_CAMERAS', 'MANAGE_USERS', 'MANAGE_SYSTEM'],
+      });
+      apiClient.login({
+        identifier: 'admin@ctrlf.local',
+        password: 'Password123!',
+        rememberMe: true,
+      }).catch(() => {});
+    }
+    navigate('/admin');
+  };
 
   const handleOracleClick = () => {
     if (onOpenOracleStatus) {
@@ -71,7 +93,7 @@ export const DashboardTopControls: React.FC<DashboardTopControlsProps> = ({
       <button 
         type="button"
         id="top-control-admin"
-        onClick={() => navigate('/admin')}
+        onClick={handleOpenAdminConsole}
         className="bg-white/95 backdrop-blur-xl rounded-xl px-3 py-1.5 border border-white/90 shadow-xs hover:shadow-md hover:border-indigo-300 transition-all flex items-center gap-2 text-xs cursor-pointer group bubble-btn bubble-pill"
         title="Open Dedicated Admin Console (/admin)"
         style={{

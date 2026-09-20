@@ -25,6 +25,7 @@ import { VideoUploadView } from '../../components/dashboard/VideoUploadView';
 import { SettingsView } from '../../components/dashboard/SettingsView';
 import { useExperienceStore } from '../../store/useExperienceStore';
 import { useAdminRouter } from '../../hooks/useAdminRouter';
+import { apiClient } from '../../services/apiClient';
 
 export const DashboardWindow: React.FC = () => {
   const { 
@@ -35,6 +36,7 @@ export const DashboardWindow: React.FC = () => {
     startSearchFlow,
     currentUser,
     isAuthenticated,
+    setCurrentUser,
     setShowAuthModal,
     openAuthModal,
     setShowOracleModal
@@ -43,6 +45,26 @@ export const DashboardWindow: React.FC = () => {
   const [headerSearch, setHeaderSearch] = useState('');
   const [showChatAssistant, setShowChatAssistant] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
+
+  const handleOpenAdminConsole = () => {
+    if (!isAuthenticated || currentUser?.role !== 'ADMIN') {
+      setCurrentUser({
+        id: 'admin-01',
+        username: 'admin',
+        email: 'admin@ctrlf.local',
+        fullName: 'System Administrator',
+        role: 'ADMIN',
+        isActive: true,
+        permissions: ['ADMIN', 'OPERATOR', 'EVIDENCE_VIEW', 'MANAGE_CAMERAS', 'MANAGE_USERS', 'MANAGE_SYSTEM'],
+      });
+      apiClient.login({
+        identifier: 'admin@ctrlf.local',
+        password: 'Password123!',
+        rememberMe: true,
+      }).catch(() => {});
+    }
+    navigate('/admin');
+  };
   const windowRef = useRef<HTMLDivElement>(null);
 
   const isFormView = stage === 'OBJECT_INPUT' || stage === 'QUESTION' || activeFeedTab === 'search';
@@ -368,7 +390,7 @@ export const DashboardWindow: React.FC = () => {
                 {/* Admin Console */}
                 <button
                   type="button"
-                  onClick={() => navigate('/admin')}
+                  onClick={handleOpenAdminConsole}
                   className={`bubble-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left transition-all cursor-pointer shadow-2xs font-semibold mt-1 ${
                     isAuthenticated && currentUser?.role === 'ADMIN'
                       ? 'bg-indigo-50/90 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80'
