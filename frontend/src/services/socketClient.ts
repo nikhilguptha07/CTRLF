@@ -43,8 +43,8 @@ class SocketClient {
     const envUrl = (import.meta as any).env?.VITE_WS_URL || (import.meta as any).env?.VITE_API_URL;
     const socketUrl =
       envUrl ||
-      (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')
-        ? 'https://ctrlf-1.onrender.com'
+      (typeof window !== 'undefined' && (window.location.hostname.includes('onrender.com') || window.location.port === '' || window.location.port === '80' || window.location.port === '443')
+        ? window.location.origin
         : 'http://localhost:5000');
     this.socket = io(socketUrl, {
       transports: ['websocket', 'polling'],

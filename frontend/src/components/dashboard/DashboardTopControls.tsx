@@ -40,6 +40,8 @@ export const DashboardTopControls: React.FC<DashboardTopControlsProps> = ({
     logout,
   } = useExperienceStore();
 
+  const { navigate } = useAdminRouter();
+
   // STRICT DASHBOARD-ONLY GUARD:
   // Visible ONLY when on the Main Dashboard / Home / Overview page and auth modal is not active.
   const isDashboard =
@@ -50,8 +52,6 @@ export const DashboardTopControls: React.FC<DashboardTopControlsProps> = ({
   if (!isDashboard) {
     return null;
   }
-
-  const { navigate } = useAdminRouter();
 
   const handleOracleClick = () => {
     if (onOpenOracleStatus) {

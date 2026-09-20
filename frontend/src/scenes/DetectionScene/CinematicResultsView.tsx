@@ -723,11 +723,11 @@ export const CinematicResultsView: React.FC = () => {
             const fallbackUrl = URL.createObjectURL(fallbackBlob);
             setBlobUrl(fallbackUrl);
             setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
-          } catch (fbErr) {
+          } catch (fbErr: any) {
             setEvidenceModal(prev => ({
               ...prev,
               status: 'ERROR',
-              errorMessage: err?.message || 'EVIDENCE FRAME FAILED TO LOAD',
+              errorMessage: fbErr?.message || 'EVIDENCE FRAME FAILED TO LOAD',
             }));
           }
         }

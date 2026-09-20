@@ -3,6 +3,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';
+import fs from 'fs';
 import { env } from './config/env';
 import routes from './routes';
 import { apiRateLimiter } from './middleware/rateLimiter';
@@ -10,6 +11,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { requestIdMiddleware } from './middleware/requestIdMiddleware';
 import { optionalAuthenticate, authorize } from './middleware/authMiddleware';
 import { Permission } from './types/user';
+import { logger } from './utils/logger';
 
 export const app = express();
 
@@ -23,9 +25,13 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://cdn.jsdelivr.net'],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
         imgSrc: ["'self'", 'data:', 'blob:', 'http:', 'https:'],
         mediaSrc: ["'self'", 'data:', 'blob:', 'http:', 'https:'],
         connectSrc: ["'self'", 'http:', 'https:', 'ws:', 'wss:'],
+        workerSrc: ["'self'", 'blob:'],
       },
     },
   })
@@ -75,23 +81,70 @@ app.use('/uploads/videos', express.static(path.resolve(env.UPLOAD_DIR, 'videos')
 app.use('/uploads/frames', express.static(path.resolve(env.UPLOAD_DIR, 'frames')));
 
 // 7. Mount Authoritative API Routes
-app.get('/', (_req, res) => {
-  res.status(200).json({
-    status: 'ONLINE',
-    system: 'CONTROL F Surveillance Intelligence Backend',
-    version: '2.5.0',
-    endpoints: {
-      health: `${env.API_PREFIX}/health`,
-      ready: `${env.API_PREFIX}/ready`,
-      auth: `${env.API_PREFIX}/auth`,
-      search: `${env.API_PREFIX}/search`,
-      cameras: `${env.API_PREFIX}/cameras`,
-      videos: `${env.API_PREFIX}/videos`,
-    },
-  });
-});
-
 app.use(env.API_PREFIX, routes);
+
+// 8. Serve Frontend SPA if built (Unified Production Deployment)
+const candidateDistPaths = [
+  path.resolve(__dirname, '../../frontend/dist'),
+  path.resolve(process.cwd(), 'frontend/dist'),
+  path.resolve(process.cwd(), '../frontend/dist'),
+];
+const frontendDist = candidateDistPaths.find((p) => fs.existsSync(p));
+
+if (frontendDist) {
+  logger.info(`Serving static frontend build from: ${frontendDist}`);
+
+  // Serve static assets (js, css, images, etc.) except index.html on root if JSON is explicitly requested
+  app.use(express.static(frontendDist, { index: false }));
+
+  // Root endpoint: serve index.html for browsers, or JSON status for API clients / monitors
+  app.get('/', (req, res) => {
+    if (req.accepts('html')) {
+      return res.sendFile(path.join(frontendDist, 'index.html'));
+    }
+    return res.status(200).json({
+      status: 'ONLINE',
+      system: 'CONTROL F Surveillance Intelligence Backend',
+      version: '2.5.0',
+      endpoints: {
+        health: `${env.API_PREFIX}/health`,
+        ready: `${env.API_PREFIX}/ready`,
+        auth: `${env.API_PREFIX}/auth`,
+        search: `${env.API_PREFIX}/search`,
+        cameras: `${env.API_PREFIX}/cameras`,
+        videos: `${env.API_PREFIX}/videos`,
+      },
+    });
+  });
+
+  // SPA fallback for all client routes (e.g. /admin, /login, /dashboard)
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith(env.API_PREFIX) || req.path.startsWith('/uploads')) {
+      return next();
+    }
+    if (req.accepts('html')) {
+      return res.sendFile(path.join(frontendDist, 'index.html'));
+    }
+    next();
+  });
+} else {
+  // Standalone API mode fallback
+  app.get('/', (_req, res) => {
+    res.status(200).json({
+      status: 'ONLINE',
+      system: 'CONTROL F Surveillance Intelligence Backend',
+      version: '2.5.0',
+      endpoints: {
+        health: `${env.API_PREFIX}/health`,
+        ready: `${env.API_PREFIX}/ready`,
+        auth: `${env.API_PREFIX}/auth`,
+        search: `${env.API_PREFIX}/search`,
+        cameras: `${env.API_PREFIX}/cameras`,
+        videos: `${env.API_PREFIX}/videos`,
+      },
+    });
+  });
+}
 
 // 8. Centralized Safe Error Handling Pipeline (Section 16)
 app.use(errorHandler);
