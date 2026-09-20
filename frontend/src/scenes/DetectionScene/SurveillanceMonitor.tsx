@@ -112,14 +112,24 @@ export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
     if (frame != null && frame > 0) {
       return frame / 30; // 30 fps
     }
+    const tsStr = detectionResult?.lastSeenTimestamp || detectionResult?.timestamp;
+    if (tsStr && typeof tsStr === 'string' && tsStr.includes(':')) {
+      const parts = tsStr.split(':').map(Number);
+      if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+        return parts[0] * 60 + parts[1];
+      }
+    }
     return 3.0;
   }, [detectionResult, searchSession]);
+
+  const isFound = Boolean(detectionResult?.found || searchSession?.status === 'DETECTED');
 
   // Video element and THREE.VideoTexture
   const [videoTexture, setVideoTexture] = useState<THREE.VideoTexture | null>(null);
   const [videoDimensions, setVideoDimensions] = useState<{ width: number; height: number }>({ width: 1920, height: 1080 });
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
+  // 1. Video Element Creation (isolated to videoSrc to avoid re-instantiation thrashing)
   useEffect(() => {
     let isCancelled = false;
     const video = document.createElement('video');
@@ -131,26 +141,6 @@ export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
     video.src = videoSrc;
     videoRef.current = video;
 
-    const onLoadedMetadata = () => {
-      if (isCancelled) return;
-      if (video.videoWidth > 0 && video.videoHeight > 0) {
-        setVideoDimensions({ width: video.videoWidth, height: video.videoHeight });
-      }
-      if (detectionTimeSec > 0 && Number.isFinite(detectionTimeSec)) {
-        try {
-          const maxSeek = Math.max(0, (video.duration || 10) - 0.1);
-          video.currentTime = Math.min(detectionTimeSec, maxSeek);
-        } catch (e) {
-          console.warn('[SurveillanceMonitor] Seek failed:', e);
-        }
-      }
-      video.play().catch((err) => {
-        console.warn('[SurveillanceMonitor] Autoplay prevented by browser:', err);
-      });
-    };
-
-    video.addEventListener('loadedmetadata', onLoadedMetadata);
-
     const vTex = new THREE.VideoTexture(video);
     vTex.colorSpace = THREE.SRGBColorSpace;
     vTex.minFilter = THREE.LinearFilter;
@@ -158,6 +148,27 @@ export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
     vTex.generateMipmaps = false;
 
     setVideoTexture(vTex);
+
+    const onLoadedMetadata = () => {
+      if (isCancelled) return;
+      if (video.videoWidth > 0 && video.videoHeight > 0) {
+        setVideoDimensions({ width: video.videoWidth, height: video.videoHeight });
+      }
+      vTex.needsUpdate = true;
+      if (!isFound) {
+        video.play().catch(() => {});
+      }
+    };
+
+    const onSeeked = () => {
+      if (isCancelled) return;
+      vTex.needsUpdate = true;
+    };
+
+    video.addEventListener('loadedmetadata', onLoadedMetadata);
+    video.addEventListener('seeked', onSeeked);
+    video.addEventListener('loadeddata', onSeeked);
+    video.addEventListener('timeupdate', onSeeked);
 
     video.load();
     if (video.readyState >= 1) {
@@ -167,15 +178,50 @@ export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
     return () => {
       isCancelled = true;
       video.removeEventListener('loadedmetadata', onLoadedMetadata);
-      video.pause();
-      video.removeAttribute('src');
-      video.load();
+      video.removeEventListener('seeked', onSeeked);
+      video.removeEventListener('loadeddata', onSeeked);
+      video.removeEventListener('timeupdate', onSeeked);
+      try {
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+      } catch {}
       vTex.dispose();
       videoRef.current = null;
     };
-  }, [videoSrc, detectionTimeSec]);
+  }, [videoSrc]);
 
-  // Display texture prioritization: live video texture > evidence image frame from SCREEN 2 > fallback rectified texture
+  // 2. Seek and freeze at the LAST POSITION of the object when target is found
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isFound && detectionTimeSec > 0 && Number.isFinite(detectionTimeSec)) {
+      const seekToLastSeen = () => {
+        try {
+          const maxSeek = Math.max(0, (video.duration || 10) - 0.05);
+          const target = Math.min(detectionTimeSec, maxSeek);
+          video.currentTime = target;
+          video.pause();
+          if (videoTexture) {
+            videoTexture.needsUpdate = true;
+          }
+        } catch (err) {
+          console.warn('[SurveillanceMonitor] Seek to last position failed:', err);
+        }
+      };
+
+      if (video.readyState >= 1) {
+        seekToLastSeen();
+      } else {
+        video.addEventListener('loadedmetadata', seekToLastSeen, { once: true });
+      }
+    } else if (!isFound && video.paused) {
+      video.play().catch(() => {});
+    }
+  }, [isFound, detectionTimeSec, videoTexture]);
+
+  // Display texture prioritization: live video texture > evidence image frame > fallback texture
   const activeTexture = videoTexture || evidenceTexture || fallbackTexture;
 
   // 16:9 Screen proportions matching reference
@@ -220,7 +266,6 @@ export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
   }, [width, height]);
 
   // Target tracking box derivation for detected object on monitor screen quad
-  const isFound = Boolean(detectionResult?.found || searchSession?.status === 'DETECTED');
   const targetBbox = useMemo(() => {
     if (!isFound) return null;
     const b = detectionResult?.boundingBox || searchSession?.detection?.boundingBox;
@@ -299,7 +344,7 @@ export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
       const mat = glowPlaneRef.current.material as THREE.MeshBasicMaterial;
       mat.opacity = 0.18 + Math.sin(t * 4.0) * 0.06;
     }
-    if (videoTexture && videoRef.current && !videoRef.current.paused) {
+    if (videoTexture && videoRef.current && videoRef.current.readyState >= 2) {
       videoTexture.needsUpdate = true;
     }
   });

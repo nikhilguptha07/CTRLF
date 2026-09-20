@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 
+// Global subscriber set to keep all useAdminRouter hook instances perfectly synchronized
+const routerListeners = new Set<() => void>();
+
 export function useAdminRouter() {
   const [pathname, setPathname] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -9,18 +12,33 @@ export function useAdminRouter() {
   });
 
   useEffect(() => {
-    const handlePopState = () => {
-      setPathname(window.location.pathname);
+    const handleLocationChange = () => {
+      if (typeof window !== 'undefined') {
+        setPathname(window.location.pathname);
+      }
     };
 
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    routerListeners.add(handleLocationChange);
+    window.addEventListener('popstate', handleLocationChange);
+    return () => {
+      routerListeners.delete(handleLocationChange);
+      window.removeEventListener('popstate', handleLocationChange);
+    };
   }, []);
 
   const navigate = useCallback((to: string) => {
     if (typeof window !== 'undefined') {
-      window.history.pushState({}, '', to);
+      if (window.location.pathname !== to) {
+        window.history.pushState({}, '', to);
+      }
       setPathname(to);
+      // Notify all other components subscribed to the router (including App.tsx)
+      routerListeners.forEach((listener) => {
+        try {
+          listener();
+        } catch {}
+      });
+      window.dispatchEvent(new Event('popstate'));
     }
   }, []);
 
