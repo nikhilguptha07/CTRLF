@@ -125,6 +125,10 @@ interface ExperienceState {
   uploadedVideoRecord: any | null;
   setUploadedVideoRecord: (video: any | null) => void;
 
+  // Active Browser CC Cam Stream (Webcam / USB CC Cam / Screen Capture)
+  activeMediaStream: MediaStream | null;
+  setActiveMediaStream: (stream: MediaStream | null) => void;
+
   // Multi-Camera Orchestrator State
   orchestratorMode: boolean;
   orchestratorCameras: Record<string, CameraWorkerStatus>;
@@ -332,6 +336,10 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
   orchestratorCameras: {},
   winningCameraId: null,
   winningCameraName: null,
+
+  // Active Browser CC Cam Stream
+  activeMediaStream: null,
+  setActiveMediaStream: (activeMediaStream) => set({ activeMediaStream }),
 
   // Phase 12 Synchronization State
   scanAngleDeg: 0,

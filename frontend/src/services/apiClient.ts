@@ -917,6 +917,53 @@ class ApiClient {
   }
 
   /**
+   * Delete a registered camera by ID
+   * Calls DELETE /api/cameras/:cameraId
+   */
+  async deleteCamera(cameraId: string): Promise<boolean> {
+    try {
+      const res = await this.request(`/api/cameras/${encodeURIComponent(cameraId)}`, {
+        method: 'DELETE',
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Delete all registered cameras (clear feeds)
+   * Calls DELETE /api/cameras
+   */
+  async deleteAllCameras(): Promise<boolean> {
+    try {
+      const res = await this.request('/api/cameras', {
+        method: 'DELETE',
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Seed default demo CCTV feeds
+   * Calls POST /api/cameras/seed-defaults
+   */
+  async seedDefaultCameras(): Promise<any[]> {
+    try {
+      const res = await this.request('/api/cameras/seed-defaults', {
+        method: 'POST',
+      });
+      if (!res.ok) return [];
+      const json = await res.json();
+      return json.data || [];
+    } catch {
+      return [];
+    }
+  }
+
+  /**
    * Fetch real-time camera stream health telemetry
    * Calls GET /api/cameras/:cameraId/health
    */

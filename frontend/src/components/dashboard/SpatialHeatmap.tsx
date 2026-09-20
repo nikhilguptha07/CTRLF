@@ -1,15 +1,41 @@
 import React from 'react';
-import { Layers, Navigation, Activity } from 'lucide-react';
+import { Layers, Navigation, Activity, Camera, Video } from 'lucide-react';
 import { useExperienceStore } from '../../store/useExperienceStore';
 
 export const SpatialHeatmap: React.FC = () => {
-  const { searchQuery, startSearchFlow, searchSession } = useExperienceStore();
+  const {
+    searchQuery,
+    startSearchFlow,
+    searchSession,
+    activeMediaStream,
+    setActiveMediaStream,
+    setActiveFeedTab,
+  } = useExperienceStore();
+
+  const handleLaunch3DCamera = async () => {
+    if (!activeMediaStream && typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        setActiveMediaStream(stream);
+      } catch (err) {
+        console.warn('[SpatialHeatmap] Camera permission deferred to 3D surveillance monitor:', err);
+      }
+    }
+    startSearchFlow(searchQuery || 'bottle', 'CAMERA');
+  };
 
   const zones = [
     { name: 'Zone 01: North Reception', density: 'Unmonitored', prob: 'N/A', color: 'bg-slate-800/40 border-slate-700 text-slate-400' },
     { name: 'Zone 02: Central Corridor', density: 'Unmonitored', prob: 'N/A', color: 'bg-slate-800/40 border-slate-700 text-slate-400' },
     { name: 'Zone 03: Executive Lounge', density: 'Unmonitored', prob: 'N/A', color: 'bg-slate-800/40 border-slate-700 text-slate-400' },
-    { name: 'Zone 04: South Entrance (CAM-01 Active)', density: searchSession.status === 'DETECTED' ? 'Target Verified' : 'Scanning Grid', prob: searchSession.status === 'DETECTED' ? 'CONFIRMED' : 'N/A', color: searchSession.status === 'DETECTED' ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' : 'bg-blue-500/20 border-blue-500/30 text-blue-300' },
+    {
+      name: activeMediaStream ? 'Zone 04: South Entrance (Live CC Cam Connected)' : 'Zone 04: South Entrance (CAM-01 Active)',
+      density: searchSession.status === 'DETECTED' ? 'Target Verified' : 'Scanning Grid',
+      prob: searchSession.status === 'DETECTED' ? 'CONFIRMED' : 'N/A',
+      color: searchSession.status === 'DETECTED'
+        ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+        : 'bg-blue-500/20 border-blue-500/30 text-blue-300',
+    },
   ];
 
   return (
@@ -81,15 +107,35 @@ export const SpatialHeatmap: React.FC = () => {
         </div>
 
         {/* Bottom CTA Strip */}
-        <div className="relative z-10 flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-white/10">
-          <span>Spatial coordinate heatmap requires multi-camera tracking integration</span>
-          <button
-            type="button"
-            onClick={() => startSearchFlow(searchQuery || 'Keys')}
-            className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-all shadow-md active:scale-95 cursor-pointer"
-          >
-            Launch 3D Camera Search &rarr;
-          </button>
+        <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 pt-2 border-t border-white/10 gap-2">
+          <div className="flex items-center gap-2">
+            {activeMediaStream ? (
+              <span className="flex items-center gap-1.5 text-emerald-400 font-medium font-mono">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                Live CC Cam Stream Active · Rig Ready
+              </span>
+            ) : (
+              <span>Spatial tracking integrates physical CC Cams, RTSP & procedural 3D surveillance</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 self-end sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setActiveFeedTab('cctv')}
+              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold transition-all border border-slate-700 hover:border-slate-600 active:scale-95 cursor-pointer flex items-center gap-1.5"
+            >
+              <Camera className="w-3.5 h-3.5 text-blue-400" />
+              <span>CCTV Feeds Hub</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleLaunch3DCamera}
+              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-all shadow-md active:scale-95 cursor-pointer flex items-center gap-1.5"
+            >
+              <Video className="w-3.5 h-3.5" />
+              <span>Launch 3D Camera Search &rarr;</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

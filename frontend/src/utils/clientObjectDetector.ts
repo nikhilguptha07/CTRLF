@@ -585,3 +585,59 @@ export async function detectObjectsInVideo(
     video.load();
   });
 }
+
+/**
+ * Detect objects on a live Video or Canvas element in real-time
+ */
+export async function detectObjectsInElement(
+  element: HTMLVideoElement | HTMLCanvasElement,
+  targetQuery?: string
+): Promise<Array<{
+  class: string;
+  score: number;
+  bbox: { x: number; y: number; width: number; height: number; x1: number; y1: number; x2: number; y2: number };
+  dominantColor: string;
+  isMatch: boolean;
+}>> {
+  const results: Array<{
+    class: string;
+    score: number;
+    bbox: { x: number; y: number; width: number; height: number; x1: number; y1: number; x2: number; y2: number };
+    dominantColor: string;
+    isMatch: boolean;
+  }> = [];
+
+  try {
+    const model = await getLoadedCocoModel();
+    if (model) {
+      const preds = await model.detect(element);
+      for (const p of preds) {
+        const [bx, by, bw, bh] = p.bbox;
+        const className = p.class;
+        const score = p.score;
+        const isMatch = targetQuery ? matchesQuery(className, targetQuery) : true;
+        results.push({
+          class: className,
+          score,
+          bbox: {
+            x: Math.round(bx),
+            y: Math.round(by),
+            width: Math.round(bw),
+            height: Math.round(bh),
+            x1: Math.round(bx),
+            y1: Math.round(by),
+            x2: Math.round(bx + bw),
+            y2: Math.round(by + bh),
+          },
+          dominantColor: 'White',
+          isMatch,
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('[detectObjectsInElement] Detection error:', err);
+  }
+
+  return results;
+}
+

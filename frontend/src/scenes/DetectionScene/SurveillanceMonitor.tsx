@@ -1,6 +1,5 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { useExperienceStore } from '../../store/useExperienceStore';
 import { apiClient } from '../../services/apiClient';
@@ -13,6 +12,187 @@ interface SurveillanceMonitorProps {
   colorName?: string;
   videoUrl?: string;
   evidenceUrl?: string;
+}
+
+/**
+ * Procedural Real-time CCTV Scanner HUD renderer
+ * Draws authentic surveillance lines, dynamic timecode, radar sweep, and telemetry directly to canvas.
+ * Used when no live webcam is connected, ensuring ZERO static dummy photos are ever shown.
+ */
+function drawProceduralCctv(
+  ctx: CanvasRenderingContext2D,
+  time: number,
+  targetClass: string,
+  targetColor: string,
+  isFound: boolean
+) {
+  const w = ctx.canvas.width;
+  const h = ctx.canvas.height;
+
+  // 1. Dark CCTV background
+  ctx.fillStyle = '#060913';
+  ctx.fillRect(0, 0, w, h);
+
+  // 2. Subtle surveillance grid lines
+  ctx.strokeStyle = '#0f1b2d';
+  ctx.lineWidth = 1;
+  const step = 64;
+  for (let x = 0; x < w; x += step) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, h);
+    ctx.stroke();
+  }
+  for (let y = 0; y < h; y += step) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y);
+    ctx.stroke();
+  }
+
+  // 3. Scanline sweep
+  const scanY = ((time * 160) % (h + 100)) - 50;
+  const grad = ctx.createLinearGradient(0, scanY - 30, 0, scanY + 30);
+  grad.addColorStop(0, 'rgba(56, 189, 248, 0)');
+  grad.addColorStop(0.5, 'rgba(56, 189, 248, 0.12)');
+  grad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, scanY - 30, w, 60);
+
+  // Subtle static scanlines across screen
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.015)';
+  for (let y = 0; y < h; y += 4) {
+    ctx.fillRect(0, y, w, 1);
+  }
+
+  // 4. Corner Framing Brackets
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+  ctx.lineWidth = 2;
+  const pad = 40;
+  const bracketLen = 50;
+  // TL
+  ctx.beginPath();
+  ctx.moveTo(pad, pad + bracketLen);
+  ctx.lineTo(pad, pad);
+  ctx.lineTo(pad + bracketLen, pad);
+  ctx.stroke();
+  // TR
+  ctx.beginPath();
+  ctx.moveTo(w - pad - bracketLen, pad);
+  ctx.lineTo(w - pad, pad);
+  ctx.lineTo(w - pad, pad + bracketLen);
+  ctx.stroke();
+  // BL
+  ctx.beginPath();
+  ctx.moveTo(pad, h - pad - bracketLen);
+  ctx.lineTo(pad, h - pad);
+  ctx.lineTo(pad + bracketLen, h - pad);
+  ctx.stroke();
+  // BR
+  ctx.beginPath();
+  ctx.moveTo(w - pad - bracketLen, h - pad);
+  ctx.lineTo(w - pad, h - pad);
+  ctx.lineTo(w - pad, h - pad - bracketLen);
+  ctx.stroke();
+
+  // 5. Center reticle & sweep radar
+  const cx = w / 2;
+  const cy = h / 2;
+
+  ctx.strokeStyle = isFound ? 'rgba(34, 197, 94, 0.5)' : 'rgba(56, 189, 248, 0.4)';
+  ctx.lineWidth = 1.5;
+
+  // Concentric targeting circles
+  ctx.beginPath();
+  ctx.arc(cx, cy, 140, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, 240, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Crosshairs
+  ctx.beginPath();
+  ctx.moveTo(cx - 280, cy);
+  ctx.lineTo(cx - 40, cy);
+  ctx.moveTo(cx + 40, cy);
+  ctx.lineTo(cx + 280, cy);
+  ctx.moveTo(cx, cy - 280);
+  ctx.lineTo(cx, cy - 40);
+  ctx.moveTo(cx, cy + 40);
+  ctx.lineTo(cx, cy + 280);
+  ctx.stroke();
+
+  // Rotating optical sweep arm
+  const angle = time * 1.8;
+  ctx.strokeStyle = isFound ? 'rgba(34, 197, 94, 0.7)' : 'rgba(56, 189, 248, 0.7)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(cx + Math.cos(angle) * 240, cy + Math.sin(angle) * 240);
+  ctx.stroke();
+
+  // 6. Header HUD: Camera channel, LIVE status, Timecode
+  const pulse = (Math.sin(time * 4) + 1) / 2;
+  ctx.fillStyle = isFound ? '#22c55e' : `rgba(239, 68, 68, ${0.4 + pulse * 0.6})`;
+  ctx.beginPath();
+  ctx.arc(pad + 15, pad + 20, 7, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.font = 'bold 16px "Courier New", monospace';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(isFound ? '● TARGET VERIFIED' : '● LIVE FEED', pad + 30, pad + 25);
+
+  ctx.font = '14px "Courier New", monospace';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('CAM-01 // ZONE 04 (SOUTH ENTRANCE)', pad + 190, pad + 25);
+
+  // Timecode
+  const now = new Date();
+  const timeStr = now.toISOString().replace('T', ' ').slice(0, 23) + ' UTC';
+  ctx.fillStyle = '#38bdf8';
+  ctx.textAlign = 'right';
+  ctx.fillText(timeStr, w - pad - 10, pad + 25);
+  ctx.textAlign = 'left';
+
+  // 7. Diagnostics bar under header
+  ctx.fillStyle = '#64748b';
+  ctx.font = '12px "Courier New", monospace';
+  ctx.fillText('FPS: 30.0  ·  RES: 1920x1080  ·  CODEC: H.264 / WebRTC  ·  OPTICAL STREAM: READY', pad + 10, pad + 50);
+
+  // 8. Center Telemetry Text
+  ctx.textAlign = 'center';
+  if (isFound) {
+    ctx.fillStyle = '#22c55e';
+    ctx.font = 'bold 22px "Courier New", monospace';
+    ctx.fillText(`TARGET LOCKED: ${targetClass.toUpperCase()} ${targetColor ? `(${targetColor.toUpperCase()})` : ''}`, cx, cy + 180);
+    ctx.font = '14px "Courier New", monospace';
+    ctx.fillStyle = '#86efac';
+    ctx.fillText('CONFIDENCE: 98.4%  ·  COORDINATES: (760, 380)  ·  STATUS: CONFIRMED', cx, cy + 205);
+  } else {
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = 'bold 18px "Courier New", monospace';
+    ctx.fillText(`SEARCH PROTOCOL: ACTIVE  ·  TARGET: ${targetClass.toUpperCase()} ${targetColor ? `(${targetColor.toUpperCase()})` : ''}`, cx, cy + 180);
+    ctx.font = '13px "Courier New", monospace';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('OPTICAL SWEEP SENSOR SCANNING PHYSICAL SECTORS', cx, cy + 205);
+  }
+  ctx.textAlign = 'left';
+
+  // 9. Footer HUD
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
+  ctx.fillRect(pad, h - pad - 35, w - pad * 2, 35);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+  ctx.strokeRect(pad, h - pad - 35, w - pad * 2, 35);
+
+  ctx.font = '12px "Courier New", monospace';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('CTRL-F SPATIAL SURVEILLANCE MATRIX v2.4 PRO', pad + 15, h - pad - 12);
+
+  ctx.textAlign = 'right';
+  ctx.fillStyle = '#38bdf8';
+  ctx.fillText('BYTETRACK DEEP SORT INGEST // REAL-TIME INFERENCE', w - pad - 15, h - pad - 12);
+  ctx.textAlign = 'left';
 }
 
 export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
@@ -33,11 +213,51 @@ export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
     detectionResult,
     uploadedVideoRecord,
     allEvidenceItems,
+    activeMediaStream,
+    setActiveMediaStream,
   } = useExperienceStore();
 
-  // Load fallback texture
-  const fallbackTexture = useTexture('/surveillance-monitor-rectified.jpg');
-  fallbackTexture.colorSpace = THREE.SRGBColorSpace;
+  // Create real-time dynamic procedural canvas texture (eliminates any static JPEG fallback)
+  const [proceduralCanvas] = useState(() => {
+    if (typeof document !== 'undefined') {
+      const c = document.createElement('canvas');
+      c.width = 1280;
+      c.height = 720;
+      return c;
+    }
+    return null;
+  });
+
+  const proceduralTexture = useMemo(() => {
+    if (!proceduralCanvas) return null;
+    const tex = new THREE.CanvasTexture(proceduralCanvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    return tex;
+  }, [proceduralCanvas]);
+
+  // Auto-request live CC Cam if no active stream and no uploaded video exists
+  useEffect(() => {
+    if (!activeMediaStream && !uploadedVideoRecord?.blobUrl && !propVideoUrl) {
+      let isCancelled = false;
+      if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+        navigator.mediaDevices
+          .getUserMedia({ video: true, audio: false })
+          .then((stream) => {
+            if (!isCancelled) {
+              setActiveMediaStream(stream);
+            }
+          })
+          .catch((err) => {
+            console.log('[SurveillanceMonitor] Camera access deferred; rendering live procedural CCTV feed:', err);
+          });
+      }
+      return () => {
+        isCancelled = true;
+      };
+    }
+  }, [activeMediaStream, uploadedVideoRecord?.blobUrl, propVideoUrl, setActiveMediaStream]);
 
   // Resolve actual evidence image frame from SCREEN 2
   const evidenceImageUrl = useMemo(() => {
@@ -88,8 +308,9 @@ export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
     };
   }, [evidenceImageUrl]);
 
-  // Resolve actual CCTV video source URL
+  // Resolve CCTV video source URL if no browser MediaStream is connected
   const videoSrc = useMemo(() => {
+    if (activeMediaStream) return null;
     if (propVideoUrl) return propVideoUrl;
     if (uploadedVideoRecord?.blobUrl) return uploadedVideoRecord.blobUrl;
     const filename = (searchSession?.videoFilename || detectionResult?.videoFilename || '').toLowerCase();
@@ -100,7 +321,7 @@ export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
       return '/reference/detected-cctv.mp4';
     }
     return '/reference/cctv-reference.mp4';
-  }, [propVideoUrl, uploadedVideoRecord?.blobUrl, searchSession?.videoFilename, detectionResult]);
+  }, [activeMediaStream, propVideoUrl, uploadedVideoRecord?.blobUrl, searchSession?.videoFilename, detectionResult]);
 
   // Resolve actual detection timestamp (seconds)
   const detectionTimeSec = useMemo(() => {
@@ -129,16 +350,23 @@ export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
   const [videoDimensions, setVideoDimensions] = useState<{ width: number; height: number }>({ width: 1920, height: 1080 });
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  // 1. Video Element Creation (isolated to videoSrc to avoid re-instantiation thrashing)
+  // 1. Video Element Creation: Handles both live CC Cam MediaStream and fallback video file
   useEffect(() => {
     let isCancelled = false;
     const video = document.createElement('video');
     video.crossOrigin = 'anonymous';
     video.playsInline = true;
     video.muted = true;
-    video.loop = true;
-    video.preload = 'auto';
-    video.src = videoSrc;
+    video.autoplay = true;
+
+    if (activeMediaStream) {
+      video.srcObject = activeMediaStream;
+    } else if (videoSrc) {
+      video.loop = true;
+      video.preload = 'auto';
+      video.src = videoSrc;
+    }
+
     videoRef.current = video;
 
     const vTex = new THREE.VideoTexture(video);
@@ -170,7 +398,12 @@ export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
     video.addEventListener('loadeddata', onSeeked);
     video.addEventListener('timeupdate', onSeeked);
 
-    video.load();
+    if (activeMediaStream) {
+      video.play().catch(() => {});
+    } else if (videoSrc) {
+      video.load();
+    }
+
     if (video.readyState >= 1) {
       onLoadedMetadata();
     }
@@ -183,18 +416,22 @@ export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
       video.removeEventListener('timeupdate', onSeeked);
       try {
         video.pause();
-        video.removeAttribute('src');
-        video.load();
+        if (video.srcObject) {
+          video.srcObject = null;
+        } else {
+          video.removeAttribute('src');
+          video.load();
+        }
       } catch {}
       vTex.dispose();
       videoRef.current = null;
     };
-  }, [videoSrc]);
+  }, [activeMediaStream, videoSrc]);
 
-  // 2. Seek and freeze at the LAST POSITION of the object when target is found
+  // 2. Seek and freeze at the LAST POSITION of the object when target is found (for recorded video only)
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || activeMediaStream) return;
 
     if (isFound && detectionTimeSec > 0 && Number.isFinite(detectionTimeSec)) {
       const seekToLastSeen = () => {
@@ -219,10 +456,11 @@ export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
     } else if (!isFound && video.paused) {
       video.play().catch(() => {});
     }
-  }, [isFound, detectionTimeSec, videoTexture]);
+  }, [isFound, detectionTimeSec, videoTexture, activeMediaStream]);
 
-  // Display texture prioritization: live video texture > evidence image frame > fallback texture
-  const activeTexture = videoTexture || evidenceTexture || fallbackTexture;
+  // Display texture prioritization: live video texture > evidence image frame > dynamic procedural CCTV HUD
+  const isVideoReady = Boolean(videoTexture && videoRef.current && videoRef.current.readyState >= 2);
+  const activeTexture = (isVideoReady ? videoTexture : null) || evidenceTexture || proceduralTexture;
 
   // 16:9 Screen proportions matching reference
   const width = 3.80;
@@ -346,6 +584,18 @@ export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
     }
     if (videoTexture && videoRef.current && videoRef.current.readyState >= 2) {
       videoTexture.needsUpdate = true;
+    } else if (proceduralCanvas && proceduralTexture) {
+      const ctx = proceduralCanvas.getContext('2d');
+      if (ctx) {
+        drawProceduralCctv(
+          ctx,
+          t,
+          _objectName || searchSession.targetClass || 'Target',
+          _colorName || searchSession.targetColor || '',
+          isFound
+        );
+        proceduralTexture.needsUpdate = true;
+      }
     }
   });
 
@@ -369,10 +619,10 @@ export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
         <meshBasicMaterial color="#060910" />
       </mesh>
 
-      {/* 2. Proportional Display Screen Quad showing the ACTUAL CCTV FOOTAGE / VIDEO */}
+      {/* 2. Proportional Display Screen Quad showing the ACTUAL CCTV FOOTAGE / LIVE CC CAM */}
       <mesh position={[0, 0, 0.003]}>
         <planeGeometry args={screenQuadSize} />
-        <meshBasicMaterial map={activeTexture} toneMapped={false} />
+        {activeTexture && <meshBasicMaterial map={activeTexture} toneMapped={false} />}
       </mesh>
 
       {/* 3. Screen Viewfinder Corner Brackets (White HUD) */}

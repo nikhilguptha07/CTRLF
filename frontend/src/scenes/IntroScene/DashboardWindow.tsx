@@ -254,9 +254,9 @@ export const DashboardWindow: React.FC = () => {
                   <span className={`bubble-pill text-[9px] font-bold px-2 py-0.5 ${
                     activeFeedTab === 'cctv' && stage === 'HOME'
                       ? 'bg-white/20 text-white'
-                      : 'bg-emerald-100 text-emerald-700'
+                      : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
                   }`}>
-                    4 Live
+                    Hub
                   </span>
                 </button>
 

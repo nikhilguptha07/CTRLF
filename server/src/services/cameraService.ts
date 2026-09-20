@@ -153,6 +153,28 @@ export class CameraService {
     });
   }
 
+  async deleteAllCameras(userId: string): Promise<{ count: number }> {
+    const cameras = await cameraRepository.findAllByUserId(userId);
+    for (const c of cameras) {
+      CameraAdapterFactory.releaseAdapter(c.id);
+    }
+    const count = await cameraRepository.deleteAll(userId);
+    await auditService.record({
+      userId,
+      action: 'ALL_CAMERAS_DELETED',
+      resourceType: 'CAMERA',
+      resourceId: 'ALL',
+      status: 'SUCCESS',
+      details: { deletedCount: count },
+    });
+    return { count };
+  }
+
+  async seedDefaultCameras(userId: string): Promise<CameraResponse[]> {
+    const seeded = await cameraRepository.seedDefaultCameras(userId);
+    return seeded.map((cam) => this.toResponse(cam));
+  }
+
   async testConnection(id: string, userId: string): Promise<{ reachable: boolean; pingMs: number; protocol?: string; error?: string }> {
     const camera = await cameraRepository.findById(id, userId);
     if (!camera) {

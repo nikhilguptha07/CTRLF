@@ -158,7 +158,7 @@ export class CameraRepository {
     return this.mapRowToCamera(result.rows[0]);
   }
 
-  async findAllByUserId(userId: string): Promise<Camera[]> {
+  async findAllByUserId(userId: string, allowSeedFallback = false): Promise<Camera[]> {
     const sql = `
       SELECT id, user_id, name, location, protocol, source_type, source_uri_encrypted, rtsp_url_encrypted,
              enabled, priority, calibration_id, status, capabilities, ptz_enabled, device_index,
@@ -169,7 +169,7 @@ export class CameraRepository {
     `;
     const result = await db.execute<CameraRow>(sql, { userId });
     const rows = (result.rows || []).map((row: CameraRow) => this.mapRowToCamera(row));
-    if (rows.length === 0) {
+    if (rows.length === 0 && allowSeedFallback) {
       return DEFAULT_CAMERAS_SEED.map((c) => {
         const adapter = CameraAdapterFactory.createAdapter(c.protocol || 'RTSP');
         return {
@@ -183,7 +183,7 @@ export class CameraRepository {
     return rows;
   }
 
-  async findAll(enabledOnly = false): Promise<Camera[]> {
+  async findAll(enabledOnly = false, allowSeedFallback = false): Promise<Camera[]> {
     let sql = `
       SELECT id, user_id, name, location, protocol, source_type, source_uri_encrypted, rtsp_url_encrypted,
              enabled, priority, calibration_id, status, capabilities, ptz_enabled, device_index,
@@ -198,7 +198,7 @@ export class CameraRepository {
     sql += ` ORDER BY priority ASC, created_at ASC`;
     const result = await db.execute<CameraRow>(sql, binds);
     const rows = (result.rows || []).map((row: CameraRow) => this.mapRowToCamera(row));
-    if (rows.length === 0) {
+    if (rows.length === 0 && allowSeedFallback) {
       return DEFAULT_CAMERAS_SEED.map((c) => {
         const adapter = CameraAdapterFactory.createAdapter(c.protocol || 'RTSP');
         return {
@@ -210,6 +210,33 @@ export class CameraRepository {
       });
     }
     return rows;
+  }
+
+  async deleteAll(userId?: string): Promise<number> {
+    let sql = `DELETE FROM CAMERAS`;
+    const binds: Record<string, unknown> = {};
+    if (userId) {
+      sql += ` WHERE user_id = :userId`;
+      binds.userId = userId;
+    }
+    const result = await db.execute(sql, binds);
+    return result.rowsAffected || 0;
+  }
+
+  async seedDefaultCameras(userId: string): Promise<Camera[]> {
+    const results: Camera[] = [];
+    for (const c of DEFAULT_CAMERAS_SEED) {
+      try {
+        const created = await this.create({
+          ...c,
+          userId,
+        });
+        results.push(created);
+      } catch {
+        // Ignore if exists
+      }
+    }
+    return results;
   }
 
   async create(camera: Omit<Camera, 'createdAt' | 'updatedAt'>): Promise<Camera> {

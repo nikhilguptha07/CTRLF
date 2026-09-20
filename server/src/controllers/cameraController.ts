@@ -53,6 +53,25 @@ export class CameraController {
     }
   }
 
+  async deleteAll(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await cameraService.deleteAllCameras(req.user!.userId);
+      return sendSuccess(res, { message: 'All cameras deleted successfully', ...result }, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async seedDefaults(req: Request, res: Response, next: NextFunction) {
+    try {
+      const cameras = await cameraService.seedDefaultCameras(req.user!.userId);
+      return sendSuccess(res, cameras, 201);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+
   async testConnection(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await cameraService.testConnection(req.params.cameraId, req.user!.userId);

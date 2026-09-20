@@ -12,6 +12,8 @@ router.use(optionalAuthenticate);
 
 router.post('/', authorize(Permission.CAMERA_MANAGE), validateRequest(createCameraSchema), cameraController.create);
 router.get('/', authorize(Permission.CAMERA_VIEW), cameraController.getAll);
+router.delete('/', authorize(Permission.CAMERA_MANAGE), cameraController.deleteAll);
+router.post('/seed-defaults', authorize(Permission.CAMERA_MANAGE), cameraController.seedDefaults);
 router.get('/:cameraId', authorize(Permission.CAMERA_VIEW), cameraController.getById);
 router.put('/:cameraId', authorize(Permission.CAMERA_MANAGE), validateRequest(updateCameraSchema), cameraController.update);
 router.delete('/:cameraId', authorize(Permission.CAMERA_MANAGE), cameraController.delete);
