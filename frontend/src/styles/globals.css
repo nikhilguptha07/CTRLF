@@ -248,7 +248,6 @@ code, kbd, samp, pre, .font-mono {
 /* Fluid Bubble Ripple Container */
 .bubble-overflow-contained {
   overflow: hidden !important;
-  position: relative;
 }
 
 /* Database & UI Pill Bubbles */

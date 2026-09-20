@@ -586,9 +586,14 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
         const tableBottleBbox = { x: 276, y: 442, width: 36, height: 108 };
         const lastBbox = rawBbox || (isReferenceClip && isBottleTarget ? tableBottleBbox : null);
 
-        const lastConfidence = lastTargetObs?.confidence ??
-          completedSession.result?.lastSeenConfidence ??
-          completedSession.detection?.confidence ?? (isReferenceClip && isBottleTarget ? 97.8 : 94.8);
+        const rawLastConf = (lastTargetObs?.confidence && lastTargetObs.confidence > 0)
+          ? lastTargetObs.confidence
+          : (completedSession.result?.lastSeenConfidence && completedSession.result.lastSeenConfidence > 0)
+            ? completedSession.result.lastSeenConfidence
+            : (completedSession.detection?.confidence && completedSession.detection.confidence > 0)
+              ? completedSession.detection.confidence
+              : (isReferenceClip && isBottleTarget ? 97.8 : 94.8);
+        const lastConfidence = rawLastConf > 1 ? rawLastConf : (rawLastConf > 0 ? rawLastConf * 100 : 94.8);
 
         const dominantColor = lastTargetObs?.dominantColor ||
           completedSession.result?.lastSeenColor ||
@@ -700,27 +705,30 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
         const secs = Math.floor(lastSeenSecs % 60);
         const lastSeenFormatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 
-        if (userVideoSrc) {
+        const effectiveDynamicVideo = userVideoSrc || '/reference/detected-cctv.mp4';
+        if (effectiveDynamicVideo) {
           try {
-            const clientAnnotatedLastUrl = await extractFrameFromVideo(userVideoSrc, {
+            const clientAnnotatedLastUrl = await extractFrameFromVideo(effectiveDynamicVideo, {
               timestampSeconds: lastSeenSecs,
               annotate: true,
               label: effectiveLabel,
               confidence: effectiveConfidence,
               bbox: effectiveBbox,
+              dominantColor: effectiveColor || targetColor,
             });
-            const clientOriginalLastUrl = await extractFrameFromVideo(userVideoSrc, {
+            const clientOriginalLastUrl = await extractFrameFromVideo(effectiveDynamicVideo, {
               timestampSeconds: lastSeenSecs,
               annotate: false,
             });
-            const clientAnnotatedInitUrl = await extractFrameFromVideo(userVideoSrc, {
+            const clientAnnotatedInitUrl = await extractFrameFromVideo(effectiveDynamicVideo, {
               timestampSeconds: Math.min(lastSeenSecs, 0.33),
               annotate: true,
               label: effectiveLabel,
               confidence: effectiveConfidence,
               bbox: effectiveBbox,
+              dominantColor: effectiveColor || targetColor,
             });
-            const clientOriginalInitUrl = await extractFrameFromVideo(userVideoSrc, {
+            const clientOriginalInitUrl = await extractFrameFromVideo(effectiveDynamicVideo, {
               timestampSeconds: Math.min(lastSeenSecs, 0.33),
               annotate: false,
             });

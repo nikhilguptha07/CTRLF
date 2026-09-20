@@ -85,6 +85,18 @@ export function initGlobalBubbleEffect() {
     const button = target.closest('button, [role="button"], .bubble-btn, .cursor-pointer') as HTMLElement | null;
     if (!button) return;
 
+    // Skip icon buttons, absolutely positioned controls, and buttons marked with no-bubble
+    const currentPosition = window.getComputedStyle(button).position;
+    if (
+      button.classList.contains('no-bubble') ||
+      button.closest('.no-bubble') ||
+      currentPosition === 'absolute' ||
+      currentPosition === 'fixed' ||
+      (button.clientWidth > 0 && button.clientWidth < 30 && button.clientHeight < 30)
+    ) {
+      return;
+    }
+
     // Determine bubble color theme based on element context
     let bubbleColor = 'rgba(67, 97, 238, 0.65)'; // default indigo
 
@@ -135,14 +147,16 @@ export function initGlobalBubbleEffect() {
     ripple.style.transition = 'transform 0.5s cubic-bezier(0.2, 0.8, 0.4, 1), opacity 0.5s ease-out';
     ripple.style.zIndex = '0';
 
-    // Ensure button positioning allows containing the ripple
-    const currentPosition = window.getComputedStyle(button).position;
-    if (currentPosition === 'static') {
+    // Ensure button positioning allows containing the ripple without breaking flow
+    const wasStatic = currentPosition === 'static';
+    if (wasStatic) {
       button.style.position = 'relative';
     }
     const currentOverflow = window.getComputedStyle(button).overflow;
+    let addedOverflowContained = false;
     if (currentOverflow !== 'hidden') {
       button.classList.add('bubble-overflow-contained');
+      addedOverflowContained = true;
     }
 
     button.appendChild(ripple);
@@ -155,6 +169,12 @@ export function initGlobalBubbleEffect() {
     setTimeout(() => {
       if (ripple.parentNode === button) {
         button.removeChild(ripple);
+      }
+      if (addedOverflowContained) {
+        button.classList.remove('bubble-overflow-contained');
+      }
+      if (wasStatic) {
+        button.style.position = '';
       }
     }, 550);
   };
