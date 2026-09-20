@@ -126,7 +126,7 @@ export class CameraRepository {
     };
   }
 
-  async findById(id: string, userId?: string): Promise<Camera | null> {
+  async findById(id: string, userId?: string, allowSeedFallback = false): Promise<Camera | null> {
     let sql = `
       SELECT id, user_id, name, location, protocol, source_type, source_uri_encrypted, rtsp_url_encrypted,
              enabled, priority, calibration_id, status, capabilities, ptz_enabled, device_index,
@@ -137,21 +137,23 @@ export class CameraRepository {
     const binds: Record<string, unknown> = { id };
 
     if (userId) {
-      sql += ` AND user_id = :userId`;
+      sql += ` AND (user_id = :userId OR user_id = 'default')`;
       binds.userId = userId;
     }
 
     const result = await db.execute<CameraRow>(sql, binds);
     if (!result.rows || result.rows.length === 0) {
-      const defaultSeed = DEFAULT_CAMERAS_SEED.find((c) => c.id === id);
-      if (defaultSeed) {
-        const adapter = CameraAdapterFactory.createAdapter(defaultSeed.protocol || 'RTSP');
-        return {
-          ...defaultSeed,
-          capabilities: adapter.getCapabilities(),
-          createdAt: new Date('2026-01-01T00:00:00Z'),
-          updatedAt: new Date(),
-        };
+      if (allowSeedFallback) {
+        const defaultSeed = DEFAULT_CAMERAS_SEED.find((c) => c.id === id);
+        if (defaultSeed) {
+          const adapter = CameraAdapterFactory.createAdapter(defaultSeed.protocol || 'RTSP');
+          return {
+            ...defaultSeed,
+            capabilities: adapter.getCapabilities(),
+            createdAt: new Date('2026-01-01T00:00:00Z'),
+            updatedAt: new Date(),
+          };
+        }
       }
       return null;
     }
@@ -164,7 +166,7 @@ export class CameraRepository {
              enabled, priority, calibration_id, status, capabilities, ptz_enabled, device_index,
              last_connected_at, created_at, updated_at
       FROM CAMERAS
-      WHERE user_id = :userId
+      WHERE user_id = :userId OR user_id = 'default'
       ORDER BY priority ASC, created_at DESC
     `;
     const result = await db.execute<CameraRow>(sql, { userId });
@@ -180,7 +182,14 @@ export class CameraRepository {
         };
       });
     }
-    return rows;
+    // Strict deduplication by ID
+    const uniqueMap = new Map<string, Camera>();
+    for (const r of rows) {
+      if (!uniqueMap.has(r.id)) {
+        uniqueMap.set(r.id, r);
+      }
+    }
+    return Array.from(uniqueMap.values());
   }
 
   async findAll(enabledOnly = false, allowSeedFallback = false): Promise<Camera[]> {
@@ -209,14 +218,21 @@ export class CameraRepository {
         };
       });
     }
-    return rows;
+    // Strict deduplication by ID
+    const uniqueMap = new Map<string, Camera>();
+    for (const r of rows) {
+      if (!uniqueMap.has(r.id)) {
+        uniqueMap.set(r.id, r);
+      }
+    }
+    return Array.from(uniqueMap.values());
   }
 
   async deleteAll(userId?: string): Promise<number> {
     let sql = `DELETE FROM CAMERAS`;
     const binds: Record<string, unknown> = {};
     if (userId) {
-      sql += ` WHERE user_id = :userId`;
+      sql += ` WHERE user_id = :userId OR user_id = 'default'`;
       binds.userId = userId;
     }
     const result = await db.execute(sql, binds);
@@ -349,12 +365,17 @@ export class CameraRepository {
     return this.findById(id, userId);
   }
 
-  async delete(id: string, userId: string): Promise<boolean> {
-    const sql = `
+  async delete(id: string, userId?: string): Promise<boolean> {
+    let sql = `
       DELETE FROM CAMERAS
-      WHERE id = :id AND user_id = :userId
+      WHERE id = :id
     `;
-    const result = await db.execute(sql, { id, userId });
+    const binds: Record<string, unknown> = { id };
+    if (userId) {
+      sql += ` AND (user_id = :userId OR user_id = 'default')`;
+      binds.userId = userId;
+    }
+    const result = await db.execute(sql, binds);
     return (result.rowsAffected || 0) > 0;
   }
 }

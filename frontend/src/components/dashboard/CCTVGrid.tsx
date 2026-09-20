@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useExperienceStore } from '../../store/useExperienceStore';
 import {
   Camera,
@@ -109,13 +109,20 @@ export const CCTVGrid: React.FC = () => {
     setActiveMediaStream,
   } = useExperienceStore();
 
-  // Cameras State — loaded from backend or local persistence
+  // Cameras State — loaded from backend or local persistence (strictly deduplicated by ID)
   const [cameras, setCameras] = useState<CameraNode[]>(() => {
     try {
       const saved = localStorage.getItem('ctrlf_cctv_nodes');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed)) {
+          const seen = new Set<string>();
+          return parsed.filter((c: any) => {
+            if (!c || !c.id || seen.has(c.id)) return false;
+            seen.add(c.id);
+            return true;
+          });
+        }
       }
     } catch {}
     return [];
@@ -170,35 +177,60 @@ export const CCTVGrid: React.FC = () => {
   const [deviceDetecting, setDeviceDetecting] = useState<boolean>(false);
   const modalPreviewRef = useRef<HTMLVideoElement | null>(null);
 
-  // Synchronize cameras to localStorage
+  // Synchronize cameras to localStorage with strict deduplication
   useEffect(() => {
     try {
-      localStorage.setItem('ctrlf_cctv_nodes', JSON.stringify(cameras));
+      const seen = new Set<string>();
+      const deduped = cameras.filter((c) => {
+        if (!c || !c.id || seen.has(c.id)) return false;
+        seen.add(c.id);
+        return true;
+      });
+      localStorage.setItem('ctrlf_cctv_nodes', JSON.stringify(deduped));
     } catch {}
   }, [cameras]);
 
-  // 1. Load cameras from backend on mount
+  // 1. Load cameras from backend on mount (strictly deduplicates with browser cameras)
   const refreshCameras = () => {
     apiClient
       .getCameras()
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          const mapped: CameraNode[] = data.map((c: any, i: number) => ({
-            id: c.id || `CAM_0${i + 1}`,
-            name: c.name || `Surveillance Node ${i + 1}`,
-            location: c.location || `Sector ${i + 1}`,
-            protocol: c.protocol || 'RTSP',
-            ptzEnabled: c.ptzEnabled ?? (c.protocol === 'ONVIF_PTZ'),
-            deviceIndex: c.deviceIndex ?? null,
-            fps: '30.0',
-            res: '1080p · 30fps',
-            status: c.status || 'ONLINE',
-            color: i === 0 ? 'border-blue-500/80 ring-2 ring-blue-400/40' : 'border-emerald-500/30',
-            active: i === 0,
-            isBrowserStream: false,
-            streamUrl: c.streamUrl || '',
-          }));
-          setCameras(mapped);
+        if (Array.isArray(data)) {
+          setCameras((prev) => {
+            const browserCams = prev.filter((c) => c.isBrowserStream);
+            const backendCams: CameraNode[] = data.map((c: any, i: number) => ({
+              id: c.id || `CAM_0${i + 1}`,
+              name: c.name || `Surveillance Node ${i + 1}`,
+              location: c.location || `Sector ${i + 1}`,
+              protocol: c.protocol || 'RTSP',
+              ptzEnabled: c.ptzEnabled ?? (c.protocol === 'ONVIF_PTZ'),
+              deviceIndex: c.deviceIndex ?? null,
+              fps: '30.0',
+              res: '1080p · 30fps',
+              status: c.status || 'ONLINE',
+              color: i === 0 ? 'border-blue-500/80 ring-2 ring-blue-400/40' : 'border-emerald-500/30',
+              active: i === 0,
+              isBrowserStream: false,
+              streamUrl: c.streamUrl || '',
+            }));
+
+            // Strict deduplication: browser cameras take precedence
+            const seen = new Set<string>();
+            const result: CameraNode[] = [];
+            for (const cam of browserCams) {
+              if (cam.id && !seen.has(cam.id)) {
+                seen.add(cam.id);
+                result.push(cam);
+              }
+            }
+            for (const cam of backendCams) {
+              if (cam.id && !seen.has(cam.id)) {
+                seen.add(cam.id);
+                result.push(cam);
+              }
+            }
+            return result;
+          });
         }
       })
       .catch(() => {});
@@ -319,7 +351,12 @@ export const CCTVGrid: React.FC = () => {
       return;
     }
 
-    const camId = `CAM_${String(cameras.length + 1).padStart(2, '0')}`;
+    let num = cameras.length + 1;
+    let camId = `CAM_${String(num).padStart(2, '0')}`;
+    while (cameras.some((c) => c.id === camId)) {
+      num++;
+      camId = `CAM_${String(num).padStart(2, '0')}`;
+    }
     const selectedDevObj = availableVideoDevices.find((d) => d.deviceId === selectedDeviceId);
     const camName =
       newCamName.trim() ||
@@ -353,7 +390,10 @@ export const CCTVGrid: React.FC = () => {
 
     setActiveMediaStreams((prev) => ({ ...prev, [camId]: streamToUse }));
     setActiveMediaStream(streamToUse);
-    setCameras((prev) => [...prev, newCam]);
+    setCameras((prev) => {
+      const filtered = prev.filter((c) => c.id !== newCam.id);
+      return [...filtered, newCam];
+    });
     setDevicePreviewStream(null);
     setShowAddModal(false);
     soundService.playDetected();
@@ -392,7 +432,10 @@ export const CCTVGrid: React.FC = () => {
 
       setActiveMediaStreams((prev) => ({ ...prev, [camId]: stream }));
       setActiveMediaStream(stream);
-      setCameras((prev) => [...prev, newCam]);
+      setCameras((prev) => {
+        const filtered = prev.filter((c) => c.id !== newCam.id);
+        return [...filtered, newCam];
+      });
       setShowAddModal(false);
       soundService.playDetected();
     } catch (err: any) {
@@ -448,7 +491,10 @@ export const CCTVGrid: React.FC = () => {
       console.warn('Backend registration warning:', err);
     }
 
-    setCameras((prev) => [...prev, newCam]);
+    setCameras((prev) => {
+      const filtered = prev.filter((c) => c.id !== newCam.id);
+      return [...filtered, newCam];
+    });
     setShowAddModal(false);
     setNewCamName('');
     setNewCamLocation('');
@@ -646,21 +692,28 @@ export const CCTVGrid: React.FC = () => {
   const isOrchDetected = stage === 'DETECTED' && orchestratorMode;
   const isOrchNotDetected = stage === 'NOT_DETECTED' && orchestratorMode;
 
+  // Strictly deduplicated camera list for rendering (guarantees zero duplicate cards)
+  const uniqueCameras = useMemo(() => {
+    const seen = new Set<string>();
+    return cameras.filter((cam) => {
+      if (!cam || !cam.id || seen.has(cam.id)) return false;
+      seen.add(cam.id);
+      return true;
+    });
+  }, [cameras]);
+
   return (
-    <div className="space-y-4 animate-fade-in w-full h-full flex flex-col font-sans">
-      {/* Top Stream & Orchestrator Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/70 backdrop-blur-md p-4 rounded-2xl border border-slate-200 shadow-xs">
+    <div className="space-y-4 animate-fade-in flex flex-col h-full">
+      {/* Top action bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
-              <Camera className="w-5 h-5 text-indigo-600" />
-              <span>Universal CCTV Camera Hub</span>
-            </h2>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+            <h2 className="text-xl font-bold text-slate-900 tracking-tight">CCTV Surveillance Hub</h2>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
               <Radio className="w-3 h-3 text-emerald-500 animate-pulse" />
               <span>
-                {cameras.length > 0
-                  ? `${cameras.length} CCTV FEED${cameras.length > 1 ? 'S' : ''} ACTIVE`
+                {uniqueCameras.length > 0
+                  ? `${uniqueCameras.length} CCTV FEED${uniqueCameras.length > 1 ? 'S' : ''} ACTIVE`
                   : 'READY TO CONNECT'}
               </span>
             </span>
@@ -685,7 +738,7 @@ export const CCTVGrid: React.FC = () => {
           </button>
 
           {/* Clear Dummy / All Feeds Button */}
-          {cameras.length > 0 && (
+          {uniqueCameras.length > 0 && (
             <button
               type="button"
               onClick={handleClearAllFeeds}
@@ -710,10 +763,10 @@ export const CCTVGrid: React.FC = () => {
           ) : (
             <button
               type="button"
-              disabled={cameras.length === 0}
+              disabled={uniqueCameras.length === 0}
               onClick={() => setShowLaunchModal(true)}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl font-semibold text-xs transition-all shadow-sm active:scale-95 cursor-pointer ${
-                cameras.length === 0
+                uniqueCameras.length === 0
                   ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
                   : 'bg-slate-900 hover:bg-slate-800 text-white'
               }`}
@@ -776,7 +829,7 @@ export const CCTVGrid: React.FC = () => {
       )}
 
       {/* Empty State: No Cameras Connected */}
-      {cameras.length === 0 && (
+      {uniqueCameras.length === 0 && (
         <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200 text-center space-y-4 shadow-xs">
           <div className="w-16 h-16 rounded-3xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm animate-pulse">
             <Camera className="w-8 h-8" />
@@ -812,9 +865,9 @@ export const CCTVGrid: React.FC = () => {
       )}
 
       {/* Camera Feed Grid */}
-      {cameras.length > 0 && (
+      {uniqueCameras.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 min-h-0">
-          {cameras.map((cam) => {
+          {uniqueCameras.map((cam: CameraNode) => {
             const worker = orchestratorCameras[cam.id];
             const isTargetFound = worker?.status === 'TARGET_FOUND';
             const isPreempted = worker?.status === 'CANCELLED_PREEMPTED';

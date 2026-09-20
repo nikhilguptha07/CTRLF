@@ -322,7 +322,15 @@ class OracleDatabaseManager implements DatabasePool {
         CREATED_AT: new Date(),
         UPDATED_AT: new Date(),
       };
-      this.inMemoryTables.cameras.push(row);
+      const existingIdx = this.inMemoryTables.cameras.findIndex((c) => c.ID === bindObj.id);
+      if (existingIdx >= 0) {
+        this.inMemoryTables.cameras[existingIdx] = {
+          ...this.inMemoryTables.cameras[existingIdx],
+          ...row,
+        };
+      } else {
+        this.inMemoryTables.cameras.push(row);
+      }
       return { rowsAffected: 1, rows: [row as T] };
     }
 
@@ -346,11 +354,19 @@ class OracleDatabaseManager implements DatabasePool {
     if (normalized.startsWith('SELECT') && normalized.includes('FROM CAMERAS')) {
       let cameras = [...this.inMemoryTables.cameras];
       if (bindObj.userId) {
-        cameras = cameras.filter((c) => c.USER_ID === bindObj.userId);
+        cameras = cameras.filter((c) => c.USER_ID === bindObj.userId || c.USER_ID === 'default');
       }
       if (bindObj.id) {
         cameras = cameras.filter((c) => c.ID === bindObj.id);
       }
+      // Strict deduplication by ID
+      const seen = new Set<string>();
+      cameras = cameras.filter((c) => {
+        const id = String(c.ID);
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      });
       return { rows: cameras as T[] };
     }
 
@@ -379,9 +395,16 @@ class OracleDatabaseManager implements DatabasePool {
 
     if (normalized.startsWith('DELETE FROM CAMERAS')) {
       const initialLen = this.inMemoryTables.cameras.length;
-      this.inMemoryTables.cameras = this.inMemoryTables.cameras.filter(
-        (c) => !(c.ID === bindObj.id && c.USER_ID === bindObj.userId)
-      );
+      this.inMemoryTables.cameras = this.inMemoryTables.cameras.filter((c) => {
+        if (bindObj.id) {
+          if (c.ID === bindObj.id) return false;
+        } else if (bindObj.userId) {
+          if (c.USER_ID === bindObj.userId || c.USER_ID === 'default') return false;
+        } else {
+          return false; // delete all
+        }
+        return true;
+      });
       return { rowsAffected: initialLen - this.inMemoryTables.cameras.length };
     }
 
