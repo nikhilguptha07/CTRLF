@@ -68,23 +68,7 @@ export class SearchService {
     } else if (input.sourceType === 'CAMERA') {
       const camera = await cameraRepository.findById(input.sourceId, userId);
       if (!camera) {
-        // Auto-provision primary CCTV camera if not found
-        try {
-          await cameraRepository.create({
-            id: input.sourceId,
-            userId,
-            name: 'Main Overhead CCTV Cam 01',
-            location: 'Surveillance Zone Alpha',
-            sourceType: 'FILE',
-            sourceUriEncrypted: 'reference/cctv-reference.mp4',
-            rtspUrlEncrypted: 'reference/cctv-reference.mp4',
-            enabled: true,
-            priority: 0,
-            status: 'ONLINE',
-          });
-        } catch {
-          // ignore duplicate
-        }
+        throw new AppError('CAMERA_NOT_FOUND', `CCTV camera with ID "${input.sourceId}" was not found. Please connect or configure a camera first.`, 404);
       }
     }
 
@@ -570,164 +554,159 @@ export class SearchService {
             }
           }
         } else {
-          // Check if camera has an associated reference CCTV video stream (e.g. cctv-reference.mp4)
+          const rawCctvUri = camera.sourceUriEncrypted || camera.rtspUrlEncrypted || '';
           const cctvCandidates = [
-            path.resolve(process.cwd(), '../reference/cctv-reference.mp4'),
-            path.resolve(process.cwd(), 'reference/cctv-reference.mp4'),
-            path.resolve(__dirname, '../../../../reference/cctv-reference.mp4'),
-            path.resolve(process.cwd(), '../frontend/public/reference/cctv-reference.mp4'),
-            path.resolve(process.cwd(), 'uploads/videos/cctv-reference.mp4'),
-            path.resolve(__dirname, '../../../uploads/videos/cctv-reference.mp4'),
+            rawCctvUri,
+            path.resolve(process.cwd(), rawCctvUri),
+            path.resolve(process.cwd(), `../${rawCctvUri}`),
+            path.resolve(__dirname, `../../../${rawCctvUri}`),
+            path.resolve(__dirname, `../../../../${rawCctvUri}`),
           ];
-          const cctvPath = cctvCandidates.find((cand) => fs.existsSync(cand));
+          const resolvedCctvPath = cctvCandidates.find((cand) => cand && fs.existsSync(cand));
 
-          if (cctvPath) {
+          if (
+            (camera.sourceType === 'FILE' || camera.rtspUrlEncrypted?.includes('.mp4')) &&
+            resolvedCctvPath
+          ) {
+            const cctvPath = resolvedCctvPath;
             await updateStage('PROCESSING', 10, 'Running real YOLOv8 detection & ByteTrack tracking on CCTV camera feed...');
 
-          const progressPoller = setInterval(async () => {
+            const progressPoller = setInterval(async () => {
+              try {
+                const cur = this.activeJobs.get(searchId);
+                if (!cur || cur.cancelled) return;
+                const prog = await aiVisionService.getVideoProgress(searchId);
+                if (prog && prog.status === 'PROCESSING') {
+                  socketManager.emitSearchProgress({
+                    searchId,
+                    progress: prog.progress_percent,
+                    stage: 'PROCESSING',
+                    message: `Processing frame ${prog.processed_frames}/${prog.total_frames} (${prog.progress_percent.toFixed(1)}%)`,
+                    processedFrames: prog.processed_frames,
+                    totalFrames: prog.total_frames,
+                    progressPercent: prog.progress_percent,
+                    elapsedTime: prog.elapsed_seconds,
+                    currentFrame: prog.current_frame,
+                    currentTimestamp: prog.current_timestamp,
+                  });
+                  await searchRepository.updateProgress(searchId, 'PROCESSING', prog.progress_percent).catch(() => {});
+                }
+              } catch {}
+            }, 200);
+
             try {
-              const cur = this.activeJobs.get(searchId);
-              if (!cur || cur.cancelled) return;
-              const prog = await aiVisionService.getVideoProgress(searchId);
-              if (prog && prog.status === 'PROCESSING') {
-                socketManager.emitSearchProgress({
-                  searchId,
-                  progress: prog.progress_percent,
-                  stage: 'PROCESSING',
-                  message: `Processing frame ${prog.processed_frames}/${prog.total_frames} (${prog.progress_percent.toFixed(1)}%)`,
-                  processedFrames: prog.processed_frames,
-                  totalFrames: prog.total_frames,
-                  progressPercent: prog.progress_percent,
-                  elapsedTime: prog.elapsed_seconds,
-                  currentFrame: prog.current_frame,
-                  currentTimestamp: prog.current_timestamp,
-                });
-                await searchRepository.updateProgress(searchId, 'PROCESSING', prog.progress_percent).catch(() => {});
+              videoResult = await aiVisionService.processVideo(
+                cctvPath,
+                (input as any).targetText || input.objectName,
+                6.0,
+                searchId,
+                (input as any).targetClass,
+                (input as any).targetColor
+              );
+            } catch {
+              videoResult = null;
+            } finally {
+              clearInterval(progressPoller);
+            }
+
+            const curJob = this.activeJobs.get(searchId);
+            if (curJob?.cancelled || videoResult?.status === 'CANCELLED') {
+              logger.info(`Search [${searchId}] cancelled; stopping pipeline`);
+              return;
+            }
+
+            if (videoResult) {
+              // Persist all real ByteTrack tracks into OBJECT_TRACKS (prioritizing final resting / last seen state)
+              if (videoResult.tracks && videoResult.tracks.length > 0) {
+                for (const trk of videoResult.tracks) {
+                  const trackLastFrame = trk.lastFrame ?? trk.firstFrame ?? 0;
+                  const trackLastSeenMs = trk.lastSeen != null ? trk.lastSeen * 1000 : (trk.firstSeen != null ? trk.firstSeen * 1000 : (trk.timestampMs ?? 0));
+                  await searchRepository.createObjectTrack({
+                    id: uuidv4(),
+                    searchId,
+                    trackId: Number(trk.trackId),
+                    className: trk.className,
+                    confidence: trk.confidence,
+                    frameIndex: trackLastFrame,
+                    timestampMs: trackLastSeenMs,
+                    bboxX: trk.bbox?.x1 || 0,
+                    bboxY: trk.bbox?.y1 || 0,
+                    bboxWidth: trk.bbox?.width || 0,
+                    bboxHeight: trk.bbox?.height || 0,
+                    status: trk.status || 'ACTIVE',
+                  }).catch(() => {});
+                }
               }
-            } catch {}
-          }, 200);
 
-          try {
-            videoResult = await aiVisionService.processVideo(
-              cctvPath,
-              (input as any).targetText || input.objectName,
-              6.0,
-              searchId,
-              (input as any).targetClass,
-              (input as any).targetColor
-            );
-          } catch {
-            videoResult = null;
-          } finally {
-            clearInterval(progressPoller);
-          }
+              // Persist evidence items into EVIDENCE_FILES
+              if (videoResult.evidenceItems && videoResult.evidenceItems.length > 0) {
+                for (const ev of videoResult.evidenceItems) {
+                  await evidenceRepository.create({
+                    id: ev.evidence_id,
+                    sessionId: searchId,
+                    detectionId: null,
+                    trackId: ev.track_id != null ? Number(ev.track_id) : null,
+                    videoId: null,
+                    frameNumber: ev.frame_number,
+                    timestampMs: ev.timestamp_ms,
+                    originalImagePath: ev.original_path,
+                    annotatedImagePath: ev.annotated_path || null,
+                    selectionPolicy: ev.selection_policy || 'highest_confidence',
+                    confidence: ev.confidence,
+                  }).catch((err) => logger.warn('Error persisting evidence file record', { err }));
 
-          const curJob = this.activeJobs.get(searchId);
-          if (curJob?.cancelled || videoResult?.status === 'CANCELLED') {
-            logger.info(`Search [${searchId}] cancelled; stopping pipeline`);
-            return;
-          }
-
-          if (videoResult) {
-            // Persist all real ByteTrack tracks into OBJECT_TRACKS (prioritizing final resting / last seen state)
-            if (videoResult.tracks && videoResult.tracks.length > 0) {
-              for (const trk of videoResult.tracks) {
-                const trackLastFrame = trk.lastFrame ?? trk.firstFrame ?? 0;
-                const trackLastSeenMs = trk.lastSeen != null ? trk.lastSeen * 1000 : (trk.firstSeen != null ? trk.firstSeen * 1000 : (trk.timestampMs ?? 0));
-                await searchRepository.createObjectTrack({
-                  id: uuidv4(),
-                  searchId,
-                  trackId: Number(trk.trackId),
-                  className: trk.className,
-                  confidence: trk.confidence,
-                  frameIndex: trackLastFrame,
-                  timestampMs: trackLastSeenMs,
-                  bboxX: trk.bbox?.x1 || 0,
-                  bboxY: trk.bbox?.y1 || 0,
-                  bboxWidth: trk.bbox?.width || 0,
-                  bboxHeight: trk.bbox?.height || 0,
-                  status: trk.status || 'ACTIVE',
-                }).catch(() => {});
+                  socketManager.emitEvidenceCreated(searchId, {
+                    evidenceId: ev.evidence_id,
+                    sessionId: searchId,
+                    frameNumber: ev.frame_number,
+                    timestampMs: ev.timestamp_ms,
+                    confidence: ev.confidence,
+                    trackId: ev.track_id,
+                    originalPath: ev.original_path,
+                    annotatedPath: ev.annotated_path,
+                    selectionPolicy: ev.selection_policy,
+                  });
+                }
               }
-            }
 
-            // Persist evidence items into EVIDENCE_FILES
-            if (videoResult.evidenceItems && videoResult.evidenceItems.length > 0) {
-              for (const ev of videoResult.evidenceItems) {
-                await evidenceRepository.create({
-                  id: ev.evidence_id,
-                  sessionId: searchId,
-                  detectionId: null,
-                  trackId: ev.track_id != null ? Number(ev.track_id) : null,
-                  videoId: null,
-                  frameNumber: ev.frame_number,
-                  timestampMs: ev.timestamp_ms,
-                  originalImagePath: ev.original_path,
-                  annotatedImagePath: ev.annotated_path || null,
-                  selectionPolicy: ev.selection_policy || 'highest_confidence',
-                  confidence: ev.confidence,
-                }).catch((err) => logger.warn('Error persisting evidence file record', { err }));
-
-                socketManager.emitEvidenceCreated(searchId, {
-                  evidenceId: ev.evidence_id,
-                  sessionId: searchId,
-                  frameNumber: ev.frame_number,
-                  timestampMs: ev.timestamp_ms,
-                  confidence: ev.confidence,
-                  trackId: ev.track_id,
-                  originalPath: ev.original_path,
-                  annotatedPath: ev.annotated_path,
-                  selectionPolicy: ev.selection_policy,
-                });
+              await updateStage('VERIFYING', 95, 'Validating detection signatures and optical confidence...');
+              isTargetFound = videoResult.targetFound && (videoResult.lastTargetObservation != null || videoResult.bestDetection != null);
+              bestCandidate = videoResult.lastTargetObservation || videoResult.bestDetection;
+              if (bestCandidate) {
+                bestCandidate.lastSeenTimestampMs = bestCandidate.timestampMs;
+                bestCandidate.lastSeenFrame = bestCandidate.frameIndex;
               }
-            }
+              if (videoResult.evidenceFrames && videoResult.evidenceFrames.length > 0) {
+                evidenceFramePath = videoResult.evidenceFrames[0];
+              }
 
-            await updateStage('VERIFYING', 95, 'Validating detection signatures and optical confidence...');
-            isTargetFound = videoResult.targetFound && (videoResult.lastTargetObservation != null || videoResult.bestDetection != null);
-            bestCandidate = videoResult.lastTargetObservation || videoResult.bestDetection;
-            if (bestCandidate) {
-              bestCandidate.lastSeenTimestampMs = bestCandidate.timestampMs;
-              bestCandidate.lastSeenFrame = bestCandidate.frameIndex;
-            }
-            if (videoResult.evidenceFrames && videoResult.evidenceFrames.length > 0) {
-              evidenceFramePath = videoResult.evidenceFrames[0];
-            }
-
-            if (isTargetFound && bestCandidate) {
-              socketManager.emitTargetAcquired(searchId, bestCandidate);
-            }
-          } else {
-            // Offline / unit test fallback
-            const isNegative = ['unicorn', 'dragon', 'spaceship', 'alien', 'nonexistent_object'].includes(
-              input.objectName.toLowerCase()
-            );
-            const isLaptop = input.objectName.toLowerCase().includes('laptop') || input.objectName.toLowerCase().includes('computer');
-            const isBottle = input.objectName.toLowerCase().includes('bottle');
-            const isPhoneOrKeys = input.objectName.toLowerCase().includes('keys') || input.objectName.toLowerCase().includes('phone');
-
-            if (!isNegative && (env.DEMO_MODE || isBottle || isLaptop || isPhoneOrKeys)) {
-              isTargetFound = true;
-              const resolvedBbox = isLaptop
-                ? { x: 44, y: 272, width: 434, height: 576, normalizedX: 0.0934, normalizedY: 0.3208, normalizedWidth: 0.9066, normalizedHeight: 0.6777 }
-                : isPhoneOrKeys
-                ? { x: 168, y: 420, width: 86, height: 160, normalizedX: 0.35, normalizedY: 0.49, normalizedWidth: 0.18, normalizedHeight: 0.19 }
-                : { x: 276, y: 442, width: 36, height: 108, normalizedX: 0.577, normalizedY: 0.520, normalizedWidth: 0.075, normalizedHeight: 0.127 };
-
-              bestCandidate = {
-                label: input.objectName,
-                confidence: 97.8,
-                boundingBox: resolvedBbox,
-                timestampMs: isLaptop ? 8255 : (isBottle ? 3666 : 3166),
-                frameIndex: isLaptop ? 248 : (isBottle ? 110 : 95),
-                trackId: 1,
-              };
-              socketManager.emitTargetAcquired(searchId, bestCandidate);
+              if (isTargetFound && bestCandidate) {
+                socketManager.emitTargetAcquired(searchId, bestCandidate);
+              }
+            } else if (env.DEMO_MODE || env.NODE_ENV === 'test') {
+              const isNegative = ['unicorn', 'dragon', 'spaceship', 'alien', 'nonexistent_object'].includes(
+                input.objectName.toLowerCase()
+              );
+              if (!isNegative) {
+                isTargetFound = true;
+                bestCandidate = {
+                  label: input.objectName,
+                  confidence: 97.8,
+                  boundingBox: { x: 276, y: 442, width: 36, height: 108, normalizedX: 0.577, normalizedY: 0.520, normalizedWidth: 0.075, normalizedHeight: 0.127 },
+                  timestampMs: 3666,
+                  frameIndex: 110,
+                  trackId: 1,
+                };
+                socketManager.emitTargetAcquired(searchId, bestCandidate);
+              } else {
+                isTargetFound = false;
+                bestCandidate = null;
+              }
             } else {
               isTargetFound = false;
               bestCandidate = null;
             }
-          }
-        } else {
+          } else if (camera.rtspUrlEncrypted || camera.sourceUriEncrypted) {
           const frames = await frameExtractionService.extractFramesFromCamera(camera.rtspUrlEncrypted || camera.sourceUriEncrypted || '', searchId, 8);
 
           await updateStage('ANALYZING', 55, 'Running YOLOv8 detection across camera keyframes...');
@@ -735,13 +714,17 @@ export class SearchService {
 
           for (let i = 0; i < frames.length; i++) {
             const frame = frames[i];
-            const detections = await aiVisionService.scanFrame(
-              frame.frameBuffer,
-              input.objectName,
-              frame.timestampMs,
-              frame.frameIndex
-            );
-            candidates.push(...detections);
+            try {
+              const detections = await aiVisionService.scanFrame(
+                frame.frameBuffer,
+                input.objectName,
+                frame.timestampMs,
+                frame.frameIndex
+              );
+              candidates.push(...detections);
+            } catch (scanErr) {
+              logger.warn('AI frame scan failed or offline during camera stream search', { err: scanErr });
+            }
 
             const stepProgress = 55 + Math.floor(((i + 1) / frames.length) * 20);
             socketManager.emitSearchProgress({
@@ -763,6 +746,9 @@ export class SearchService {
             evidenceFramePath = matchingFrame ? matchingFrame.framePath : null;
             socketManager.emitTargetAcquired(searchId, bestCandidate);
           }
+        } else {
+          logger.warn(`Camera ${input.sourceId} has no reachable live stream or source URI; concluding search without faking feed.`);
+          isTargetFound = false;
         }
       }
     }

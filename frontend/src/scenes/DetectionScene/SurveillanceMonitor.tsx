@@ -207,6 +207,7 @@ export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
   const groupRef = useRef<THREE.Group>(null);
   const radarRingRef = useRef<THREE.Mesh>(null);
   const glowPlaneRef = useRef<THREE.Mesh>(null);
+  const lastProceduralDrawTimeRef = useRef<number>(0);
 
   const {
     searchSession,
@@ -313,15 +314,8 @@ export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
     if (activeMediaStream) return null;
     if (propVideoUrl) return propVideoUrl;
     if (uploadedVideoRecord?.blobUrl) return uploadedVideoRecord.blobUrl;
-    const filename = (searchSession?.videoFilename || detectionResult?.videoFilename || '').toLowerCase();
-    if (filename === 'whatsapp video 2026-09-03 at 8.46.51 pm.mp4' || filename === 'cctv-reference.mp4' || filename.includes('f2b31c43')) {
-      return '/reference/detected-cctv.mp4';
-    }
-    if (detectionResult?.found && filename === '') {
-      return '/reference/detected-cctv.mp4';
-    }
-    return '/reference/cctv-reference.mp4';
-  }, [activeMediaStream, propVideoUrl, uploadedVideoRecord?.blobUrl, searchSession?.videoFilename, detectionResult]);
+    return null;
+  }, [activeMediaStream, propVideoUrl, uploadedVideoRecord?.blobUrl]);
 
   // Resolve actual detection timestamp (seconds)
   const detectionTimeSec = useMemo(() => {
@@ -585,16 +579,20 @@ export const SurveillanceMonitor: React.FC<SurveillanceMonitorProps> = ({
     if (videoTexture && videoRef.current && videoRef.current.readyState >= 2) {
       videoTexture.needsUpdate = true;
     } else if (proceduralCanvas && proceduralTexture) {
-      const ctx = proceduralCanvas.getContext('2d');
-      if (ctx) {
-        drawProceduralCctv(
-          ctx,
-          t,
-          _objectName || searchSession.targetClass || 'Target',
-          _colorName || searchSession.targetColor || '',
-          isFound
-        );
-        proceduralTexture.needsUpdate = true;
+      // Throttle procedural CCTV canvas redraw to 10 FPS (every 100ms) to conserve GPU-to-CPU bandwidth
+      if (t - lastProceduralDrawTimeRef.current >= 0.1) {
+        lastProceduralDrawTimeRef.current = t;
+        const ctx = proceduralCanvas.getContext('2d');
+        if (ctx) {
+          drawProceduralCctv(
+            ctx,
+            t,
+            _objectName || searchSession.targetClass || 'Target',
+            _colorName || searchSession.targetColor || '',
+            isFound
+          );
+          proceduralTexture.needsUpdate = true;
+        }
       }
     }
   });

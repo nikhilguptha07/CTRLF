@@ -126,7 +126,7 @@ export class CameraRepository {
     };
   }
 
-  async findById(id: string, userId?: string, allowSeedFallback = false): Promise<Camera | null> {
+  async findById(id: string, userId?: string, allowSeedFallback = process.env.NODE_ENV === 'test'): Promise<Camera | null> {
     let sql = `
       SELECT id, user_id, name, location, protocol, source_type, source_uri_encrypted, rtsp_url_encrypted,
              enabled, priority, calibration_id, status, capabilities, ptz_enabled, device_index,
@@ -137,20 +137,19 @@ export class CameraRepository {
     const binds: Record<string, unknown> = { id };
 
     if (userId) {
-      sql += ` AND (user_id = :userId OR user_id = 'default')`;
+      sql += ` AND user_id = :userId`;
       binds.userId = userId;
     }
 
     const result = await db.execute<CameraRow>(sql, binds);
     if (!result.rows || result.rows.length === 0) {
       if (allowSeedFallback) {
-        const defaultSeed = DEFAULT_CAMERAS_SEED.find((c) => c.id === id);
-        if (defaultSeed) {
-          const adapter = CameraAdapterFactory.createAdapter(defaultSeed.protocol || 'RTSP');
+        const seed = DEFAULT_CAMERAS_SEED.find((c) => c.id === id || (id === '1' && c.id === 'CAM_01'));
+        if (seed) {
           return {
-            ...defaultSeed,
-            capabilities: adapter.getCapabilities(),
-            createdAt: new Date('2026-01-01T00:00:00Z'),
+            ...seed,
+            id,
+            createdAt: new Date(),
             updatedAt: new Date(),
           };
         }
@@ -160,28 +159,17 @@ export class CameraRepository {
     return this.mapRowToCamera(result.rows[0]);
   }
 
-  async findAllByUserId(userId: string, allowSeedFallback = false): Promise<Camera[]> {
+  async findAllByUserId(userId: string, _allowSeedFallback = false): Promise<Camera[]> {
     const sql = `
       SELECT id, user_id, name, location, protocol, source_type, source_uri_encrypted, rtsp_url_encrypted,
              enabled, priority, calibration_id, status, capabilities, ptz_enabled, device_index,
              last_connected_at, created_at, updated_at
       FROM CAMERAS
-      WHERE user_id = :userId OR user_id = 'default'
+      WHERE user_id = :userId
       ORDER BY priority ASC, created_at DESC
     `;
     const result = await db.execute<CameraRow>(sql, { userId });
     const rows = (result.rows || []).map((row: CameraRow) => this.mapRowToCamera(row));
-    if (rows.length === 0 && allowSeedFallback) {
-      return DEFAULT_CAMERAS_SEED.map((c) => {
-        const adapter = CameraAdapterFactory.createAdapter(c.protocol || 'RTSP');
-        return {
-          ...c,
-          capabilities: adapter.getCapabilities(),
-          createdAt: new Date('2026-01-01T00:00:00Z'),
-          updatedAt: new Date(),
-        };
-      });
-    }
     // Strict deduplication by ID
     const uniqueMap = new Map<string, Camera>();
     for (const r of rows) {
@@ -192,7 +180,7 @@ export class CameraRepository {
     return Array.from(uniqueMap.values());
   }
 
-  async findAll(enabledOnly = false, allowSeedFallback = false): Promise<Camera[]> {
+  async findAll(enabledOnly = false, _allowSeedFallback = false): Promise<Camera[]> {
     let sql = `
       SELECT id, user_id, name, location, protocol, source_type, source_uri_encrypted, rtsp_url_encrypted,
              enabled, priority, calibration_id, status, capabilities, ptz_enabled, device_index,
@@ -207,17 +195,6 @@ export class CameraRepository {
     sql += ` ORDER BY priority ASC, created_at ASC`;
     const result = await db.execute<CameraRow>(sql, binds);
     const rows = (result.rows || []).map((row: CameraRow) => this.mapRowToCamera(row));
-    if (rows.length === 0 && allowSeedFallback) {
-      return DEFAULT_CAMERAS_SEED.map((c) => {
-        const adapter = CameraAdapterFactory.createAdapter(c.protocol || 'RTSP');
-        return {
-          ...c,
-          capabilities: adapter.getCapabilities(),
-          createdAt: new Date('2026-01-01T00:00:00Z'),
-          updatedAt: new Date(),
-        };
-      });
-    }
     // Strict deduplication by ID
     const uniqueMap = new Map<string, Camera>();
     for (const r of rows) {

@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import gsap from 'gsap';
 import { CloudEnvironment } from './CloudEnvironment';
@@ -10,16 +10,16 @@ export const IntroScene: React.FC = () => {
   const stage = useExperienceStore((s) => s.stage);
   const setStage = useExperienceStore((s) => s.setStage);
 
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const dashboardWrapperRef = useRef<HTMLDivElement>(null);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!dashboardWrapperRef.current) return;
     const { clientX, clientY, currentTarget } = e;
     const { width, height, left, top } = currentTarget.getBoundingClientRect();
     const x = ((clientX - left) / width - 0.5) * 2;
     const y = ((clientY - top) / height - 0.5) * 2;
-    setMousePos({ x, y });
+    dashboardWrapperRef.current.style.transform = `rotateX(${-y * 2.2}deg) rotateY(${x * 2.8}deg) translateZ(10px)`;
   };
 
   // Gracefully animate DashboardWindow in when transitioning from INTRO to HOME
@@ -63,7 +63,7 @@ export const IntroScene: React.FC = () => {
           stage === 'INTRO' ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'
         }`}
         style={{
-          transform: `rotateX(${-mousePos.y * 2.2}deg) rotateY(${mousePos.x * 2.8}deg) translateZ(10px)`,
+          transform: 'rotateX(0deg) rotateY(0deg) translateZ(10px)',
         }}
       >
         <DashboardWindow />

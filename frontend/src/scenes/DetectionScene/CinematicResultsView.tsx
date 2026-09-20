@@ -246,7 +246,7 @@ export const CinematicResultsView: React.FC = () => {
   }, [detectionResult?.confidence]);
 
   // Top evidence URLs (guaranteed real video frame from client extraction, Oracle 21c XE BLOB, or canvas)
-  const topAnnotatedUrl = React.useMemo(() => {
+  const topAnnotatedUrl = React.useMemo((): string => {
     if (clientExtractedUrls.lastAnnotated) {
       return clientExtractedUrls.lastAnnotated;
     }
@@ -258,13 +258,10 @@ export const CinematicResultsView: React.FC = () => {
     }
     if (searchSession.evidence) return toFullUrl(searchSession.evidence);
     if (sessionId) return toFullUrl(`/api/search/${sessionId}/evidence/frame?type=annotated&spot=last_spot`);
-    if (isReferenceClip && targetClass.toLowerCase().includes('bottle')) {
-      return '/evidence/frame_last_spot_annotated.jpg';
-    }
-    return toFullUrl('/api/search/latest/evidence/frame?type=annotated&spot=last_spot');
-  }, [clientExtractedUrls.lastAnnotated, allEvidenceItems, detectionResult?.detectionId, searchSession.evidence, sessionId, isReferenceClip, targetClass]);
+    return '';
+  }, [clientExtractedUrls.lastAnnotated, allEvidenceItems, detectionResult?.detectionId, searchSession.evidence, sessionId]);
 
-  const topOriginalUrl = React.useMemo(() => {
+  const topOriginalUrl = React.useMemo((): string => {
     if (clientExtractedUrls.lastOriginal) {
       return clientExtractedUrls.lastOriginal;
     }
@@ -272,11 +269,8 @@ export const CinematicResultsView: React.FC = () => {
       return toFullUrl(allEvidenceItems[0].originalImagePath);
     }
     if (sessionId) return toFullUrl(`/api/search/${sessionId}/evidence/frame?type=original&spot=last_spot`);
-    if (isReferenceClip && targetClass.toLowerCase().includes('bottle')) {
-      return '/evidence/frame_last_spot_orig.jpg';
-    }
-    return toFullUrl('/api/search/latest/evidence/frame?type=original&spot=last_spot');
-  }, [clientExtractedUrls.lastOriginal, allEvidenceItems, sessionId, isReferenceClip, targetClass]);
+    return '';
+  }, [clientExtractedUrls.lastOriginal, allEvidenceItems, sessionId]);
 
   // Handle switching between LAST SEEN SPOT and IN HAND
   const handleSpotChange = (spot: 'LAST_SPOT' | 'INITIAL_SPOT') => {
@@ -284,10 +278,10 @@ export const CinematicResultsView: React.FC = () => {
     if (spot === 'LAST_SPOT') {
       const lastAnn = (hasUserUploadedVideo && clientExtractedUrls.lastAnnotated)
         ? clientExtractedUrls.lastAnnotated
-        : (topAnnotatedUrl || clientExtractedUrls.lastAnnotated || `/api/search/${sessionId}/evidence/frame?type=annotated&spot=last_spot`);
+        : (topAnnotatedUrl || clientExtractedUrls.lastAnnotated || (sessionId ? `/api/search/${sessionId}/evidence/frame?type=annotated&spot=last_spot` : ''));
       const lastOrig = (hasUserUploadedVideo && clientExtractedUrls.lastOriginal)
         ? clientExtractedUrls.lastOriginal
-        : (topOriginalUrl || clientExtractedUrls.lastOriginal || `/api/search/${sessionId}/evidence/frame?type=original&spot=last_spot`);
+        : (topOriginalUrl || clientExtractedUrls.lastOriginal || (sessionId ? `/api/search/${sessionId}/evidence/frame?type=original&spot=last_spot` : ''));
 
       const lastSeenMs = detectionResult?.lastSeenTimestampMs ?? matchingTargets[0]?.lastSeenMs;
       const computedFrame = detectionResult?.lastSeenFrame ?? matchingTargets[0]?.frameNumber ?? (lastSeenMs != null ? Math.round(lastSeenMs / 33.33) : (isReferenceClip && targetClass.toLowerCase().includes('bottle') ? 110 : 30));
@@ -299,18 +293,18 @@ export const CinematicResultsView: React.FC = () => {
         frameNumber: computedFrame,
         timestamp: computedTs,
         confidence: detectionResult?.confidence || matchingTargets[0]?.confidence || 97.8,
-        annotatedUrl: lastAnn,
-        originalUrl: lastOrig,
+        annotatedUrl: lastAnn || '',
+        originalUrl: lastOrig || '',
         status: 'LOADING',
         errorMessage: null,
       }));
     } else {
       const initAnn = (hasUserUploadedVideo && clientExtractedUrls.initialAnnotated)
         ? clientExtractedUrls.initialAnnotated
-        : (clientExtractedUrls.initialAnnotated || (sessionId ? toFullUrl(`/api/search/${sessionId}/evidence/frame?type=annotated&spot=initial`) : topAnnotatedUrl));
+        : (clientExtractedUrls.initialAnnotated || (sessionId ? toFullUrl(`/api/search/${sessionId}/evidence/frame?type=annotated&spot=initial`) : topAnnotatedUrl) || '');
       const initOrig = (hasUserUploadedVideo && clientExtractedUrls.initialOriginal)
         ? clientExtractedUrls.initialOriginal
-        : (clientExtractedUrls.initialOriginal || (sessionId ? toFullUrl(`/api/search/${sessionId}/evidence/frame?type=original&spot=initial`) : topOriginalUrl));
+        : (clientExtractedUrls.initialOriginal || (sessionId ? toFullUrl(`/api/search/${sessionId}/evidence/frame?type=original&spot=initial`) : topOriginalUrl) || '');
 
       setEvidenceModal(prev => ({
         ...prev,
@@ -318,8 +312,8 @@ export const CinematicResultsView: React.FC = () => {
         frameNumber: 10,
         timestamp: '00:00',
         confidence: 96.4,
-        annotatedUrl: initAnn,
-        originalUrl: initOrig,
+        annotatedUrl: initAnn || '',
+        originalUrl: initOrig || '',
         status: 'LOADING',
         errorMessage: null,
       }));
@@ -334,8 +328,8 @@ export const CinematicResultsView: React.FC = () => {
     trackId?: string | number;
     frameNumber?: number | string | null;
     timestamp?: string;
-    annotatedUrl?: string;
-    originalUrl?: string;
+    annotatedUrl?: string | null;
+    originalUrl?: string | null;
     detectionId?: string | null;
     sessionId?: string | null;
     videoId?: string | null;
@@ -391,9 +385,6 @@ export const CinematicResultsView: React.FC = () => {
       } else if (!isLastSpot && clientExtractedUrls.initialAnnotated) {
         ann = clientExtractedUrls.initialAnnotated;
         orig = clientExtractedUrls.initialOriginal || ann;
-      } else if (isReferenceClip && targetClass.toLowerCase().includes('bottle')) {
-        ann = isLastSpot ? '/evidence/frame_last_spot_annotated.jpg' : '/evidence/frame_10_annotated.jpg';
-        orig = isLastSpot ? '/evidence/frame_last_spot_orig.jpg' : '/evidence/frame_10_orig.jpg';
       } else {
         ann = topAnnotatedUrl;
         orig = topOriginalUrl;
@@ -424,8 +415,8 @@ export const CinematicResultsView: React.FC = () => {
       trackId: trkId,
       frameNumber: fNum,
       timestamp: ts,
-      annotatedUrl: ann,
-      originalUrl: orig || ann,
+      annotatedUrl: ann || '',
+      originalUrl: orig || ann || '',
       mode: 'ANNOTATED',
       spotType: targetSpot,
       videoName,
@@ -760,28 +751,6 @@ export const CinematicResultsView: React.FC = () => {
               }
             } catch (onDemandErr) {
               console.warn('[ON-DEMAND FRAME EXTRACTION ERROR]', onDemandErr);
-            }
-          }
-
-          // Prioritize genuine extracted photo directly from surveillance reference video ONLY if target is a bottle
-          if (isReferenceClip && (evidenceModal.objectName || targetClass || '').toLowerCase().includes('bottle')) {
-            const isLastSpot = evidenceModal.spotType !== 'INITIAL_SPOT';
-            const genuinePhotoUrl = isLastSpot
-              ? `/evidence/frame_last_spot_${evidenceModal.mode === 'ORIGINAL' ? 'orig' : 'annotated'}.jpg`
-              : `/evidence/frame_10_${evidenceModal.mode === 'ORIGINAL' ? 'orig' : 'annotated'}.jpg`;
-            try {
-              const photoRes = await fetch(genuinePhotoUrl);
-              if (photoRes.ok) {
-                const photoBlob = await photoRes.blob();
-                if (photoBlob.size > 0) {
-                  const photoObjUrl = URL.createObjectURL(photoBlob);
-                  setBlobUrl(photoObjUrl);
-                  setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
-                  return;
-                }
-              }
-            } catch (photoErr) {
-              console.warn('[GENUINE PHOTO FETCH FAILED]', photoErr);
             }
           }
 
@@ -1424,24 +1393,7 @@ export const CinematicResultsView: React.FC = () => {
                     }
                   }
 
-                  if (isReferenceClip && (evidenceModal.objectName || targetClass || '').toLowerCase().includes('bottle')) {
-                    const isLastSpot = evidenceModal.spotType !== 'INITIAL_SPOT';
-                    const genuinePhotoUrl = isLastSpot
-                      ? `/evidence/frame_last_spot_${evidenceModal.mode === 'ORIGINAL' ? 'orig' : 'annotated'}.jpg`
-                      : `/evidence/frame_10_${evidenceModal.mode === 'ORIGINAL' ? 'orig' : 'annotated'}.jpg`;
-                    try {
-                      const photoRes = await fetch(genuinePhotoUrl);
-                      if (photoRes.ok) {
-                        const photoBlob = await photoRes.blob();
-                        if (photoBlob.size > 0) {
-                          const photoObjUrl = URL.createObjectURL(photoBlob);
-                          setBlobUrl(photoObjUrl);
-                          setEvidenceModal(prev => ({ ...prev, status: 'LOADED', errorMessage: null }));
-                          return;
-                        }
-                      }
-                    } catch {}
-                  }
+
 
                   if (activeVideoSource) {
                     try {

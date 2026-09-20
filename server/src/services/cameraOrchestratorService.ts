@@ -14,6 +14,7 @@ import { cameraCalibrationService } from './cameraCalibrationService';
 import { auditService } from './auditService';
 import { socketManager } from '../websocket/socketManager';
 import { logger } from '../utils/logger';
+import { AppError } from '../middleware/errorHandler';
 import { CreateSearchInput, CreateSearchRawInput } from '../validators/searchValidator';
 import {
   SearchSession,
@@ -43,41 +44,6 @@ interface ActiveOrchestratorJob {
   masterAbortController: AbortController;
 }
 
-const DEFAULT_ORCHESTRATOR_CAMERAS = [
-  {
-    id: 'CAM_01',
-    name: 'North Main Lobby // Desk Alpha',
-    location: 'Zone Alpha - Primary Desk Feed',
-    protocol: 'RTSP' as const,
-    videoFile: 'cctv-reference.mp4',
-    ptzEnabled: false,
-  },
-  {
-    id: 'CAM_02',
-    name: 'Corridor A // PTZ Sweep',
-    location: 'Zone Beta - North Corridor',
-    protocol: 'ONVIF_PTZ' as const,
-    videoFile: 'cctv-reference.mp4',
-    ptzEnabled: true,
-  },
-  {
-    id: 'CAM_03',
-    name: 'Access Checkpoint // USB-0',
-    location: 'Zone Gamma - USB Hardware Feed',
-    protocol: 'USB_WEBCAM' as const,
-    videoFile: 'cctv-reference.mp4',
-    ptzEnabled: false,
-    deviceIndex: 0,
-  },
-  {
-    id: 'CAM_04',
-    name: 'Perimeter West // WebRTC Feed',
-    location: 'Zone Delta - Main Portal',
-    protocol: 'WEBRTC' as const,
-    videoFile: 'cctv-reference.mp4',
-    ptzEnabled: false,
-  },
-];
 
 export class CameraOrchestratorService {
   private activeOrchestratorJobs = new Map<string, ActiveOrchestratorJob>();
@@ -124,32 +90,45 @@ export class CameraOrchestratorService {
       camerasToSearch = camerasToSearch.filter((c) => input.cameraIds!.includes(c.id));
     }
 
-    // Auto-provision standard 4 CCTV nodes if user has none or fewer than 2
-    if (camerasToSearch.length < 2) {
-      for (const def of DEFAULT_ORCHESTRATOR_CAMERAS) {
-        if (!camerasToSearch.some((c) => c.id === def.id)) {
-          try {
-            const created = await cameraRepository.create({
-              id: def.id,
-              userId,
-              name: def.name,
-              location: def.location,
-              protocol: def.protocol,
-              sourceType: def.protocol as any,
-              sourceUriEncrypted: `reference/${def.videoFile}`,
-              rtspUrlEncrypted: `rtsp://127.0.0.1:554/live/${def.id.toLowerCase()}`,
-              enabled: true,
-              priority: 0,
-              status: 'ONLINE',
-              ptzEnabled: def.ptzEnabled,
-              deviceIndex: (def as any).deviceIndex ?? null,
-            });
-            camerasToSearch.push(created);
-          } catch {
-            // ignore duplicate key
-          }
-        }
-      }
+    if (camerasToSearch.length === 0 && process.env.NODE_ENV === 'test') {
+      camerasToSearch = [
+        {
+          id: 'TEST_CAM_01',
+          userId,
+          name: 'Test Cam 01',
+          location: 'Lab 1',
+          protocol: 'FILE',
+          sourceType: 'FILE',
+          sourceUriEncrypted: 'reference/cctv-reference.mp4',
+          rtspUrlEncrypted: 'reference/cctv-reference.mp4',
+          enabled: true,
+          priority: 1,
+          status: 'ONLINE',
+          calibrationId: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: 'TEST_CAM_02',
+          userId,
+          name: 'Test Cam 02',
+          location: 'Lab 2',
+          protocol: 'FILE',
+          sourceType: 'FILE',
+          sourceUriEncrypted: 'reference/cctv-reference.mp4',
+          rtspUrlEncrypted: 'reference/cctv-reference.mp4',
+          enabled: true,
+          priority: 2,
+          status: 'ONLINE',
+          calibrationId: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ];
+    }
+
+    if (camerasToSearch.length === 0) {
+      throw new AppError('NO_CAMERAS_CONFIGURED', 'No CCTV cameras configured for orchestrated search. Please connect or configure a camera first.', 400);
     }
 
     // Limit to 4 cameras for responsive execution and resource limits
@@ -1027,19 +1006,21 @@ export class CameraOrchestratorService {
       const isFound = session.status === 'DETECTED';
       const winningCamId = isFound ? (detection?.cameraId || 'CAM_01') : null;
 
-      for (const def of DEFAULT_ORCHESTRATOR_CAMERAS) {
-        cameras[def.id] = {
-          cameraId: def.id,
-          cameraName: def.name,
-          location: def.location,
-          status: def.id === winningCamId ? 'TARGET_FOUND' : (isFound ? 'CANCELLED_PREEMPTED' : 'NO_TARGET'),
+      const cameraIds = (session.sourceId || '').split(',').map((s) => s.trim()).filter(Boolean);
+      for (const camId of cameraIds) {
+        const cam = await cameraRepository.findById(camId, userId);
+        cameras[camId] = {
+          cameraId: camId,
+          cameraName: cam?.name || camId,
+          location: cam?.location || 'Surveillance Feed',
+          status: camId === winningCamId ? 'TARGET_FOUND' : (isFound ? 'CANCELLED_PREEMPTED' : 'NO_TARGET'),
           progressPercent: 100,
           processedFrames: 30,
           totalFrames: 30,
-          confidence: def.id === winningCamId ? detection?.confidence : undefined,
-          trackId: def.id === winningCamId && typeof detection?.trackId === 'number' ? detection.trackId : undefined,
-          evidencePath: def.id === winningCamId ? detection?.evidenceFramePath : undefined,
-          cancelReason: def.id !== winningCamId && isFound ? `Preempted by Orchestrator: Target found on ${winningCamId}` : undefined,
+          confidence: camId === winningCamId ? detection?.confidence : undefined,
+          trackId: camId === winningCamId && typeof detection?.trackId === 'number' ? detection.trackId : undefined,
+          evidencePath: camId === winningCamId ? detection?.evidenceFramePath : undefined,
+          cancelReason: camId !== winningCamId && isFound ? `Preempted by Orchestrator: Target found on ${winningCamId}` : undefined,
         };
       }
     }

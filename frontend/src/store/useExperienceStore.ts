@@ -250,7 +250,7 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
     status: 'IDLE',
     startedAt: null,
     completedAt: null,
-    cameraId: 'CAM-01',
+    cameraId: null,
     videoFilename: null,
     detection: null,
     trackId: null,
@@ -1006,36 +1006,18 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
 
     const startedAt = new Date().toISOString();
 
-    const defaultCameras: Record<string, CameraWorkerStatus> = {
-      CAM_01: {
-        cameraId: 'CAM_01',
-        cameraName: 'CAM 01 — Zone Alpha Overhead',
-        location: 'Surveillance Zone Alpha // Monitored Feed',
-        status: 'CONNECTING',
-        progressPercent: 5,
-      },
-      CAM_02: {
-        cameraId: 'CAM_02',
-        cameraName: 'CAM 02 — Zone Beta Corridor',
-        location: 'Surveillance Zone Beta // Main Corridor',
-        status: 'CONNECTING',
-        progressPercent: 5,
-      },
-      CAM_03: {
-        cameraId: 'CAM_03',
-        cameraName: 'CAM 03 — Zone Gamma Parking',
-        location: 'Surveillance Zone Gamma // West Perimeter',
-        status: 'CONNECTING',
-        progressPercent: 5,
-      },
-      CAM_04: {
-        cameraId: 'CAM_04',
-        cameraName: 'CAM 04 — Zone Delta Lobby',
-        location: 'Surveillance Zone Delta // Access Checkpoint',
-        status: 'CONNECTING',
-        progressPercent: 5,
-      },
-    };
+    const initialOrchCameras: Record<string, CameraWorkerStatus> = {};
+    if (cameraIds && cameraIds.length > 0) {
+      for (const id of cameraIds) {
+        initialOrchCameras[id] = {
+          cameraId: id,
+          cameraName: id,
+          location: 'Surveillance Feed',
+          status: 'CONNECTING',
+          progressPercent: 5,
+        };
+      }
+    }
 
     set({
       searchQuery: activeQuery,
@@ -1047,7 +1029,7 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
       progressDetails: null,
       winningCameraId: null,
       winningCameraName: null,
-      orchestratorCameras: defaultCameras,
+      orchestratorCameras: initialOrchCameras,
       searchSession: {
         sessionId: null,
         target: activeQuery,
@@ -1055,7 +1037,7 @@ export const useExperienceStore = create<ExperienceState>((set, get) => ({
         status: 'SEARCHING',
         startedAt,
         completedAt: null,
-        cameraId: 'CAM_01',
+        cameraId: cameraIds?.[0] || null,
         winningCameraId: null,
         winningCameraName: null,
         detection: null,

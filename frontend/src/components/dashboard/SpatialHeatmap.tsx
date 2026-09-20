@@ -29,7 +29,7 @@ export const SpatialHeatmap: React.FC = () => {
     { name: 'Zone 02: Central Corridor', density: 'Unmonitored', prob: 'N/A', color: 'bg-slate-800/40 border-slate-700 text-slate-400' },
     { name: 'Zone 03: Executive Lounge', density: 'Unmonitored', prob: 'N/A', color: 'bg-slate-800/40 border-slate-700 text-slate-400' },
     {
-      name: activeMediaStream ? 'Zone 04: South Entrance (Live CC Cam Connected)' : 'Zone 04: South Entrance (CAM-01 Active)',
+      name: activeMediaStream ? 'Zone 04: South Entrance (Live CC Cam Connected)' : 'Zone 04: South Entrance (Surveillance Grid)',
       density: searchSession.status === 'DETECTED' ? 'Target Verified' : 'Scanning Grid',
       prob: searchSession.status === 'DETECTED' ? 'CONFIRMED' : 'N/A',
       color: searchSession.status === 'DETECTED'

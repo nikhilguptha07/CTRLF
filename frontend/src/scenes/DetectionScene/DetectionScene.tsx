@@ -2,6 +2,7 @@ import React, { Suspense, useMemo, useCallback, useEffect, useRef } from 'react'
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
+import { OrbitControls } from '@react-three/drei';
 import { CinematicCCTVCamera } from './CinematicCCTVCamera';
 import { VolumetricDustParticles } from './VolumetricDustParticles';
 import { CinematicResultsView } from './CinematicResultsView';
@@ -267,7 +268,10 @@ export const DetectionScene: React.FC<DetectionSceneProps> = ({ timelineTime }) 
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('ctrlf:cctv-angle', { detail: { deg: rounded, sweep: count } }));
     }
-    setRotationProgress(rounded, rounded / 360, isMinSatisfied);
+    // Only update store state on full rotation completion to prevent continuous React re-renders during 360 sweep
+    if (isMinSatisfied) {
+      setRotationProgress(360, 1.0, true);
+    }
   }, [setRotationProgress]);
 
   const isAnalysisComplete =
@@ -291,6 +295,15 @@ export const DetectionScene: React.FC<DetectionSceneProps> = ({ timelineTime }) 
         }}
       >
         <Suspense fallback={null}>
+          <OrbitControls
+            makeDefault
+            enableDamping
+            dampingFactor={0.05}
+            minDistance={2.0}
+            maxDistance={9.0}
+            maxPolarAngle={Math.PI / 2 + 0.05}
+            target={[0, 0, 0]}
+          />
           <fogExp2 attach="fog" args={['#0d121a', 0.022]} />
 
           {/* Studio Lighting Setup */}

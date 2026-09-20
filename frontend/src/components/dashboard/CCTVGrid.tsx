@@ -28,7 +28,6 @@ import {
   Monitor,
   Globe,
   RefreshCw,
-  Play,
   Check,
 } from 'lucide-react';
 import { apiClient, type CameraStreamHealth } from '../../services/apiClient';
@@ -52,32 +51,7 @@ export interface CameraNode {
   streamUrl?: string;
 }
 
-const DEMO_SAMPLE_FEEDS: CameraNode[] = [
-  {
-    id: 'CAM_01',
-    name: 'North Main Lobby // Desk Alpha',
-    location: 'Zone Alpha - Primary Desk Feed',
-    protocol: 'RTSP',
-    ptzEnabled: false,
-    fps: '30.0',
-    res: '1080p · 30fps',
-    status: 'ONLINE',
-    color: 'border-blue-500/80 ring-2 ring-blue-400/40',
-    active: true,
-  },
-  {
-    id: 'CAM_02',
-    name: 'Corridor A // PTZ Sweep',
-    location: 'Zone Beta - North Corridor',
-    protocol: 'ONVIF_PTZ',
-    ptzEnabled: true,
-    fps: '30.0',
-    res: '1080p · 30fps',
-    status: 'ONLINE',
-    color: 'border-emerald-500/30',
-    active: false,
-  },
-];
+
 
 const PUBLIC_SAMPLE_STREAMS = [
   {
@@ -117,8 +91,20 @@ export const CCTVGrid: React.FC = () => {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
           const seen = new Set<string>();
+          const dummyIds = new Set(['CAM_01', 'CAM_02', 'CAM_03', 'CAM_04']);
           return parsed.filter((c: any) => {
             if (!c || !c.id || seen.has(c.id)) return false;
+            // Purge legacy dummy demo cameras
+            if (
+              dummyIds.has(c.id) &&
+              !c.isBrowserStream &&
+              (c.name?.includes('North Main Lobby') ||
+                c.name?.includes('Corridor A') ||
+                c.location?.includes('Zone Alpha') ||
+                c.location?.includes('Zone Beta'))
+            ) {
+              return false;
+            }
             seen.add(c.id);
             return true;
           });
@@ -198,21 +184,28 @@ export const CCTVGrid: React.FC = () => {
         if (Array.isArray(data)) {
           setCameras((prev) => {
             const browserCams = prev.filter((c) => c.isBrowserStream);
-            const backendCams: CameraNode[] = data.map((c: any, i: number) => ({
-              id: c.id || `CAM_0${i + 1}`,
-              name: c.name || `Surveillance Node ${i + 1}`,
-              location: c.location || `Sector ${i + 1}`,
-              protocol: c.protocol || 'RTSP',
-              ptzEnabled: c.ptzEnabled ?? (c.protocol === 'ONVIF_PTZ'),
-              deviceIndex: c.deviceIndex ?? null,
-              fps: '30.0',
-              res: '1080p · 30fps',
-              status: c.status || 'ONLINE',
-              color: i === 0 ? 'border-blue-500/80 ring-2 ring-blue-400/40' : 'border-emerald-500/30',
-              active: i === 0,
-              isBrowserStream: false,
-              streamUrl: c.streamUrl || '',
-            }));
+            const backendCams: CameraNode[] = data
+              .filter((c: any) => {
+                const isDummy =
+                  (c.id === 'CAM_01' || c.id === 'CAM_02' || c.id === 'CAM_03' || c.id === 'CAM_04') &&
+                  (c.name?.includes('North Main Lobby') || c.name?.includes('Corridor A') || c.location?.includes('Zone Alpha'));
+                return !isDummy;
+              })
+              .map((c: any, i: number) => ({
+                id: c.id,
+                name: c.name || `Surveillance Node ${i + 1}`,
+                location: c.location || `Sector ${i + 1}`,
+                protocol: c.protocol || 'RTSP',
+                ptzEnabled: c.ptzEnabled ?? (c.protocol === 'ONVIF_PTZ'),
+                deviceIndex: c.deviceIndex ?? null,
+                fps: '30.0',
+                res: '1080p · 30fps',
+                status: c.status || 'ONLINE',
+                color: i === 0 ? 'border-blue-500/80 ring-2 ring-blue-400/40' : 'border-emerald-500/30',
+                active: i === 0,
+                isBrowserStream: false,
+                streamUrl: c.streamUrl || '',
+              }));
 
             // Strict deduplication: browser cameras take precedence
             const seen = new Set<string>();
@@ -543,16 +536,9 @@ export const CCTVGrid: React.FC = () => {
     localStorage.removeItem('ctrlf_cctv_nodes');
   };
 
-  // Load Demo / Sample Feeds
-  const handleLoadDemoFeeds = async () => {
-    try {
-      const seeded = await apiClient.seedDefaultCameras();
-      if (seeded && seeded.length > 0) {
-        refreshCameras();
-        return;
-      }
-    } catch {}
-    setCameras(DEMO_SAMPLE_FEEDS);
+  // Refresh Feeds from backend
+  const handleRefreshFeeds = () => {
+    refreshCameras();
   };
 
   // Real-time AI Object Search on Camera
@@ -854,11 +840,11 @@ export const CCTVGrid: React.FC = () => {
             </button>
             <button
               type="button"
-              onClick={handleLoadDemoFeeds}
+              onClick={handleRefreshFeeds}
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-all cursor-pointer"
             >
-              <Play className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Load Demo Feeds</span>
+              <RefreshCw className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Refresh Feeds</span>
             </button>
           </div>
         </div>
@@ -1176,8 +1162,8 @@ export const CCTVGrid: React.FC = () => {
                     {!worker && !isSearchingThis && !isNoTarget && (
                       <div className="text-[10px] font-mono text-slate-300 uppercase tracking-widest bg-black/50 backdrop-blur-xs px-2.5 py-1 rounded-md inline-block border border-white/10">
                         {isLive
-                          ? `[LIVE FEED ACTIVE · 30.0 FPS · ${cam.location}]`
-                          : `[STANDBY · ${cam.location}]`}
+                          ? `[LIVE FEED ACTIVE · 30.0 FPS · ${cam.location || 'ONLINE'}]`
+                          : `[OFFLINE · ${cam.location || 'SIGNAL LOST'}]`}
                       </div>
                     )}
                   </div>
