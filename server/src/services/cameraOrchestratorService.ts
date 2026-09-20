@@ -97,7 +97,7 @@ export class CameraOrchestratorService {
           userId,
           name: 'Test Cam 01',
           location: 'Lab 1',
-          protocol: 'FILE',
+          protocol: 'RTSP',
           sourceType: 'FILE',
           sourceUriEncrypted: 'reference/cctv-reference.mp4',
           rtspUrlEncrypted: 'reference/cctv-reference.mp4',
@@ -113,7 +113,7 @@ export class CameraOrchestratorService {
           userId,
           name: 'Test Cam 02',
           location: 'Lab 2',
-          protocol: 'FILE',
+          protocol: 'RTSP',
           sourceType: 'FILE',
           sourceUriEncrypted: 'reference/cctv-reference.mp4',
           rtspUrlEncrypted: 'reference/cctv-reference.mp4',
@@ -1008,7 +1008,7 @@ export class CameraOrchestratorService {
 
       const cameraIds = (session.sourceId || '').split(',').map((s) => s.trim()).filter(Boolean);
       for (const camId of cameraIds) {
-        const cam = await cameraRepository.findById(camId, userId);
+        const cam = await cameraRepository.findById(camId, session.userId);
         cameras[camId] = {
           cameraId: camId,
           cameraName: cam?.name || camId,
